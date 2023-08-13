@@ -1,0 +1,7 @@
+{
+    "Effects": [
+        "low\\depth.json",
+        "low\\shadow.json",
+        "low\\opaque.json"
+    ]
+}

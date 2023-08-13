@@ -1,0 +1,17 @@
+{
+    "Shaders":[
+        {
+            "name": "Color.frag",
+            "type": "FRAGMENT",
+            "shaderPath": "",
+            "reflPath": ""
+        },
+        {
+            "name": "PC.vert",
+            "type": "VERTEX",
+            "shaderPath": "",
+            "reflPath": ""
+
+        }
+    ]
+}

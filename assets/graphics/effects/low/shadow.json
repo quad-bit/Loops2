@@ -1,0 +1,16 @@
+{
+    "Shaders":[
+        {
+            "name": "ShadowMapping.frag",
+            "type": "FRAGMENT",
+            "shaderPath": "",
+            "reflPath": ""
+        },
+        {
+            "name": "ShadowMapping.vert",
+            "type": "VERTEX",
+            "shaderPath": "",
+            "reflPath": ""
+        }
+    ]
+}

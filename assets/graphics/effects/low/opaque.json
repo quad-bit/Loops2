@@ -1,0 +1,16 @@
+{
+    "Shaders":[
+        {
+            "name": "ColorLighting.frag",
+            "type": "FRAGMENT",
+            "shaderPath": "",
+            "reflPath": ""
+        },
+        {
+            "name": "PCN_Lighting.vert",
+            "type": "VERTEX",
+            "shaderPath": "",
+            "reflPath": ""
+        }
+    ]
+}
