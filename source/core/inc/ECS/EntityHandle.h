@@ -3,9 +3,16 @@
 
 #include <iostream>
 
+namespace ECS
+{
+    namespace Components
+    {
+        class Transform;
+    }
+}
+
 class Entity;
 class World;
-class Transform;
 
 template< typename ComponentType>
 class ComponentHandle;
@@ -30,7 +37,7 @@ public:
     }
 
     Entity * GetEntity() { return entityObj; }
-    Transform * GetTransform(){ return entityObj->transform; }
+    ECS::Components::Transform * GetTransform(){ return entityObj->transform; }
 
     template<typename ComponentType>
     void AddComponent(ComponentType* componentType);
@@ -64,9 +71,9 @@ inline void EntityHandle::AddComponent(ComponentType * componentType)
 }
 
 template<>
-inline void EntityHandle::AddComponent(Camera * componentType)
+inline void EntityHandle::AddComponent(ECS::Components::Camera * componentType)
 {
-    worldObj->AddComponent<Camera>(componentType, entityObj);
+    worldObj->AddComponent<ECS::Components::Camera>(componentType, entityObj);
     
     CameraAdditionEvent evt;
     evt.cam = componentType;
@@ -74,9 +81,9 @@ inline void EntityHandle::AddComponent(Camera * componentType)
 }
 
 template<>
-inline void EntityHandle::AddComponent(MeshRenderer * componentType)
+inline void EntityHandle::AddComponent(ECS::Components::MeshRenderer * componentType)
 {
-    worldObj->AddComponent<MeshRenderer>(componentType, entityObj);
+    worldObj->AddComponent<ECS::Components::MeshRenderer>(componentType, entityObj);
 
     MeshRendererAdditionEvent evt;
     evt.renderer = componentType;
@@ -84,17 +91,17 @@ inline void EntityHandle::AddComponent(MeshRenderer * componentType)
 }
 
 template<>
-inline void EntityHandle::AddComponent(Scriptable * componentType)
+inline void EntityHandle::AddComponent(ECS::Components::Scriptable * componentType)
 {
-    worldObj->AddComponent<Scriptable>(componentType, entityObj);
+    worldObj->AddComponent<ECS::Components::Scriptable>(componentType, entityObj);
     componentType->entityHandle = this;
     componentType->Activated();
 }
 
 template<>
-inline void EntityHandle::AddComponent(Light * componentType)
+inline void EntityHandle::AddComponent(ECS::Components::Light * componentType)
 {
-    worldObj->AddComponent<Light>(componentType, entityObj);
+    worldObj->AddComponent<ECS::Components::Light>(componentType, entityObj);
 
     LightAdditionEvent evt;
     evt.light = componentType;

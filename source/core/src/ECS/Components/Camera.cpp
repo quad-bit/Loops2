@@ -1,7 +1,7 @@
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Transform.h"
 
-Camera::Camera(Transform * transform, glm::vec3 up, float yaw, float pitch, CameraType projectionType) : movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
+ECS::Components::Camera::Camera(ECS::Components::Transform * transform, glm::vec3 up, float yaw, float pitch, CameraType projectionType) : movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
 {
     this->transform = transform;
     //this->position = position;
@@ -17,7 +17,7 @@ Camera::Camera(Transform * transform, glm::vec3 up, float yaw, float pitch, Came
 }
 
 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
-glm::mat4 Camera::GetViewMatrix()
+glm::mat4 ECS::Components::Camera::GetViewMatrix()
 {
     glm::vec3 localForward = transform->GetForward();
     glm::vec3 localUp = transform->GetUp();
@@ -27,7 +27,7 @@ glm::mat4 Camera::GetViewMatrix()
     return viewMat;
 }
 
-glm::mat4 Camera::GetProjectionMat()
+glm::mat4 ECS::Components::Camera::GetProjectionMat()
 {
     glm::mat4 clip = glm::mat4(
         1.0f, 0.0f, 0.0f, 0.0f,
@@ -50,72 +50,72 @@ glm::mat4 Camera::GetProjectionMat()
     return projectionMat;
 }
 
-const glm::vec3* Camera::GetPosition()
+const glm::vec3* ECS::Components::Camera::GetPosition()
 {
     return transform->GetLocalPositionRef();
 }
 
-glm::vec3 Camera::GetFront()
+glm::vec3 ECS::Components::Camera::GetFront()
 {
     return transform->GetForward();
 }
 
-glm::vec3 Camera::GetUp()
+glm::vec3 ECS::Components::Camera::GetUp()
 {
     return transform->GetUp();
 }
 
-glm::vec3 Camera::GetRight()
+glm::vec3 ECS::Components::Camera::GetRight()
 {
     return transform->GetRight();
 }
 
-glm::vec3& Camera::GetWorlUp()
+glm::vec3& ECS::Components::Camera::GetWorlUp()
 {
     return this->worldUp;
 }
 
-float& Camera::GetYaw()
+float& ECS::Components::Camera::GetYaw()
 {
     return this->yaw;
 }
 
-float& Camera::GetPitch()
+float& ECS::Components::Camera::GetPitch()
 {
     return this->pitch;
 }
 
-float& Camera::GetMovementSpeed()
+float& ECS::Components::Camera::GetMovementSpeed()
 {
     return this->movementSpeed;
 }
 
-float& Camera::GetMouseSensitivity()
+float& ECS::Components::Camera::GetMouseSensitivity()
 {
     return this->mouseSensitivity;
 }
 
-float& Camera::GetFOV()
+float& ECS::Components::Camera::GetFOV()
 {
     return this->fov;
 }
 
-void Camera::SetFOV(const float & fov)
+void ECS::Components::Camera::SetFOV(const float & fov)
 {
     this->fov = fov;
 }
 
-void Camera::SetNearPlane(const float & near)
+void ECS::Components::Camera::SetNearPlane(const float & near)
 {
     this->zNear = near;
 }
 
-void Camera::SetFarPlane(const float & far)
+void ECS::Components::Camera::SetFarPlane(const float & far)
 {
     this->zFar = far;
 }
 
-void Camera::SetProjectionType(const CameraType & type)
+void ECS::Components::Camera::SetProjectionType(const CameraType & type)
 {
     this->projectionType = type;
 }

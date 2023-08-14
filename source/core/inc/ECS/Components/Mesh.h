@@ -1,71 +1,77 @@
 #pragma once
 
-#include "Component.h"
-#include "BoundingBox.h"
+#include "ECS/Component.h"
+#include "Math/BoundingBox.h"
 #include <stdint.h>
 #include <glm/glm.hpp>
 
-enum class MESH_TYPE
+namespace ECS
 {
-    TRIANGLE,
-    QUAD,
-    CUBE,
-    SPHERE,
-    CYLINDER
-};
-
-class Mesh : public Component<Mesh>
-{
-public:
-
-    BoundingBox bounds;
-    uint32_t submeshCount;
-
-    std::vector<glm::vec2*> uv;
-    std::vector<glm::vec2*> uv2;
-    std::vector<glm::vec2*> uv3;
-    std::vector<glm::vec2*> uv4;
-    std::vector<glm::vec2*> uv5;
-    std::vector<glm::vec2*> uv6;
-    std::vector<glm::vec2*> uv7;
-    std::vector<glm::vec2*> uv8;
-
-    std::vector<glm::vec3*> positions;
-    std::vector<glm::vec4*> colors;
-    std::vector<glm::vec3*> normals;
-    std::vector<glm::vec3*> tangents;
-    std::vector<uint32_t*> indicies;
-
-    uint32_t vertexAttributeCount;
-    uint32_t vertexCount;
-
-    uint32_t * vertexBuffersIds;
-    uint32_t vertexBufferCount;
-    size_t * vertexDataSizes;
-
-    uint32_t * memoryIds;
-    uint32_t memoryCount;
-
-    uint32_t indexBufferId;
-    uint32_t indexCount;
-    size_t indexDataSize;
-    /*
-    void ** pGpuMemVB;
-    void * pGpuMemIB;
-    */
-
-    Mesh()
+    namespace Components
     {
-        componentType = COMPONENT_TYPE::MESH;
-    }
+        enum class MESH_TYPE
+        {
+            TRIANGLE,
+            QUAD,
+            CUBE,
+            SPHERE,
+            CYLINDER
+        };
 
-    ~Mesh()
-    {
-        delete[] vertexBuffersIds;
-        delete[] memoryIds;
-        //delete[] pGpuMemVB;
+        class Mesh : public Component<Mesh>
+        {
+        public:
+
+            BoundingBox bounds;
+            uint32_t submeshCount;
+
+            std::vector<glm::vec2*> uv;
+            std::vector<glm::vec2*> uv2;
+            std::vector<glm::vec2*> uv3;
+            std::vector<glm::vec2*> uv4;
+            std::vector<glm::vec2*> uv5;
+            std::vector<glm::vec2*> uv6;
+            std::vector<glm::vec2*> uv7;
+            std::vector<glm::vec2*> uv8;
+
+            std::vector<glm::vec3*> positions;
+            std::vector<glm::vec4*> colors;
+            std::vector<glm::vec3*> normals;
+            std::vector<glm::vec3*> tangents;
+            std::vector<uint32_t*> indicies;
+
+            uint32_t vertexAttributeCount;
+            uint32_t vertexCount;
+
+            uint32_t* vertexBuffersIds;
+            uint32_t vertexBufferCount;
+            size_t* vertexDataSizes;
+
+            uint32_t* memoryIds;
+            uint32_t memoryCount;
+
+            uint32_t indexBufferId;
+            uint32_t indexCount;
+            size_t indexDataSize;
+            /*
+            void ** pGpuMemVB;
+            void * pGpuMemIB;
+            */
+
+            Mesh()
+            {
+                componentType = COMPONENT_TYPE::MESH;
+            }
+
+            ~Mesh()
+            {
+                delete[] vertexBuffersIds;
+                delete[] memoryIds;
+                //delete[] pGpuMemVB;
+            }
+        };
     }
-};
+}
 
 //Unity ref
 /*

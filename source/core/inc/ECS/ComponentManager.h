@@ -97,7 +97,7 @@ inline ComponentIndex ComponentManager<ComponentType>::AddComponent(ComponentTyp
 }
 
 template<>
-inline ComponentIndex ComponentManager<Material>::AddComponent(Material * componentType, Entity * entity)
+inline ComponentIndex ComponentManager<ECS::Components::Material>::AddComponent(ECS::Components::Material * componentType, Entity * entity)
 {
     ComponentIndex ind = componentDataObj.size;
     componentDataObj.data->at(ind) = componentType;

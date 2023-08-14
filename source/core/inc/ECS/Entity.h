@@ -3,8 +3,14 @@
 #include <string>
 
 //using namespace std;
+namespace ECS
+{
+    namespace Components
+    {
+        class Transform;
+    }
+}
 
-class Transform;
 class Entity
 {
 private:
@@ -12,7 +18,7 @@ private:
 public:
     uint32_t id;
 
-    Transform * transform;
+    ECS::Components::Transform * transform;
     std::string entityName;
 	std::string entityTag ;
 	std::string entityLayer ;
