@@ -1,18 +1,18 @@
-#include "MeshRendererSystem.h"
-#include "Mesh.h"
-#include "MeshRenderer.h"
-#include "Material.h"
-#include "Transform.h"
-#include "World.h"
-#include "EventBus.h"
-#include "ComponentAdditionEvent.h"
-#include "ResourceAllocationHelper.h"
-#include "UniformFactory.h"
-#include "DrawGraphManager.h"
-#include "Graph.h"
+#include "ECS/Systems/MeshRendererSystem.h"
+#include <ECS/Components/Mesh.h>
+#include <ECS/Components/MeshRenderer.h>
+#include <ECS/Components/Material.h>
+#include <ECS/Components/Transform.h>
+#include <ECS/World.h>
+#include <ECS/Events/EventBus.h>
+#include <ECS/Events/ComponentAdditionEvent.h>
+#include <Utility/ResourceAllocationHelper.h>
 #include <plog/Log.h> 
-#include "DrawCommandBuffer.h"
-#include "DrawGraphNode.h"
+//#include "UniformFactory.h"
+//#include "DrawGraphManager.h"
+//#include "Graph.h"
+//#include "DrawCommandBuffer.h"
+//#include "DrawGraphNode.h"
 
 uint32_t MeshRendererSystem::GenerateId()
 {
@@ -21,77 +21,77 @@ uint32_t MeshRendererSystem::GenerateId()
 
 void MeshRendererSystem::Init()
 {
-    EventBus::GetInstance()->Subscribe<MeshRendererSystem, MeshRendererAdditionEvent>(this, &MeshRendererSystem::HandleMeshRendererAddition);
+    //EventBus::GetInstance()->Subscribe<MeshRendererSystem, MeshRendererAdditionEvent>(this, &MeshRendererSystem::HandleMeshRendererAddition);
 
-    allocConfig.numDescriptorSets = Settings::maxFramesInFlight;
-    allocConfig.numMemories = 1;
-    allocConfig.numResources = 1;
+    //allocConfig.numDescriptorSets = Settings::maxFramesInFlight;
+    //allocConfig.numMemories = 1;
+    //allocConfig.numResources = 1;
 
-    resourceSharingConfig.maxUniformPerResource = 2;
-    resourceSharingConfig.allocatedUniformCount = 0;
+    //resourceSharingConfig.maxUniformPerResource = 2;
+    //resourceSharingConfig.allocatedUniformCount = 0;
 
-    size_t uniformSize = sizeof(TransformUniform);
-    memoryAlignedDataSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+    //size_t uniformSize = sizeof(TransformUniform);
+    //memoryAlignedDataSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
 void MeshRendererSystem::DeInit()
 {
-    for each(auto obj in meshNodeList)
-    {
-        delete obj->node;
-        delete obj;
-    }
+    //for each(auto obj in meshNodeList)
+    //{
+    //    delete obj->node;
+    //    delete obj;
+    //}
 
-    meshNodeList.clear();
-    
-    for each(auto obj in transformNodeList)
-    {
-        delete obj->node;
-        delete obj;
-    }
+    //meshNodeList.clear();
+    //
+    //for each(auto obj in transformNodeList)
+    //{
+    //    delete obj->node;
+    //    delete obj;
+    //}
 
-    transformNodeList.clear();
+    //transformNodeList.clear();
 
-    for each(auto obj in drawingNodeList)
-    {
-        delete obj->node;
-        delete obj;
-    }
+    //for each(auto obj in drawingNodeList)
+    //{
+    //    delete obj->node;
+    //    delete obj;
+    //}
 
-    drawingNodeList.clear();
+    //drawingNodeList.clear();
 }
 
 void MeshRendererSystem::Update(float dt)
 {
-    for (auto & entity : registeredEntities)
-    {
-        ComponentHandle<MeshRenderer> * renderer;
-        ComponentHandle<Transform> * transform;
-        worldObj->Unpack(entity, &renderer, &transform);
-        
-        Transform * transformObj = transform->GetComponent();
-        TransformUniform obj = {};
-        obj.modelMat = transformObj->GetGlobalModelMatrix();
+    //for (auto & entity : registeredEntities)
+    //{
+    //    ComponentHandle<MeshRenderer> * renderer;
+    //    ComponentHandle<Transform> * transform;
+    //    worldObj->Unpack(entity, &renderer, &transform);
+    //    
+    //    Transform * transformObj = transform->GetComponent();
+    //    TransformUniform obj = {};
+    //    obj.modelMat = transformObj->GetGlobalModelMatrix();
 
-        ShaderBindingDescription * desc = transformToBindDescMap[transformObj];
-        UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0], memoryAlignedDataSize, memoryAlignedDataSize,
-            &obj, desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
+    //    ShaderBindingDescription * desc = transformToBindDescMap[transformObj];
+    //    UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0], memoryAlignedDataSize, memoryAlignedDataSize,
+    //        &obj, desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
 
-    }
+    //}
 }
 
 MeshRendererSystem::MeshRendererSystem()
 {
-    signature.AddComponent<MeshRenderer>();
-    signature.AddComponent<Mesh>();
-    signature.AddComponent<Material>();
-    signature.AddComponent<Transform>();
+    signature.AddComponent<ECS::Components::MeshRenderer>();
+    signature.AddComponent<ECS::Components::Mesh>();
+    signature.AddComponent<ECS::Components::Material>();
+    signature.AddComponent<ECS::Components::Transform>();
 }
 
 MeshRendererSystem::~MeshRendererSystem()
 {
 }
-
+#if 0
 void MeshRendererSystem::HandleMeshRendererAddition(MeshRendererAdditionEvent * inputEvent)
 {
     // Create descriptor for transform set
@@ -256,3 +256,4 @@ void MeshRendererSystem::HandleMeshRendererAddition(MeshRendererAdditionEvent * 
     {transform, desc}));
 }
 
+#endif

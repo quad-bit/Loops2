@@ -18,7 +18,7 @@ public:
     template<typename ComponentType>
     void RemoveComponent()
     {
-        mask &= ~(1 << Component<ComponentType>::Family());
+        mask &= ~(1 << ECS::Component<ComponentType>::Family());
     }
 
     bool isNewMatch(ComponentMask oldMask, ComponentMask systemMask);

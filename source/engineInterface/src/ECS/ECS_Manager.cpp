@@ -1,20 +1,20 @@
 #include <CorePrecompiled.h>
-#include "ECS_EngineManager.h"
-#include "World.h"
-#include "Transform.h"
-#include "TransformSystem.h"
-#include "Scriptable.h"
-#include "ScriptableSystem.h"
-#include "ECS_Setting.h"
-#include "EventBus.h"
-#include "Mesh.h"
-#include "Material.h"
-#include "Camera.h"
-#include "CameraSystem.h"
-#include "MeshRenderer.h"
-#include "MeshRendererSystem.h"
-#include "LightSystem.h"
-#include "Light.h"
+#include "ECS/ECS_Manager.h"
+#include <ECS/World.h>
+#include <ECS/Components/Transform.h>
+#include "ECS/Systems/TransformSystem.h"
+#include <ECS/Components/Scriptable.h>
+#include "ECS/Systems/ScriptableSystem.h"
+#include <ECS/ECS_Setting.h>
+#include <ECS/Events/EventBus.h>
+#include <ECS/Components/Mesh.h>
+#include <ECS/Components/Material.h>
+#include <ECS/Components/Camera.h>
+#include "ECS/Systems/CameraSystem.h"
+#include <ECS/Components/MeshRenderer.h>
+#include "ECS/Systems/MeshRendererSystem.h"
+#include "ECS/Systems/LightSystem.h"
+#include <ECS/Components/Light.h>
 
 ECS_Manager* ECS_Manager::instance = nullptr;
 World * worldObj;
@@ -25,13 +25,13 @@ void ECS_Manager::Init()
 
     worldObj = new World();
     
-    scriptableManager = worldObj->CreateManager<Scriptable>();
-    transformManager = worldObj->CreateManager<Transform>();
-    meshManager = worldObj->CreateManager<Mesh>();
-    materialManager = worldObj->CreateManager<Material>();
-    cameraManager = worldObj->CreateManager<Camera>();
-    meshRendererManager = worldObj->CreateManager<MeshRenderer>();
-    lightManager = worldObj->CreateManager<Light>();
+    scriptableManager = worldObj->CreateManager<ECS::Components::Scriptable>();
+    transformManager = worldObj->CreateManager<ECS::Components::Transform>();
+    meshManager = worldObj->CreateManager<ECS::Components::Mesh>();
+    materialManager = worldObj->CreateManager<ECS::Components::Material>();
+    cameraManager = worldObj->CreateManager<ECS::Components::Camera>();
+    meshRendererManager = worldObj->CreateManager<ECS::Components::MeshRenderer>();
+    lightManager = worldObj->CreateManager<ECS::Components::Light>();
 
     scriptableSystemObj = new ScriptableSystem();
     worldObj->AddSystem(scriptableSystemObj);

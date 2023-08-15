@@ -1,54 +1,40 @@
+include("${CMAKE_SOURCE_DIR}/cmake/Util.cmake")
+GROUP_SOURCE_FILES(${CMAKE_CURRENT_SOURCE_DIR})
 
-##  file list creation Begin
-
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../Util.cmake")
-
-HEADER_DIRECTORIES(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
-
-Set ( SourceList "")
-
-FOREACH(subdir ${SUBDIRS})
-    #message(${subdir})
-    #file(RELATIVE_PATH test ${CMAKE_CURRENT_SOURCE_DIR} ${subdir})
-    #message(${test})
-
-    file(GLOB fileListInDir
-        "${subdir}/*.h"
-        "${subdir}/*.cpp"
-        "${subdir}/*.txt"
-    )
-    LIST(APPEND SourceList ${fileListInDir})
-
-    source_group(${subdir} FILES ${fileListInDir})
-
-ENDFOREACH()
-
-message("\n")
-
-#get all the source files
-file(GLOB filesInParentDir
-    "*.h"
-    "*.cpp"
-    "*.txt"
+set(SourceList
+    inc/EngineManager.h
+    inc/SceneManager.h
+    inc/ECS/ECS_Manager.h
+    inc/ECS/Systems/CameraSystem.h
+    inc/ECS/Systems/LightSystem.h
+    inc/ECS/Systems/MeshRendererSystem.h
+    inc/ECS/Systems/ScriptableSystem.h
+    inc/ECS/Systems/TransformSystem.h
+    src/EngineManager.cpp
+    src/SceneManager.cpp
+    src/ECS/ECS_Manager.cpp
+    src/ECS/Systems/CameraSystem.cpp
+    src/ECS/Systems/LightSystem.cpp
+    src/ECS/Systems/MeshRendererSystem.cpp
+    src/ECS/Systems/ScriptableSystem.cpp
+    src/ECS/Systems/TransformSystem.cpp
 )
 
-list(LENGTH filesInParentDir size)
-IF(NOT ${size} EQUAL 0)
-    LIST(APPEND SourceList ${filesInParentDir})
-    source_group("" FILES ${filesInParentDir})
-    LIST(APPEND SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
-ENDIF()
-
 #create library
-add_library(EngineInterface ${SourceList})
+set(TARGET_NAME "EngineInterface")
+add_library(${TARGET_NAME} ${SourceList})
+add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 
-# forces anyone who uses this lib to include the below mentioned source dir into their project props
-target_include_directories(EngineInterface PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(EngineInterface PUBLIC ${SUBDIRS})
-#target_include_directories(EngineInterface PUBLIC ${plog_INCLUDE_DIR})
+target_link_libraries(${TARGET_NAME} PRIVATE Core)
+# target_link_libraries(EngineInterface PUBLIC Renderer)
 
-target_link_libraries(EngineInterface PUBLIC Core)
-target_link_libraries(EngineInterface PUBLIC Renderer)
+target_include_directories(${TARGET_NAME}
+    PUBLIC
+        $<INSTALL_INTERFACE:inc>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 if (MSVC)
     # For precompiled header.

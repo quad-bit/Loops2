@@ -2,11 +2,11 @@
 #include "EngineManager.h"
 #include <CoreManager.h>
 #include <Settings.h>
-#include <GraphicsManager.h>
-#include <ECS_EngineManager.h>
-#include <InputManager.h>
-#include <Timer.h>
-#include <SceneManager.h>
+//#include <GraphicsManager.h>
+#include <ECS/ECS_Manager.h>
+//#include <InputManager.h>
+#include <Utility/Timer.h>
+#include "SceneManager.h"
 
 EngineManager* EngineManager::instance = nullptr;
 
@@ -15,8 +15,8 @@ void EngineManager::Init()
     //PLOGD << "ENGINE MANAGER Init";
     Settings::maxFrameRate = 60;
     CoreManager::GetInstance()->Init();
-    GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
-    GraphicsManager::GetInstance()->SetupRenderer();
+    //GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
+    //GraphicsManager::GetInstance()->SetupRenderer();
     ECS_Manager::GetInstance()->Init();
     sceneManagerObj = new SceneManager();
     Timer::GetInstance()->Init();
@@ -32,9 +32,9 @@ void EngineManager::DeInit()
     ECS_Manager::GetInstance()->DeInit();
     delete ECS_Manager::GetInstance();
 
-    GraphicsManager::GetInstance()->DislogeRenderer();
-    GraphicsManager::GetInstance()->DeInit();
-    delete GraphicsManager::GetInstance();
+    //GraphicsManager::GetInstance()->DislogeRenderer();
+    //GraphicsManager::GetInstance()->DeInit();
+    //delete GraphicsManager::GetInstance();
 
     CoreManager::GetInstance()->DeInit();
     delete CoreManager::GetInstance();
@@ -42,6 +42,7 @@ void EngineManager::DeInit()
 
 void EngineManager::Update()
 {
+#if 0
     // Before the update, will run just once
     {
         GraphicsManager::GetInstance()->PreUpdate();
@@ -82,7 +83,7 @@ void EngineManager::Update()
     {
         GraphicsManager::GetInstance()->PostUpdate();
     }
-
+#endif
 }
 
 

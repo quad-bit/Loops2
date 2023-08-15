@@ -1,8 +1,8 @@
-#include "ScriptableSystem.h"
-#include "Scriptable.h"
-#include "World.h"
-#include "ECS_Setting.h"
-#include "ComponentHandle.h"
+#include "ECS/Systems/ScriptableSystem.h"
+#include <ECS/Components/Scriptable.h>
+#include <ECS/World.h>
+#include <ECS/ECS_Setting.h>
+#include <ECS/ComponentHandle.h>
 
 void ScriptableSystem::Init()
 {
@@ -23,7 +23,7 @@ void ScriptableSystem::Update(float dt)
     case APP_STATE::STARTED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->Init();
@@ -34,7 +34,7 @@ void ScriptableSystem::Update(float dt)
     case APP_STATE::RUNNING:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->Update(dt);
@@ -44,7 +44,7 @@ void ScriptableSystem::Update(float dt)
     case APP_STATE::PAUSED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
             if(scriptableHandle->runInEditMode)
                 scriptableHandle->Update(dt);
@@ -54,7 +54,7 @@ void ScriptableSystem::Update(float dt)
     case APP_STATE::STOPPED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->DeInit();
@@ -65,7 +65,7 @@ void ScriptableSystem::Update(float dt)
     case APP_STATE::NONE:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
             if (scriptableHandle->runInEditMode)
                 scriptableHandle->Update(dt);
@@ -84,7 +84,7 @@ void ScriptableSystem::Render(float dt)
     case APP_STATE::STARTED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->Init();
@@ -95,7 +95,7 @@ void ScriptableSystem::Render(float dt)
     case APP_STATE::RUNNING:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->Render(dt);
@@ -105,7 +105,7 @@ void ScriptableSystem::Render(float dt)
     case APP_STATE::PAUSED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
             if (scriptableHandle->runInEditMode)
                 scriptableHandle->Render(dt);
@@ -115,7 +115,7 @@ void ScriptableSystem::Render(float dt)
     case APP_STATE::STOPPED:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
 
             scriptableHandle->DeInit();
@@ -126,7 +126,7 @@ void ScriptableSystem::Render(float dt)
     case APP_STATE::NONE:
         for (auto & entity : registeredEntities)
         {
-            ComponentHandle<Scriptable> scriptableHandle;
+            ECS::ComponentHandle<ECS::Components::Scriptable> scriptableHandle;
             worldObj->Unpack(entity, scriptableHandle);
             if (scriptableHandle->runInEditMode)
                 scriptableHandle->Render(dt);
@@ -140,7 +140,7 @@ void ScriptableSystem::Render(float dt)
 
 ScriptableSystem::ScriptableSystem()
 {
-    signature.AddComponent<Scriptable>();
+    signature.AddComponent<ECS::Components::Scriptable>();
 }
 
 ScriptableSystem::~ScriptableSystem()

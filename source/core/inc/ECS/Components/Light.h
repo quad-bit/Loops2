@@ -1,6 +1,7 @@
 #pragma once
 #include "ECS/Component.h"
-#include <glm\glm.hpp>
+#include "Platform/Assertion.h"
+#include <glm/glm.hpp>
 
 namespace ECS
 {

@@ -10,49 +10,52 @@
 class EntityMap;
 class Entity;
 
-template <typename ComponentType>
-class ComponentHandle;
-
-using ComponentIndex = uint32_t;
-
-template <typename ComponentType>
-class ComponentData
+namespace ECS
 {
-public:
-    uint32_t size = 1;
-    std::array<ComponentType*, MAX_NUM_OF_UNIQUE_COMPONENT>* data;
-};
+    template <typename ComponentType>
+    class ComponentHandle;
 
-class BaseComponentManager {
-public:
-    BaseComponentManager() = default;
-    virtual ~BaseComponentManager() = default;
-    BaseComponentManager(const BaseComponentManager &) = default;
-    BaseComponentManager &operator=(const BaseComponentManager &) = default;
-    BaseComponentManager(BaseComponentManager &&) = default;
-    BaseComponentManager &operator=(BaseComponentManager &&) = default;
-};
+    using ComponentIndex = uint32_t;
 
-template <typename ComponentType>
-class ComponentManager : public BaseComponentManager
-{
-private:
-    ComponentData<ComponentType> componentDataObj;
-    EntityMap * entityMapObj;
+    template <typename ComponentType>
+    class ComponentData
+    {
+    public:
+        uint32_t size = 1;
+        std::array<ComponentType*, MAX_NUM_OF_UNIQUE_COMPONENT>* data;
+    };
 
-public:
+    class BaseComponentManager {
+    public:
+        BaseComponentManager() = default;
+        virtual ~BaseComponentManager() = default;
+        BaseComponentManager(const BaseComponentManager&) = default;
+        BaseComponentManager& operator=(const BaseComponentManager&) = default;
+        BaseComponentManager(BaseComponentManager&&) = default;
+        BaseComponentManager& operator=(BaseComponentManager&&) = default;
+    };
 
-    using LookupType = ComponentType;
+    template <typename ComponentType>
+    class ComponentManager : public BaseComponentManager
+    {
+    private:
+        ComponentData<ComponentType> componentDataObj;
+        EntityMap* entityMapObj;
 
-    ComponentManager();
-    ComponentIndex AddComponent(ComponentType * componentType, Entity * entity);
-    void RemoveComponent(Entity * entity);
-    ComponentType* GetComponent(Entity * entity);
-    ComponentHandle<ComponentType>* GetComponentHandle(Entity * entity);
-    void iterateAll(std::function<void(ComponentType* componentType)> lambda);
+    public:
 
-    ~ComponentManager();
-};
+        using LookupType = ComponentType;
+
+        ComponentManager();
+        ComponentIndex AddComponent(ComponentType* componentType, Entity* entity);
+        void RemoveComponent(Entity* entity);
+        ComponentType* GetComponent(Entity* entity);
+        ComponentHandle<ComponentType>* GetComponentHandle(Entity* entity);
+        void iterateAll(std::function<void(ComponentType* componentType)> lambda);
+
+        ~ComponentManager();
+    };
+}
 
 #include "ECS/Entity.h"
 #include "ECS/EntityMap.h"
@@ -60,7 +63,7 @@ public:
 #include "ECS/Components/Material.h"
 
 template<typename ComponentType>
-inline ComponentManager<ComponentType>::ComponentManager()
+inline ECS::ComponentManager<ComponentType>::ComponentManager()
 {
     PLOGD << "ComponentManager contructor";
     componentDataObj.data = static_cast<std::array<ComponentType*, MAX_NUM_OF_UNIQUE_COMPONENT>* >(malloc(sizeof(ComponentType) * MAX_NUM_OF_UNIQUE_COMPONENT));
@@ -68,7 +71,7 @@ inline ComponentManager<ComponentType>::ComponentManager()
 }
 
 template<typename ComponentType>
-inline ComponentManager<ComponentType>::~ComponentManager()
+inline ECS::ComponentManager<ComponentType>::~ComponentManager()
 {
     PLOGD << "ComponentManager destructor";
 
@@ -85,9 +88,9 @@ inline ComponentManager<ComponentType>::~ComponentManager()
 }
 
 template<typename ComponentType>
-inline ComponentIndex ComponentManager<ComponentType>::AddComponent(ComponentType * componentType, Entity * entity)
+inline ECS::ComponentIndex ECS::ComponentManager<ComponentType>::AddComponent(ComponentType * componentType, Entity * entity)
 {
-    ComponentIndex ind = componentDataObj.size;
+    ECS::ComponentIndex ind = componentDataObj.size;
     componentDataObj.data->at(ind) = componentType;
 
     entityMapObj->AddToMap(entity, &ind);
@@ -97,9 +100,9 @@ inline ComponentIndex ComponentManager<ComponentType>::AddComponent(ComponentTyp
 }
 
 template<>
-inline ComponentIndex ComponentManager<ECS::Components::Material>::AddComponent(ECS::Components::Material * componentType, Entity * entity)
+inline ECS::ComponentIndex ECS::ComponentManager<ECS::Components::Material>::AddComponent(ECS::Components::Material * componentType, Entity * entity)
 {
-    ComponentIndex ind = componentDataObj.size;
+    ECS::ComponentIndex ind = componentDataObj.size;
     componentDataObj.data->at(ind) = componentType;
 
     entityMapObj->AddToMap(entity, &ind);
@@ -109,10 +112,10 @@ inline ComponentIndex ComponentManager<ECS::Components::Material>::AddComponent(
 }
 
 template<typename ComponentType>
-inline void ComponentManager<ComponentType>::RemoveComponent(Entity * e)
+inline void ECS::ComponentManager<ComponentType>::RemoveComponent(Entity * e)
 {
-    ComponentIndex ind = entityMapObj->GetComponentIndex(e);
-    ComponentIndex lastIndex = componentDataObj.size - 1;
+    ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(e);
+    ECS::ComponentIndex lastIndex = componentDataObj.size - 1;
 
     componentDataObj.data->at(ind) = componentDataObj.data->at(lastIndex);
 
@@ -125,25 +128,26 @@ inline void ComponentManager<ComponentType>::RemoveComponent(Entity * e)
 }
 
 template<typename ComponentType>
-inline ComponentType* ComponentManager<ComponentType>::GetComponent(Entity * entity)
+inline ComponentType* ECS::ComponentManager<ComponentType>::GetComponent(Entity * entity)
 {
-    ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
+    ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
     return componentDataObj.data->at(ind);
 }
 
 template<typename ComponentType>
-inline ComponentHandle<ComponentType>* ComponentManager<ComponentType>::GetComponentHandle(Entity * entity)
+inline ECS::ComponentHandle<ComponentType>* ECS::ComponentManager<ComponentType>::GetComponentHandle(Entity * entity)
 {
-    ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
-    ComponentHandle<ComponentType>* handle = new ComponentHandle<ComponentType>(this, entity, ind);
+    ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
+    ECS::ComponentHandle<ComponentType>* handle = new ECS::ComponentHandle<ComponentType>(this, entity, ind);
 
     return handle;
 }
 
 template<typename ComponentType>
-inline void ComponentManager<ComponentType>::iterateAll(std::function<void(ComponentType* componentType)> lambda)
+inline void ECS::ComponentManager<ComponentType>::iterateAll(std::function<void(ComponentType* componentType)> lambda)
 {
-    for (int i = 1; i<componentDataObj.size; i++) {
+    for (int i = 1; i<componentDataObj.size; i++)
+    {
         lambda(componentDataObj.data[i]);
     }
 }

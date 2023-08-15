@@ -1,18 +1,19 @@
-#include "LightSystem.h"
-#include "EventBus.h"
-#include "ComponentAdditionEvent.h"
-#include "Light.h"
-#include "ResourceAllocationHelper.h"
-#include "UniformFactory.h"
-#include "Transform.h"
-#include "MaterialFactory.h"
-#include "DrawGraphManager.h"
-#include "World.h"
-#include "Mesh.h"
-#include "Camera.h"
-#include "CameraSystem.h"
-#include "RendererSettings.h"
-#include "GraphicsPipelineManager.h"
+#include "ECS/Systems/LightSystem.h"
+#include <ECS/Events/EventBus.h>
+#include <ECS/Events/ComponentAdditionEvent.h>
+#include <ECS/Components/Light.h>
+#include <Utility/ResourceAllocationHelper.h>
+#include <ECS/Components/Transform.h>
+#include <ECS/World.h>
+#include <ECS/Components/Mesh.h>
+#include <ECS/Components/Camera.h>
+#include <RendererSettings.h>
+#include "ECS/Systems/CameraSystem.h"
+
+//#include "MaterialFactory.h"
+//#include "DrawGraphManager.h"
+//#include "UniformFactory.h"
+//#include "GraphicsPipelineManager.h"
 
 
 uint32_t LightSystem::GeneratedLightId()
@@ -20,8 +21,9 @@ uint32_t LightSystem::GeneratedLightId()
     return idCounter++;
 }
 
-void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc, Light * light)
+void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc, ECS::Components::Light * light)
 {
+#if 0
     desc->set = (uint32_t)ResourceSets::LIGHT;
     desc->binding = 0;
     desc->numElements = 8;
@@ -35,10 +37,12 @@ void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc,
     desc->bufferBindingInfo.info.allocationConfig = lightUniformAllocConfig;
     desc->bufferBindingInfo.bufferIdList.resize(lightUniformAllocConfig.numResources);
     desc->bufferBindingInfo.bufferMemoryId.resize(lightUniformAllocConfig.numMemories);
+#endif
 }
 
-void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, Light * light, Camera * cam)
+void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, ECS::Components::Light * light, ECS::Components::Camera * cam)
 {
+#if 0
     // Check if it can be fit into an existing buffer
     if (AllocationUtility::IsNewAllocationRequired(lightBufferSharingConfig))
     {
@@ -74,12 +78,13 @@ void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, Ligh
         UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0], sizeof(LightUniform),
             memoryAlignedUniformSize, &obj, desc->bufferBindingInfo.info.offsetsForEachDescriptor[i], false);
     }
+#endif
 }
 
-Camera *  LightSystem::CreateLightCamera(Transform * transform)
+ECS::Components::Camera *  LightSystem::CreateLightCamera(ECS::Components::Transform * transform)
 {
     // create a camera 
-    Camera * lightCam = new Camera(transform);
+    ECS::Components::Camera * lightCam = new ECS::Components::Camera(transform);
     //lightCam->SetProjectionType(CameraType::ORTHOGONAL);
     lightCam->SetFOV((90.0f));
     lightCam->SetNearPlane(2.0f);
@@ -88,14 +93,15 @@ Camera *  LightSystem::CreateLightCamera(Transform * transform)
     //lightToCamList.push_back(lightCam);
 
     // create the camera draw node, node has been added to the graph in HandleCameraAddition
-    GraphNode<DrawGraphNode> * cameraNode = ((CameraSystem*)cameraSystem)->HandleCameraAddition(lightCam, RenderPassTag::DepthPass);
-    cameraNode->node->tag = RenderPassTag::DepthPass;
+    //GraphNode<DrawGraphNode> * cameraNode = ((CameraSystem*)cameraSystem)->HandleCameraAddition(lightCam, RenderPassTag::DepthPass);
+    //cameraNode->node->tag = RenderPassTag::DepthPass;
 
     return lightCam;
 }
 
 void LightSystem::CreateShadowMap(ShaderBindingDescription * desc)
 {
+#if 0
     SamplerCreateInfo info = {};
     info.minFilter = Filter::FILTER_NEAREST;
     info.magFilter = Filter::FILTER_NEAREST;
@@ -124,10 +130,12 @@ void LightSystem::CreateShadowMap(ShaderBindingDescription * desc)
     desc->resourceType = DescriptorType::COMBINED_IMAGE_SAMPLER;
     desc->imageBindingInfo.imageId = RendererSettings::depthPrepassImageId;
     desc->samplerBindingInfo.samplerId.push_back(samplerId);
+#endif
 }
 
 void LightSystem::Init()
 {
+#if 0
     EventBus::GetInstance()->Subscribe<LightSystem, LightAdditionEvent>(this, &LightSystem::HandleLightAddition);
     EventBus::GetInstance()->Subscribe<LightSystem, MeshToMatAdditionEvent>(this, &LightSystem::HandleMeshAddition);
     EventBus::GetInstance()->Subscribe<LightSystem, MeshRendererAdditionEvent>(this, &LightSystem::HandleRendererAddition);
@@ -145,6 +153,7 @@ void LightSystem::Init()
 
     size_t uniformSize = sizeof(LightUniform);
     memoryAlignedUniformSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+#endif
 }
 
 void LightSystem::DeInit()
@@ -158,12 +167,13 @@ void LightSystem::DeInit()
 
 void LightSystem::Update(float dt)
 {
+#if 0
     for (auto & entity : registeredEntities)
     {
-        ComponentHandle<Light> * lightHandle;
+        ECS::ComponentHandle<ECS::Components::Light> * lightHandle;
         worldObj->Unpack(entity, &lightHandle);
 
-        Light * light = lightHandle->GetComponent();
+        ECS::Components::Light * light = lightHandle->GetComponent();
         LightUniform obj = {};
         obj.ambient = Vec3ToVec4_0(light->GetAmbient());
         obj.diffuse = Vec3ToVec4_0(light->GetDiffuse());
@@ -173,7 +183,7 @@ void LightSystem::Update(float dt)
         obj.beamHeight = light->GetBeamHeight();
         obj.beamRadius = light->GetBeamRadius();
 
-        Camera * cam = lightToCamList[light];
+        ECS::Components::Camera * cam = lightToCamList[light];
         obj.lightSpaceMat = cam->GetProjectionMat() * cam->GetViewMatrix();// *light->GetTransform()->GetLocalModelMatrix();
 
         ShaderBindingDescription * desc = lightToDescriptionMap[lightHandle->GetComponent()];
@@ -189,12 +199,13 @@ void LightSystem::Update(float dt)
 
         // TODO : write the uniform data of Camera to gpu memory via void*
     }
+#endif
 }
 
-
+#if 0
 void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
 {
-    Light* light = lightAdditionEvent->light;
+    ECS::Components::Light* light = lightAdditionEvent->light;
 
     lightlist.push_back(light);
     light->componentId = GeneratedLightId();
@@ -205,9 +216,9 @@ void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
 
     CreateLightUniformDescription(&desc[0], light);
     CreateShadowMap(&desc[1]);
-    Camera * cam = CreateLightCamera(light->GetTransform());
+    ECS::Components::Camera * cam = CreateLightCamera(light->GetTransform());
 
-    lightToCamList.insert(std::pair<Light* , Camera*>({light, cam}));
+    lightToCamList.insert(std::pair<ECS::Components::Light*, ECS::Components::Camera*>({light, cam}));
 
     lightSetWrapper = UniformFactory::GetInstance()->GetSetWrapper(desc, numBindingsInSet);
     CreateLightUniformBuffer(&desc[0], light, cam);
@@ -223,7 +234,7 @@ void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
     // Get the View id
     
     {
-        lightToDescriptionMap.insert(std::pair<Light *, ShaderBindingDescription *>(
+        lightToDescriptionMap.insert(std::pair<ECS::Components::Light *, ShaderBindingDescription *>(
         { light, desc }));
 
         // draw graph node creation
@@ -306,6 +317,7 @@ void LightSystem::HandleDepthPrepassCreation(DepthPassAttachmentCreationEvent * 
 {
     
 }
+#endif
 
 void LightSystem::AssignCameraSystem(System * camSystem)
 {
@@ -314,7 +326,7 @@ void LightSystem::AssignCameraSystem(System * camSystem)
 
 LightSystem::LightSystem()
 {
-    signature.AddComponent<Light>();
+    signature.AddComponent<ECS::Components::Light>();
 }
 
 LightSystem::~LightSystem()

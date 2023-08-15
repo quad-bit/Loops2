@@ -143,7 +143,6 @@ IF( glfw3_FOUND )
 ENDIF()
 
 #create library
-
 set(TARGET_NAME "Core")
 add_library(${TARGET_NAME} 
     ${CORE_FILES} 
@@ -157,10 +156,7 @@ add_library(${TARGET_NAME}
 )
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 
-target_link_libraries(${TARGET_NAME} PUBLIC glfw glm::glm plog)
-# target_link_libraries(${TARGET_NAME} PRIVATE glm::glm)
-# target_link_libraries(${TARGET_NAME} PRIVATE plog)
-
+target_link_libraries(${TARGET_NAME} PUBLIC glfw glm::glm plog::plog)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

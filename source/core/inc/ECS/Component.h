@@ -4,58 +4,61 @@
 #include <vector>
 #include "ECS_Helper.h"
 
-//using namespace std;
-
-struct ComponentCounter {
-    static int counter;
-};
-
-template <typename ComponentType>
-class Component
+namespace ECS
 {
-private:
-    static int family;
-    bool isComponentActive = true;
-
-public:
-    uint32_t componentId = UINT32_MAX;
-    COMPONENT_TYPE componentType;
-
-    static inline int Family()
+    struct ComponentCounter 
     {
-        if (family == -1)
-            family = ComponentCounter::counter++;
+        static int counter;
+    };
 
-        return family;
-    }
-
-    bool GetActiveStatus()
+    template <typename ComponentType>
+    class Component
     {
-        return isComponentActive;
-    }
+    private:
+        static int family;
+        bool isComponentActive = true;
 
-    void SetActiveStatus(const bool & status)
-    {
-        isComponentActive = status;
-    }
-};
+    public:
+        uint32_t componentId = UINT32_MAX;
+        COMPONENT_TYPE componentType;
+
+        static inline int Family()
+        {
+            if (family == -1)
+                family = ComponentCounter::counter++;
+
+            return family;
+        }
+
+        bool GetActiveStatus()
+        {
+            return isComponentActive;
+        }
+
+        void SetActiveStatus(const bool& status)
+        {
+            isComponentActive = status;
+        }
+    };
+}
+
 
 
 template <typename ComponentType>
-int Component<ComponentType>::family = -1;
+int ECS::Component<ComponentType>::family = -1;
 
 //TODO: Need more understanding on the below function
 
 template<typename ComponentType>
 int GetComponentFamily()
 {
-    int family = Component<typename std::remove_const<ComponentType>::type>::Family();
+    int family = ECS::Component<typename std::remove_const<ComponentType>::type>::Family();
     return family;
 }
 
 template<typename ComponentType>
 void AssignFamily()
 {
-    Component<typename std::remove_const<ComponentType>::type>::Family();
+    ECS::Component<typename std::remove_const<ComponentType>::type>::Family();
 }
 

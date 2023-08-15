@@ -1,19 +1,20 @@
-#include "CameraSystem.h"
-#include "Camera.h"
-#include "ComponentHandle.h"
-#include "World.h"
-#include "ECS_Setting.h"
-#include "Transform.h"
-#include "EventBus.h"
-#include "ComponentAdditionEvent.h"
-#include "ShaderResourceDescription.h"
-#include "UniformFactory.h"
-#include "ResourceAllocationHelper.h"
+#include "ECS/Systems/CameraSystem.h"
+#include <ECS/Components/Camera.h>
+#include <ECS/ComponentHandle.h>
+#include <ECS/World.h>
+#include <ECS/ECS_Setting.h>
+#include <ECS/Components/Transform.h>
+#include <ECS/Events/EventBus.h>
+#include <ECS/Events/ComponentAdditionEvent.h>
+#include <Utility/ShaderResourceDescription.h>
+#include <Utility/ResourceAllocationHelper.h>
+/*
 #include "MaterialFactory.h"
+#include "UniformFactory.h"
 #include "DrawGraphManager.h"
 #include "DrawCommandBuffer.h"
 #include "DrawGraphNode.h"
-
+*/
 uint32_t CameraSystem::GeneratedCamId()
 {
     return idCounter++;
@@ -21,57 +22,58 @@ uint32_t CameraSystem::GeneratedCamId()
 
 void CameraSystem::Init()
 {
-    EventBus::GetInstance()->Subscribe<CameraSystem, CameraAdditionEvent>(this, &CameraSystem::HandleCameraAddition);
-    EventBus::GetInstance()->Subscribe<CameraSystem, MeshToMatAdditionEvent>(this, &CameraSystem::HandleMeshAddition);
+    //EventBus::GetInstance()->Subscribe<CameraSystem, CameraAdditionEvent>(this, &CameraSystem::HandleCameraAddition);
+    //EventBus::GetInstance()->Subscribe<CameraSystem, MeshToMatAdditionEvent>(this, &CameraSystem::HandleMeshAddition);
 
-    numDescriptorSetsPerUniformSet = Settings::maxFramesInFlight;
+    //numDescriptorSetsPerUniformSet = Settings::maxFramesInFlight;
 
-    allocConfig.numDescriptorSets = numDescriptorSetsPerUniformSet;// || Settings::maxFramesInFlight;
-    allocConfig.numMemories = 1; // 1 memory
-    allocConfig.numResources = 1; //1 buff
+    //allocConfig.numDescriptorSets = numDescriptorSetsPerUniformSet;// || Settings::maxFramesInFlight;
+    //allocConfig.numMemories = 1; // 1 memory
+    //allocConfig.numResources = 1; //1 buff
 
-    resourceSharingConfig.maxUniformPerResource = 2;
-    resourceSharingConfig.allocatedUniformCount = 0;
+    //resourceSharingConfig.maxUniformPerResource = 2;
+    //resourceSharingConfig.allocatedUniformCount = 0;
 
-    size_t uniformSize = sizeof(CameraUniform);
-    memoryAlignedUniformSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+    //size_t uniformSize = sizeof(CameraUniform);
+    //memoryAlignedUniformSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
 void CameraSystem::DeInit()
 {
-    for (uint32_t i = 0; i < resDescriptionList.size(); i++)
-    {
-        delete resDescriptionList[i];
-    }
-    resDescriptionList.clear();
+    //for (uint32_t i = 0; i < resDescriptionList.size(); i++)
+    //{
+    //    delete resDescriptionList[i];
+    //}
+    //resDescriptionList.clear();
 }
 
 void CameraSystem::Update(float dt)
 {
-    for (auto & entity : registeredEntities)
-    {
-        ComponentHandle<Camera> * camHandle;
-        worldObj->Unpack(entity, &camHandle);
+    //for (auto & entity : registeredEntities)
+    //{
+    //    ComponentHandle<Camera> * camHandle;
+    //    worldObj->Unpack(entity, &camHandle);
 
-        UpdateCameraVectors(camHandle->GetComponent());
+    //    UpdateCameraVectors(camHandle->GetComponent());
 
-        CameraUniform obj = {};
-        obj.projectionMat = camHandle->GetComponent()->GetProjectionMat();
-        obj.viewMat = camHandle->GetComponent()->GetViewMatrix();
-        obj.cameraPos = *camHandle->GetComponent()->GetPosition();
+    //    CameraUniform obj = {};
+    //    obj.projectionMat = camHandle->GetComponent()->GetProjectionMat();
+    //    obj.viewMat = camHandle->GetComponent()->GetViewMatrix();
+    //    obj.cameraPos = *camHandle->GetComponent()->GetPosition();
 
-        ShaderBindingDescription * desc = camToDescriptionMap[camHandle->GetComponent()];
-        //upload data to buffers
-        {
-            UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
-                memoryAlignedUniformSize, memoryAlignedUniformSize, &obj, 
-                desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
-        }
+    //    ShaderBindingDescription * desc = camToDescriptionMap[camHandle->GetComponent()];
+    //    //upload data to buffers
+    //    {
+    //        UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
+    //            memoryAlignedUniformSize, memoryAlignedUniformSize, &obj, 
+    //            desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
+    //    }
 
-        // TODO : write the uniform data of Camera to gpu memory via void*
-    }
+    //    // TODO : write the uniform data of Camera to gpu memory via void*
+    //}
 }
 
+/*
 void CameraSystem::HandleCameraAddition(CameraAdditionEvent * inputEvent)
 {
     // recieved the camera addition to the scene 
@@ -245,43 +247,43 @@ void CameraSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent
         }
     }
 }
-
+*/
 CameraSystem::CameraSystem()
 {
-    signature.AddComponent<Camera>();
-    signature.AddComponent<Transform>();
+    signature.AddComponent<ECS::Components::Camera>();
+    signature.AddComponent<ECS::Components::Transform>();
 }
 
 CameraSystem::~CameraSystem()
 {
 }
 
-void CameraSystem::ProcessKeyboard(Camera * cam, glm::vec3 * camTransformPos, Camera_Movement * direction, float deltaTime)
+void CameraSystem::ProcessKeyboard(ECS::Components::Camera * cam, glm::vec3 * camTransformPos, ECS::Components::Camera_Movement * direction, float deltaTime)
 {
     float velocity = cam->GetMovementSpeed()* deltaTime;
 
-    if (*direction == Camera_Movement::FORWARD)
+    if (*direction == ECS::Components::Camera_Movement::FORWARD)
     {
         *camTransformPos += cam->GetFront() * velocity;
     }
 
-    if (*direction == Camera_Movement::BACKWARD)
+    if (*direction == ECS::Components::Camera_Movement::BACKWARD)
     {
         *camTransformPos -= cam->GetFront() * velocity;
     }
 
-    if (*direction == Camera_Movement::LEFT)
+    if (*direction == ECS::Components::Camera_Movement::LEFT)
     {
         *camTransformPos -= cam->GetRight() * velocity;
     }
 
-    if (*direction == Camera_Movement::RIGHT)
+    if (*direction == ECS::Components::Camera_Movement::RIGHT)
     {
         *camTransformPos += cam->GetRight() * velocity;
     }
 }
 
-void CameraSystem::ProcessMouseMovement(Camera * cam, float xOffset, float yOffset, bool constrainPitch)
+void CameraSystem::ProcessMouseMovement(ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch)
 {
     xOffset *= cam->GetMouseSensitivity();
     yOffset *= cam->GetMouseSensitivity();
@@ -308,7 +310,7 @@ void CameraSystem::ProcessMouseMovement(Camera * cam, float xOffset, float yOffs
     UpdateCameraVectors(cam);
 }
 
-void CameraSystem::UpdateCameraVectors(Camera * cam)
+void CameraSystem::UpdateCameraVectors(ECS::Components::Camera * cam)
 {
     // Calculate the new Front vector
     glm::vec3 front;

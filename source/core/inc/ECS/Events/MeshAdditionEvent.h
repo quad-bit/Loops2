@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Event.h>
-#include "RenderingWrapper.h"
+#include "ECS/Events/Event.h"
+#include "Utility/RenderingWrappers/RenderingWrapper.h"
 
 class MeshToMatAdditionEvent : public Event
 {

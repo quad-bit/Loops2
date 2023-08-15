@@ -14,8 +14,11 @@ namespace ECS
 class Entity;
 class World;
 
-template< typename ComponentType>
-class ComponentHandle;
+namespace ECS
+{
+    template< typename ComponentType>
+    class ComponentHandle;
+}
 
 class EntityHandle
 {
@@ -46,7 +49,7 @@ public:
     void RemoveComponent(ComponentType* componentType);
 
     template<typename ComponentType>
-    ComponentHandle<ComponentType> GetComponent();
+    ECS::ComponentHandle<ComponentType> GetComponent();
 
     ~EntityHandle()
     {
@@ -115,9 +118,9 @@ inline void EntityHandle::RemoveComponent(ComponentType * componentType)
 }
 
 template<typename ComponentType>
-inline ComponentHandle<ComponentType> EntityHandle::GetComponent()
+inline ECS::ComponentHandle<ComponentType> EntityHandle::GetComponent()
 {
-    ComponentHandle<ComponentType> componentHandle;  
+    ECS::ComponentHandle<ComponentType> componentHandle;  
     worldObj->Unpack(entityObj, componentHandle);
     return componentHandle;
 }

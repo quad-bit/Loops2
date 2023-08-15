@@ -3,29 +3,35 @@
 
 class Entity;
 
-template <typename ComponentType>
-class ComponentManager;
-
-template <typename ComponentType>
-class ComponentHandle
+namespace ECS
 {
-private:
-    Entity * owner;
-    ComponentManager<ComponentType> * componentManagerObj;
-    ComponentType * componentType;
+    template <typename ComponentType>
+    class ComponentManager;
+}
 
-public:
-    ComponentHandle() {}
-    ComponentHandle(ComponentManager<ComponentType>* componentManagerObj, Entity * owner, uint32_t componentIndex);
-    void DestroyComponent();
-    ComponentType *operator->() const { return componentType; }
-    ComponentType * GetComponent();
-};
+namespace ECS
+{
+    template <typename ComponentType>
+    class ComponentHandle
+    {
+    private:
+        Entity* owner;
+        ComponentManager<ComponentType>* componentManagerObj;
+        ComponentType* componentType;
+
+    public:
+        ComponentHandle() {}
+        ComponentHandle(ECS::ComponentManager<ComponentType>* componentManagerObj, Entity* owner, uint32_t componentIndex);
+        void DestroyComponent();
+        ComponentType* operator->() const { return componentType; }
+        ComponentType* GetComponent();
+    };
+}
 
 #include "ComponentManager.h"
 
 template<typename ComponentType>
-inline ComponentHandle<ComponentType>::ComponentHandle(ComponentManager<ComponentType>* componentManagerObj, Entity * owner, uint32_t componentIndex)
+inline ECS::ComponentHandle<ComponentType>::ComponentHandle(ECS::ComponentManager<ComponentType>* componentManagerObj, Entity * owner, uint32_t componentIndex)
 {
     this->owner = owner;
     this->componentManagerObj = componentManagerObj;
@@ -33,13 +39,13 @@ inline ComponentHandle<ComponentType>::ComponentHandle(ComponentManager<Componen
 }
 
 template<typename ComponentType>
-void ComponentHandle<ComponentType>::DestroyComponent()
+void ECS::ComponentHandle<ComponentType>::DestroyComponent()
 {
     componentManagerObj->RemoveComponent(owner);
 }
 
 template<typename ComponentType>
-inline ComponentType * ComponentHandle<ComponentType>::GetComponent()
+inline ComponentType * ECS::ComponentHandle<ComponentType>::GetComponent()
 {
     return componentType;
 }
