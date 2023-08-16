@@ -26,7 +26,7 @@ glm::vec2 CameraController::TransformMouse(const glm::vec2 & mouse)
 void CameraController::Rotate()
 {
     float sensitivity = 1.102f;
-    ECS::Components::Transform* transform = cam->transform;
+    Core::ECS::Components::Transform* transform = cam->transform;
     glm::vec3 angles = transform->GetLocalEulerAngles();
 
     float deltaX = currentMousePos.x - prevMousePos.x;
@@ -82,7 +82,7 @@ void CameraController::Revolve()
 
 void CameraController::Activated()
 {
-    cam = entityHandle->GetComponent<ECS::Components::Camera>().GetComponent();
+    cam = entityHandle->GetComponent<Core::ECS::Components::Camera>().GetComponent();
 }
 
 void CameraController::Init()
@@ -122,7 +122,7 @@ void CameraController::DeInit()
 {
 }
 
-CameraController::CameraController() : ECS::Components::Scriptable(true)
+CameraController::CameraController() : Core::ECS::Components::Scriptable(true)
 {
     /*EventBus::GetInstance()->Subscribe(this, &CameraController::KeyBoardEventHandler);
     EventBus::GetInstance()->Subscribe(this, &CameraController::MouseDragEventHandler);
@@ -187,7 +187,7 @@ void CameraController::KeyBoardEventHandler(KeyInputEvent * evt)
     case KeyState::DOWN:
     case KeyState::PRESSED:
         {
-            ECS::Components::Transform * trf = entityHandle->GetTransform();
+            Core::ECS::Components::Transform * trf = entityHandle->GetTransform();
             //move the camera
             if (strcmp(w, evt->keyname) == 0)
             {

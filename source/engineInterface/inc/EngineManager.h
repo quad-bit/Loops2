@@ -6,8 +6,8 @@ class EngineManager
 
 private:
     EngineManager(){}
-    EngineManager(EngineManager const &) {}
-    EngineManager const & operator= (EngineManager const &) {}
+    EngineManager(EngineManager const&) = delete;
+    EngineManager const& operator= (EngineManager const&) = delete;
 
     static EngineManager* instance;
 

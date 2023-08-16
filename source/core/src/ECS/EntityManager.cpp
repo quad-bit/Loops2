@@ -78,7 +78,7 @@ void EntityManager::DestroyEntity(Entity * entity)
 		}
     } 
     
-    entityHandleList[pos]->RemoveComponent<ECS::Components::Transform>(entity->transform);
+    entityHandleList[pos]->RemoveComponent<Core::ECS::Components::Transform>(entity->transform);
 
     if (entity != nullptr)
     {

@@ -14,25 +14,28 @@ class VulkanInterface;
 template <typename T>
 class GraphNode;
 
-namespace ECS
+namespace Core
 {
-    template <typename T>
-    class ComponentHandle;
-
-    namespace Components
+    namespace ECS
     {
-        class Light;
-        class Camera;
-        class Material;
-        class Transform;
+        template <typename T>
+        class ComponentHandle;
+
+        namespace Components
+        {
+            class Light;
+            class Camera;
+            class Material;
+            class Transform;
+        }
     }
 }
 
 class LightSystem : public System
 {
 private:
-    std::vector<ECS::Components::Light *> lightlist;
-    std::map<ECS::Components::Light *, ECS::Components::Camera *> lightToCamList;
+    std::vector<Core::ECS::Components::Light *> lightlist;
+    std::map<Core::ECS::Components::Light *, Core::ECS::Components::Camera *> lightToCamList;
     std::vector<ShaderBindingDescription *> resDescriptionList;
     GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
     GlobalResourceSharingConfig lightBufferSharingConfig;
@@ -44,16 +47,16 @@ private:
 
     //std::vector<GraphNode<DrawGraphNode> *> lightGraphNodeList;
     //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
-    std::map<ECS::Components::Light *, ShaderBindingDescription *> lightToDescriptionMap;
+    std::map<Core::ECS::Components::Light *, ShaderBindingDescription *> lightToDescriptionMap;
 
     size_t memoryAlignedUniformSize;
     
-    ECS::Components::Material * shadowMappingMat = nullptr;
+    Core::ECS::Components::Material * shadowMappingMat = nullptr;
     System * cameraSystem;
 
-    void CreateLightUniformDescription(ShaderBindingDescription * desc, ECS::Components::Light * light);
-    void CreateLightUniformBuffer(ShaderBindingDescription * desc, ECS::Components::Light * light, ECS::Components::Camera * cam);
-    ECS::Components::Camera * CreateLightCamera(ECS::Components::Transform * transform);
+    void CreateLightUniformDescription(ShaderBindingDescription * desc, Core::ECS::Components::Light * light);
+    void CreateLightUniformBuffer(ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
+    Core::ECS::Components::Camera * CreateLightCamera(Core::ECS::Components::Transform * transform);
     void CreateShadowMap(ShaderBindingDescription * desc);
 
 public:

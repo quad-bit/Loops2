@@ -1,4 +1,4 @@
 #include "ECS/Component.h"
 
 
-int ECS::ComponentCounter::counter = 0;
+int Core::ECS::ComponentCounter::counter = 0;

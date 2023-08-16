@@ -11,8 +11,8 @@ EntityHandle* World::CreateEntity()
     ComponentMask mask;
     entityMasks.insert({ obj, mask });
 
-    ECS::Components::Transform * transform = new ECS::Components::Transform(obj);
-    handle->AddComponent<ECS::Components::Transform>(transform);
+    Core::ECS::Components::Transform * transform = new Core::ECS::Components::Transform(obj);
+    handle->AddComponent<Core::ECS::Components::Transform>(transform);
     obj->transform = transform;
 
     return handle;

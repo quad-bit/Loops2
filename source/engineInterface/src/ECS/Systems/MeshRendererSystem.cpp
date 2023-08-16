@@ -82,10 +82,10 @@ void MeshRendererSystem::Update(float dt)
 
 MeshRendererSystem::MeshRendererSystem()
 {
-    signature.AddComponent<ECS::Components::MeshRenderer>();
-    signature.AddComponent<ECS::Components::Mesh>();
-    signature.AddComponent<ECS::Components::Material>();
-    signature.AddComponent<ECS::Components::Transform>();
+    signature.AddComponent<Core::ECS::Components::MeshRenderer>();
+    signature.AddComponent<Core::ECS::Components::Mesh>();
+    signature.AddComponent<Core::ECS::Components::Material>();
+    signature.AddComponent<Core::ECS::Components::Transform>();
 }
 
 MeshRendererSystem::~MeshRendererSystem()

@@ -1,11 +1,14 @@
 #pragma once
 
 class EntityHandle;
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class Scriptable;
+        namespace Components
+        {
+            class Scriptable;
+        }
     }
 }
 
@@ -13,7 +16,7 @@ class ApplicationController
 {
 private:
     EntityHandle* mainObject;
-    ECS::Components::Scriptable* sceneManagerScript;
+    Core::ECS::Components::Scriptable* sceneManagerScript;
 
 public:
     void Init();

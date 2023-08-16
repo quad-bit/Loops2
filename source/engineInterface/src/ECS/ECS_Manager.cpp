@@ -25,13 +25,13 @@ void ECS_Manager::Init()
 
     worldObj = new World();
     
-    scriptableManager = worldObj->CreateManager<ECS::Components::Scriptable>();
-    transformManager = worldObj->CreateManager<ECS::Components::Transform>();
-    meshManager = worldObj->CreateManager<ECS::Components::Mesh>();
-    materialManager = worldObj->CreateManager<ECS::Components::Material>();
-    cameraManager = worldObj->CreateManager<ECS::Components::Camera>();
-    meshRendererManager = worldObj->CreateManager<ECS::Components::MeshRenderer>();
-    lightManager = worldObj->CreateManager<ECS::Components::Light>();
+    scriptableManager = worldObj->CreateManager<Core::ECS::Components::Scriptable>();
+    transformManager = worldObj->CreateManager<Core::ECS::Components::Transform>();
+    meshManager = worldObj->CreateManager<Core::ECS::Components::Mesh>();
+    materialManager = worldObj->CreateManager<Core::ECS::Components::Material>();
+    cameraManager = worldObj->CreateManager<Core::ECS::Components::Camera>();
+    meshRendererManager = worldObj->CreateManager<Core::ECS::Components::MeshRenderer>();
+    lightManager = worldObj->CreateManager<Core::ECS::Components::Light>();
 
     scriptableSystemObj = new ScriptableSystem();
     worldObj->AddSystem(scriptableSystemObj);

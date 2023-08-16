@@ -15,7 +15,7 @@
 
 #define debugMeshForLight 0
 
-SceneManagerScript::SceneManagerScript() : ECS::Components::Scriptable(false)
+SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(false)
 {
     scriptName = typeid(this).raw_name();
 
@@ -24,28 +24,28 @@ SceneManagerScript::SceneManagerScript() : ECS::Components::Scriptable(false)
     camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 35, 50));
     camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(-27.0f), 0, 0));
 
-    ECS::Components::Camera * camera = new ECS::Components::Camera(camHandle0->GetTransform());
-    camHandle0->AddComponent<ECS::Components::Camera>(camera);
+    Core::ECS::Components::Camera * camera = new Core::ECS::Components::Camera(camHandle0->GetTransform());
+    camHandle0->AddComponent<Core::ECS::Components::Camera>(camera);
     
     cameraController = new CameraController();
-    camHandle0->AddComponent<ECS::Components::Scriptable>(cameraController);
+    camHandle0->AddComponent<Core::ECS::Components::Scriptable>(cameraController);
 
     playerObject = worldObj->CreateEntity("playerObject");
     ASSERT_MSG_DEBUG(playerObject != nullptr, "Object not found");
 
     //playerHandlerScript = new PlayerHandlerScript();
-    //playerObject->AddComponent<ECS::Components::Scriptable>(playerHandlerScript);
+    //playerObject->AddComponent<Core::ECS::Components::Scriptable>(playerHandlerScript);
 
     lightHandle = worldObj->CreateEntity("light");
-    ECS::ComponentHandle<ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<ECS::Components::Transform>();
+    Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<Core::ECS::Components::Transform>();
     lightTrfHandle->SetLocalPosition(glm::vec3(19, 29, 0));
     // ligth is using forward
     lightTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(-60.0f), glm::radians(90.0), glm::radians(0.0f)));
 
-    lightComponent = new ECS::Components::Light(lightTrfHandle.GetComponent());
-    lightHandle->AddComponent<ECS::Components::Light>(lightComponent);
+    lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
+    lightHandle->AddComponent<Core::ECS::Components::Light>(lightComponent);
     
-    ECS::Components::Material *colMat, *floorMat , *wallMat;
+    Core::ECS::Components::Material *colMat, *floorMat , *wallMat;
 
 #if (debugMeshForLight)
     {
@@ -84,7 +84,7 @@ SceneManagerScript::SceneManagerScript() : ECS::Components::Scriptable(false)
 #endif
 
     floorHandle = worldObj->CreateEntity("floor");
-    ECS::ComponentHandle<ECS::Components::Transform> floorTrfHandle = floorHandle->GetComponent<ECS::Components::Transform>();
+    Core::ECS::ComponentHandle<Core::ECS::Components::Transform> floorTrfHandle = floorHandle->GetComponent<Core::ECS::Components::Transform>();
     floorTrfHandle->SetLocalPosition(glm::vec3(0, -20, 0));
     floorTrfHandle->SetLocalScale(glm::vec3(200, 200, 1));
     floorTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(90.0), 0, 0));
@@ -141,7 +141,7 @@ SceneManagerScript::SceneManagerScript() : ECS::Components::Scriptable(false)
     for (uint32_t i = 0; i < numBoxes; i++)
     {
         boxHandles[i] = worldObj->CreateEntity("box" + std::to_string(i));
-        ECS::ComponentHandle<ECS::Components::Transform> trfHandle = boxHandles[i]->GetComponent<ECS::Components::Transform>();
+        Core::ECS::ComponentHandle<Core::ECS::Components::Transform> trfHandle = boxHandles[i]->GetComponent<Core::ECS::Components::Transform>();
         
         /*
         theta = random(0,TWO_PI);
@@ -239,12 +239,12 @@ SceneManagerScript::~SceneManagerScript()
     for (uint32_t i = 0; i < boxHandles.size(); i++)
     {
         {
-            ECS::ComponentHandle<ECS::Components::Mesh> mesh = boxHandles[i]->GetComponent<ECS::Components::Mesh>();
-            //MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
-            mesh.DestroyComponent();
-            
-            ECS::ComponentHandle<ECS::Components::Material> mat = boxHandles[i]->GetComponent<ECS::Components::Material>();
-            mat.DestroyComponent();
+            //Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = boxHandles[i]->GetComponent<Core::ECS::Components::Mesh>();
+            ////MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
+            //mesh.DestroyComponent();
+
+            //Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = boxHandles[i]->GetComponent<Core::ECS::Components::Material>();
+            //mat.DestroyComponent();
 
         }
         worldObj->DestroyEntity(boxHandles[i]);
@@ -252,11 +252,11 @@ SceneManagerScript::~SceneManagerScript()
 
 
     {
-        ECS::ComponentHandle<ECS::Components::Mesh> mesh = floorHandle->GetComponent<ECS::Components::Mesh>();
-        //MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
-        mesh.DestroyComponent();
-        ECS::ComponentHandle<ECS::Components::Material> mat = floorHandle->GetComponent<ECS::Components::Material>();
-        mat.DestroyComponent();
+        //Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = floorHandle->GetComponent<Core::ECS::Components::Mesh>();
+        ////MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
+        //mesh.DestroyComponent();
+        //Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = floorHandle->GetComponent<Core::ECS::Components::Material>();
+        //mat.DestroyComponent();
     }
     worldObj->DestroyEntity(floorHandle);
 
@@ -270,13 +270,13 @@ SceneManagerScript::~SceneManagerScript()
     }
 #endif
 
-    lightHandle->RemoveComponent<ECS::Components::Light>(lightComponent);
+    lightHandle->RemoveComponent<Core::ECS::Components::Light>(lightComponent);
     worldObj->DestroyEntity(lightHandle);
 
     delete cameraController;
     worldObj->DestroyEntity(camHandle0);
 
-    /*playerObject->RemoveComponent<ECS::Components::Scriptable>(playerHandlerScript);
+    /*playerObject->RemoveComponent<Core::ECS::Components::Scriptable>(playerHandlerScript);
     delete playerHandlerScript;
     playerHandlerScript = NULL;*/
 }
@@ -314,7 +314,7 @@ void SceneManagerScript::Update(float dt)
     //PLOGD << x << " " << y;
 
     {
-        ECS::Components::Transform * transform = lightHandle->GetTransform();
+        Core::ECS::Components::Transform * transform = lightHandle->GetTransform();
 
         float angle = MathUtil::lerp(prevAngle, currentAngle, dt);
         prevAngle = currentAngle;

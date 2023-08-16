@@ -21,7 +21,7 @@ uint32_t LightSystem::GeneratedLightId()
     return idCounter++;
 }
 
-void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc, ECS::Components::Light * light)
+void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc, Core::ECS::Components::Light * light)
 {
 #if 0
     desc->set = (uint32_t)ResourceSets::LIGHT;
@@ -40,7 +40,7 @@ void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc,
 #endif
 }
 
-void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, ECS::Components::Light * light, ECS::Components::Camera * cam)
+void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam)
 {
 #if 0
     // Check if it can be fit into an existing buffer
@@ -81,10 +81,10 @@ void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, ECS:
 #endif
 }
 
-ECS::Components::Camera *  LightSystem::CreateLightCamera(ECS::Components::Transform * transform)
+Core::ECS::Components::Camera *  LightSystem::CreateLightCamera(Core::ECS::Components::Transform * transform)
 {
     // create a camera 
-    ECS::Components::Camera * lightCam = new ECS::Components::Camera(transform);
+    Core::ECS::Components::Camera * lightCam = new Core::ECS::Components::Camera(transform);
     //lightCam->SetProjectionType(CameraType::ORTHOGONAL);
     lightCam->SetFOV((90.0f));
     lightCam->SetNearPlane(2.0f);
@@ -170,10 +170,10 @@ void LightSystem::Update(float dt)
 #if 0
     for (auto & entity : registeredEntities)
     {
-        ECS::ComponentHandle<ECS::Components::Light> * lightHandle;
+        Core::ECS::ComponentHandle<Core::ECS::Components::Light> * lightHandle;
         worldObj->Unpack(entity, &lightHandle);
 
-        ECS::Components::Light * light = lightHandle->GetComponent();
+        Core::ECS::Components::Light * light = lightHandle->GetComponent();
         LightUniform obj = {};
         obj.ambient = Vec3ToVec4_0(light->GetAmbient());
         obj.diffuse = Vec3ToVec4_0(light->GetDiffuse());
@@ -183,7 +183,7 @@ void LightSystem::Update(float dt)
         obj.beamHeight = light->GetBeamHeight();
         obj.beamRadius = light->GetBeamRadius();
 
-        ECS::Components::Camera * cam = lightToCamList[light];
+        Core::ECS::Components::Camera * cam = lightToCamList[light];
         obj.lightSpaceMat = cam->GetProjectionMat() * cam->GetViewMatrix();// *light->GetTransform()->GetLocalModelMatrix();
 
         ShaderBindingDescription * desc = lightToDescriptionMap[lightHandle->GetComponent()];
@@ -205,7 +205,7 @@ void LightSystem::Update(float dt)
 #if 0
 void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
 {
-    ECS::Components::Light* light = lightAdditionEvent->light;
+    Core::ECS::Components::Light* light = lightAdditionEvent->light;
 
     lightlist.push_back(light);
     light->componentId = GeneratedLightId();
@@ -216,9 +216,9 @@ void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
 
     CreateLightUniformDescription(&desc[0], light);
     CreateShadowMap(&desc[1]);
-    ECS::Components::Camera * cam = CreateLightCamera(light->GetTransform());
+    Core::ECS::Components::Camera * cam = CreateLightCamera(light->GetTransform());
 
-    lightToCamList.insert(std::pair<ECS::Components::Light*, ECS::Components::Camera*>({light, cam}));
+    lightToCamList.insert(std::pair<Core::ECS::Components::Light*, Core::ECS::Components::Camera*>({light, cam}));
 
     lightSetWrapper = UniformFactory::GetInstance()->GetSetWrapper(desc, numBindingsInSet);
     CreateLightUniformBuffer(&desc[0], light, cam);
@@ -234,7 +234,7 @@ void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
     // Get the View id
     
     {
-        lightToDescriptionMap.insert(std::pair<ECS::Components::Light *, ShaderBindingDescription *>(
+        lightToDescriptionMap.insert(std::pair<Core::ECS::Components::Light *, ShaderBindingDescription *>(
         { light, desc }));
 
         // draw graph node creation
@@ -326,7 +326,7 @@ void LightSystem::AssignCameraSystem(System * camSystem)
 
 LightSystem::LightSystem()
 {
-    signature.AddComponent<ECS::Components::Light>();
+    signature.AddComponent<Core::ECS::Components::Light>();
 }
 
 LightSystem::~LightSystem()

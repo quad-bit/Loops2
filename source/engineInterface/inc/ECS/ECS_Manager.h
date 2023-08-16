@@ -3,21 +3,24 @@
 class World;
 class System;
 
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class Transform;
-        class Scriptable;
-        class Mesh;
-        class Material;
-        class Camera;
-        class MeshRenderer;
-        class Light;
-    }
+        namespace Components
+        {
+            class Transform;
+            class Scriptable;
+            class Mesh;
+            class Material;
+            class Camera;
+            class MeshRenderer;
+            class Light;
+        }
 
-    template<typename T>
-    class ComponentManager;
+        template<typename T>
+        class ComponentManager;
+    }
 }
 
 class ECS_Manager
@@ -30,22 +33,22 @@ private:
     static ECS_Manager* instance;
 
 public:
-    ECS::ComponentManager<ECS::Components::Transform>* transformManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Transform>* transformManager;
     System* transformSystemObj;
 
-    ECS::ComponentManager<ECS::Components::Scriptable>* scriptableManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Scriptable>* scriptableManager;
     System* scriptableSystemObj;
 
-    ECS::ComponentManager<ECS::Components::Camera>* cameraManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Camera>* cameraManager;
     System* cameraSystemObj;
 
-    ECS::ComponentManager<ECS::Components::Mesh>* meshManager;
-    ECS::ComponentManager<ECS::Components::Material>* materialManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Mesh>* meshManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Material>* materialManager;
 
-    ECS::ComponentManager<ECS::Components::MeshRenderer>* meshRendererManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::MeshRenderer>* meshRendererManager;
     System* meshRendererSystem;
 
-    ECS::ComponentManager<ECS::Components::Light>* lightManager;
+    Core::ECS::ComponentManager<Core::ECS::Components::Light>* lightManager;
     System* lightSystem;
 
     void Init();

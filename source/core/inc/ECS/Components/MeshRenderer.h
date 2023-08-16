@@ -3,32 +3,34 @@
 #include "ECS/Component.h"
 #include "ECS/ECS_Helper.h"
 
-
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class Mesh;
-        class Material;
-        class Transform;
-
-        class MeshRenderer : public Component<MeshRenderer>
+        namespace Components
         {
-        public:
-            Mesh* geometry;
-            Material* material;
-            Transform* transform;
-            bool castShadows = true;
-            bool receiveShadows = true;
+            class Mesh;
+            class Material;
+            class Transform;
 
-            COMPONENT_TYPE componentType{ COMPONENT_TYPE::MESH_RENDERER };
-
-            MeshRenderer(Mesh* geo, Material* mat, Transform* tran)
+            class MeshRenderer : public Component<MeshRenderer>
             {
-                geometry = geo;
-                material = mat;
-                transform = tran;
-            }
-        };
+            public:
+                Mesh* geometry;
+                Material* material;
+                Transform* transform;
+                bool castShadows = true;
+                bool receiveShadows = true;
+
+                COMPONENT_TYPE componentType{ COMPONENT_TYPE::MESH_RENDERER };
+
+                MeshRenderer(Mesh* geo, Material* mat, Transform* tran)
+                {
+                    geometry = geo;
+                    material = mat;
+                    transform = tran;
+                }
+            };
+        }
     }
 }

@@ -4,15 +4,18 @@
 #include <string>
 #include "ComponentMask.h"
 
-namespace ECS
+namespace Core
 {
-    template<typename ComponentType>
-    class ComponentManager;
+    namespace ECS
+    {
+        template<typename ComponentType>
+        class ComponentManager;
 
-    class BaseComponentManager;
+        class BaseComponentManager;
 
-    template<typename T>
-    class ComponentHandle;
+        template<typename T>
+        class ComponentHandle;
+    }
 }
 
 class Entity;
@@ -25,9 +28,9 @@ class World
 {
 private:
     template<typename ComponentType>
-    ECS::ComponentManager<ComponentType>* GetComponentManager();
+    Core::ECS::ComponentManager<ComponentType>* GetComponentManager();
 
-    std::vector<ECS::BaseComponentManager*> managerList;
+    std::vector<Core::ECS::BaseComponentManager*> managerList;
     std::vector<System*> systemList;
 
     std::map<Entity * , ComponentMask> entityMasks;
@@ -54,14 +57,14 @@ public:
     void UpdateEntityMask(Entity *entity, ComponentMask oldMask);
 
     template<typename ComponentType>
-    ECS::ComponentManager<ComponentType>* CreateManager();
+    Core::ECS::ComponentManager<ComponentType>* CreateManager();
 
     void AddSystem(System* system);
 
     template<typename ComponentType, typename... Args>
-    void Unpack(Entity* e, ECS::ComponentHandle<ComponentType>& handle, ECS::ComponentHandle<Args>&... args)
+    void Unpack(Entity* e, Core::ECS::ComponentHandle<ComponentType>& handle, Core::ECS::ComponentHandle<Args>&... args)
     {
-        typedef ECS::ComponentManager<ComponentType> componentManagerType;
+        typedef Core::ECS::ComponentManager<ComponentType> componentManagerType;
 
         componentManagerType* manager = (componentManagerType*)GetComponentManager<ComponentType>();
         handle = *(manager->GetComponentHandle(e));
@@ -70,18 +73,18 @@ public:
     }
 
     template<typename ComponentType>
-    void Unpack(Entity* e, ECS::ComponentHandle<ComponentType>& handle)
+    void Unpack(Entity* e, Core::ECS::ComponentHandle<ComponentType>& handle)
     {
-        typedef ECS::ComponentManager<ComponentType> componentManagerType;
+        typedef Core::ECS::ComponentManager<ComponentType> componentManagerType;
 
         componentManagerType* manager = (componentManagerType*)GetComponentManager<ComponentType>();
         handle = *(manager->GetComponentHandle(e));
     }
     
     template<typename ComponentType, typename... Args>
-    void Unpack(Entity* e, ECS::ComponentHandle<ComponentType>** handle, ECS::ComponentHandle<Args>**... args)
+    void Unpack(Entity* e, Core::ECS::ComponentHandle<ComponentType>** handle, Core::ECS::ComponentHandle<Args>**... args)
     {
-        typedef ECS::ComponentManager<ComponentType> componentManagerType;
+        typedef Core::ECS::ComponentManager<ComponentType> componentManagerType;
 
         componentManagerType* manager = (componentManagerType*)GetComponentManager<ComponentType>();
         *handle = (manager->GetComponentHandle(e));
@@ -90,9 +93,9 @@ public:
     }
 
     template<typename ComponentType>
-    void Unpack(Entity* e, ECS::ComponentHandle<ComponentType>** handle)
+    void Unpack(Entity* e, Core::ECS::ComponentHandle<ComponentType>** handle)
     {
-        typedef ECS::ComponentManager<ComponentType> componentManagerType;
+        typedef Core::ECS::ComponentManager<ComponentType> componentManagerType;
 
         componentManagerType* manager = (componentManagerType*)GetComponentManager<ComponentType>();
         *handle = (manager->GetComponentHandle(e));
@@ -117,16 +120,16 @@ public:
 #include "Component.h"
 
 template<typename ComponentType>
-inline ECS::ComponentManager<ComponentType>* World::GetComponentManager()
+inline Core::ECS::ComponentManager<ComponentType>* World::GetComponentManager()
 {
 	int family = GetComponentFamily<ComponentType>();
-    return (ECS::ComponentManager<ComponentType>*)managerList[family];
+    return (Core::ECS::ComponentManager<ComponentType>*)managerList[family];
 }
 
 template<typename ComponentType>
 inline void World::AddComponent(ComponentType * componentType, Entity * entityObj)
 {
-    ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
+    Core::ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
     manager->AddComponent(componentType, entityObj);
 
     ComponentMask oldMask = entityMasks[entityObj];
@@ -138,7 +141,7 @@ inline void World::AddComponent(ComponentType * componentType, Entity * entityOb
 template<typename ComponentType>
 inline void World::RemoveComponent(ComponentType * componentType, Entity * entityObj)
 {
-    ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
+    Core::ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
     manager->RemoveComponent(entityObj);
 
     ComponentMask oldMask = entityMasks[entityObj];
@@ -148,9 +151,9 @@ inline void World::RemoveComponent(ComponentType * componentType, Entity * entit
 }
 
 template<typename ComponentType>
-inline ECS::ComponentManager<ComponentType>* World::CreateManager() // TODO ..Create the managers properly, hacked for testing..!!!
+inline Core::ECS::ComponentManager<ComponentType>* World::CreateManager() // TODO ..Create the managers properly, hacked for testing..!!!
 {
-    ECS::ComponentManager<ComponentType>* manager = new ECS::ComponentManager<ComponentType>();
+    Core::ECS::ComponentManager<ComponentType>* manager = new Core::ECS::ComponentManager<ComponentType>();
     managerList.push_back(manager);
 
 	AssignFamily<ComponentType>();

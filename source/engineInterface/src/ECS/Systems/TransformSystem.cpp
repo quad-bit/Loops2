@@ -54,7 +54,7 @@ void TransformSystem::Update(float dt)
 
 TransformSystem::TransformSystem()
 {
-    signature.AddComponent<ECS::Components::Transform>();
+    signature.AddComponent<Core::ECS::Components::Transform>();
 }
 
 

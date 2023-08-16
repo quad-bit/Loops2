@@ -3,7 +3,7 @@
 #include "ECS/Events/SceneChangeEvent.h"
 #include "ECS/Entity.h"
 
-void ECS::Components::Transform::Init()
+void Core::ECS::Components::Transform::Init()
 {
     up = glm::vec3(0, 1, 0);
     right = glm::vec3(1, 0, 0);
@@ -31,12 +31,12 @@ void ECS::Components::Transform::Init()
     EventBus::GetInstance()->Publish(&event);
 }
 
-ECS::Components::Transform::Transform()
+Core::ECS::Components::Transform::Transform()
 {
     
 }
 
-ECS::Components::Transform::Transform(Entity * entity)
+Core::ECS::Components::Transform::Transform(Entity * entity)
 {
     owner = entity;
     entityName = &owner->entityName; 
@@ -44,12 +44,12 @@ ECS::Components::Transform::Transform(Entity * entity)
     Init();
 }
 
-ECS::Components::Transform * ECS::Components::Transform::GetParent()
+Core::ECS::Components::Transform * Core::ECS::Components::Transform::GetParent()
 {
     return parent;
 }
 
-void ECS::Components::Transform::SetParent(ECS::Components::Transform * transform)
+void Core::ECS::Components::Transform::SetParent(Core::ECS::Components::Transform * transform)
 {
     parent = transform;
 
@@ -61,7 +61,7 @@ void ECS::Components::Transform::SetParent(ECS::Components::Transform * transfor
     EventBus::GetInstance()->Publish(&event);
 }
 
-void ECS::Components::Transform::UpdateGlobalParams()
+void Core::ECS::Components::Transform::UpdateGlobalParams()
 {
     GetGlobalPosition();
     this->translationMat = glm::translate(this->globalPosition);
@@ -75,7 +75,7 @@ void ECS::Components::Transform::UpdateGlobalParams()
     this->globalModelMatrix = this->translationMat * this->rotationMat * this->scaleMat;
 }
 
-void ECS::Components::Transform::UpdateLocalParams()
+void Core::ECS::Components::Transform::UpdateLocalParams()
 {
     this->translationMat = glm::translate(this->localPosition);
     this->scaleMat = glm::scale(this->localScale);
@@ -104,47 +104,47 @@ void ECS::Components::Transform::UpdateLocalParams()
     this->localModelMatrix = this->translationMat * this->rotationMat * this->scaleMat;
 }
 
-const std::vector<ECS::Components::Transform*>& ECS::Components::Transform::GetChildren()
+const std::vector<Core::ECS::Components::Transform*>& Core::ECS::Components::Transform::GetChildren()
 {
     return childrenList;
 }
 
-glm::vec3 ECS::Components::Transform::GetForward()
+glm::vec3 Core::ECS::Components::Transform::GetForward()
 {
     return ( forward );
 }
 
-glm::vec3 ECS::Components::Transform::GetUp()
+glm::vec3 Core::ECS::Components::Transform::GetUp()
 {
     return up;
 }
 
-glm::vec3 ECS::Components::Transform::GetRight()
+glm::vec3 Core::ECS::Components::Transform::GetRight()
 {
     return right;
 }
 
-glm::vec3 ECS::Components::Transform::GetLocalPosition()
+glm::vec3 Core::ECS::Components::Transform::GetLocalPosition()
 {
     return localPosition;
 }
 
-glm::vec3 ECS::Components::Transform::GetLocalEulerAngles()
+glm::vec3 Core::ECS::Components::Transform::GetLocalEulerAngles()
 {
     return localEulerAngle;
 }
 
-glm::vec3 ECS::Components::Transform::GetLocalScale()
+glm::vec3 Core::ECS::Components::Transform::GetLocalScale()
 {
     return localScale;
 }
 
-glm::mat4 ECS::Components::Transform::GetLocalModelMatrix()
+glm::mat4 Core::ECS::Components::Transform::GetLocalModelMatrix()
 {
     return localModelMatrix;
 }
 
-glm::vec3 ECS::Components::Transform::GetGlobalPosition()
+glm::vec3 Core::ECS::Components::Transform::GetGlobalPosition()
 {
     //ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     //not sure.. this is not required as using the localPosition localModelMat gets derived
@@ -153,7 +153,7 @@ glm::vec3 ECS::Components::Transform::GetGlobalPosition()
     glm::vec4 temp = localModelMatrix * Vec3ToVec4_1(origin);
     glm::vec3 position = Vec4ToVec3(temp);
 
-    ECS::Components::Transform * parentTransform = parent;
+    Core::ECS::Components::Transform * parentTransform = parent;
     glm::mat4 globalTransform = glm::identity<glm::mat4>();
 
     while (parentTransform != nullptr)
@@ -169,75 +169,75 @@ glm::vec3 ECS::Components::Transform::GetGlobalPosition()
     return globalPosition;
 }
 
-glm::vec3 ECS::Components::Transform::GetGlobalEulerAngles()
+glm::vec3 Core::ECS::Components::Transform::GetGlobalEulerAngles()
 {
     ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     return globalEulerAngle;
 }
 
-glm::vec3 ECS::Components::Transform::GetGlobalScale()
+glm::vec3 Core::ECS::Components::Transform::GetGlobalScale()
 {
     ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     return globalScale;
 }
 
-glm::mat4 ECS::Components::Transform::GetGlobalModelMatrix()
+glm::mat4 Core::ECS::Components::Transform::GetGlobalModelMatrix()
 {
     //ASSERT_MSG(0, "Yet to be implemented");
     return globalModelMatrix;
 }
 
-void ECS::Components::Transform::SetLocalPosition(const glm::vec3 & pos)
+void Core::ECS::Components::Transform::SetLocalPosition(const glm::vec3 & pos)
 {
     localPosition = pos;
     UpdateLocalParams();
     UpdateGlobalParams();
 }
 
-void ECS::Components::Transform::SetLocalEulerAngles(const glm::vec3 & angle)
+void Core::ECS::Components::Transform::SetLocalEulerAngles(const glm::vec3 & angle)
 {
     localEulerAngle = angle;
     UpdateLocalParams();
     UpdateGlobalParams();
 }
 
-void ECS::Components::Transform::SetLocalScale(const glm::vec3 & scale)
+void Core::ECS::Components::Transform::SetLocalScale(const glm::vec3 & scale)
 {
     localScale = scale;
     UpdateLocalParams();
     UpdateGlobalParams();
 }
 
-void ECS::Components::Transform::SetLocalModelMatrix(const glm::mat4 & mat)
+void Core::ECS::Components::Transform::SetLocalModelMatrix(const glm::mat4 & mat)
 {
     localModelMatrix = mat;
 }
 
-void ECS::Components::Transform::SetGlobalPosition(const glm::vec3 & pos)
+void Core::ECS::Components::Transform::SetGlobalPosition(const glm::vec3 & pos)
 {
     ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     globalPosition = pos;
 }
 
-void ECS::Components::Transform::SetGlobalEulerAngles(const glm::vec3 & angle)
+void Core::ECS::Components::Transform::SetGlobalEulerAngles(const glm::vec3 & angle)
 {
     ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     globalEulerAngle = angle;
 }
 
-void ECS::Components::Transform::SetGlobalScale(const glm::vec3 & scale)
+void Core::ECS::Components::Transform::SetGlobalScale(const glm::vec3 & scale)
 {
     ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     globalScale = scale;
 }
 
-void ECS::Components::Transform::SetGlobalModelMatrix(const glm::mat4 & mat)
+void Core::ECS::Components::Transform::SetGlobalModelMatrix(const glm::mat4 & mat)
 {
     //ASSERT_MSG(0, "Yet to be implemented");
     globalModelMatrix = mat;
 }
 
-void ECS::Components::Transform::Entry()
+void Core::ECS::Components::Transform::Entry()
 {
     //SceneTreeUtil::nameList.push_back(*entityName);
     //PLOGD << "entry " << *entityName;
@@ -262,7 +262,7 @@ void ECS::Components::Transform::Entry()
     SceneTreeUtil::matrixList.push_back(this->GetLocalModelMatrix());
 }
 
-void ECS::Components::Transform::Exit()
+void Core::ECS::Components::Transform::Exit()
 {
     // pop the transformation stack
     //PLOGD << "exit " << *entityName;

@@ -10,10 +10,10 @@
 //struct MouseButtonEvent;
 //enum class KeyState;
 
-class CameraController : public ECS::Components::Scriptable
+class CameraController : public Core::ECS::Components::Scriptable
 {
 private:
-    ECS::Components::Camera * cam;
+    Core::ECS::Components::Camera * cam;
     float velocity = .4f;
     //ComponentHandle<Camera> camHandle;
 

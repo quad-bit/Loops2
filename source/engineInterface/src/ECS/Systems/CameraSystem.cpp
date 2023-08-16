@@ -250,40 +250,40 @@ void CameraSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent
 */
 CameraSystem::CameraSystem()
 {
-    signature.AddComponent<ECS::Components::Camera>();
-    signature.AddComponent<ECS::Components::Transform>();
+    signature.AddComponent<Core::ECS::Components::Camera>();
+    signature.AddComponent<Core::ECS::Components::Transform>();
 }
 
 CameraSystem::~CameraSystem()
 {
 }
 
-void CameraSystem::ProcessKeyboard(ECS::Components::Camera * cam, glm::vec3 * camTransformPos, ECS::Components::Camera_Movement * direction, float deltaTime)
+void CameraSystem::ProcessKeyboard(Core::ECS::Components::Camera * cam, glm::vec3 * camTransformPos, Core::ECS::Components::Camera_Movement * direction, float deltaTime)
 {
     float velocity = cam->GetMovementSpeed()* deltaTime;
 
-    if (*direction == ECS::Components::Camera_Movement::FORWARD)
+    if (*direction == Core::ECS::Components::Camera_Movement::FORWARD)
     {
         *camTransformPos += cam->GetFront() * velocity;
     }
 
-    if (*direction == ECS::Components::Camera_Movement::BACKWARD)
+    if (*direction == Core::ECS::Components::Camera_Movement::BACKWARD)
     {
         *camTransformPos -= cam->GetFront() * velocity;
     }
 
-    if (*direction == ECS::Components::Camera_Movement::LEFT)
+    if (*direction == Core::ECS::Components::Camera_Movement::LEFT)
     {
         *camTransformPos -= cam->GetRight() * velocity;
     }
 
-    if (*direction == ECS::Components::Camera_Movement::RIGHT)
+    if (*direction == Core::ECS::Components::Camera_Movement::RIGHT)
     {
         *camTransformPos += cam->GetRight() * velocity;
     }
 }
 
-void CameraSystem::ProcessMouseMovement(ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch)
+void CameraSystem::ProcessMouseMovement(Core::ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch)
 {
     xOffset *= cam->GetMouseSensitivity();
     yOffset *= cam->GetMouseSensitivity();
@@ -310,7 +310,7 @@ void CameraSystem::ProcessMouseMovement(ECS::Components::Camera * cam, float xOf
     UpdateCameraVectors(cam);
 }
 
-void CameraSystem::UpdateCameraVectors(ECS::Components::Camera * cam)
+void CameraSystem::UpdateCameraVectors(Core::ECS::Components::Camera * cam)
 {
     // Calculate the new Front vector
     glm::vec3 front;

@@ -14,6 +14,10 @@ void EngineManager::Init()
 {
     //PLOGD << "ENGINE MANAGER Init";
     Settings::maxFrameRate = 60;
+    Settings::windowWidth = 1024;
+    Settings::windowHeight = 1024;
+    Settings::windowName = "Loops";
+
     CoreManager::GetInstance()->Init();
     //GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
     //GraphicsManager::GetInstance()->SetupRenderer();

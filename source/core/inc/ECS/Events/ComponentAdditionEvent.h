@@ -3,13 +3,16 @@
 #include "ECS/Events/Event.h"
 //#include "Camera.h"
 
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class Camera;
-        class MeshRenderer;
-        class Light;
+        namespace Components
+        {
+            class Camera;
+            class MeshRenderer;
+            class Light;
+        }
     }
 }
 class Entity;
@@ -17,19 +20,19 @@ class Entity;
 class CameraAdditionEvent : public Event
 {
 public:
-    ECS::Components::Camera * cam;
+    Core::ECS::Components::Camera * cam;
 };
 
 class MeshRendererAdditionEvent : public Event
 {
 public:
-    ECS::Components::MeshRenderer * renderer;
+    Core::ECS::Components::MeshRenderer * renderer;
 };
 
 class LightAdditionEvent : public Event
 {
 public:
-    ECS::Components::Light * light;
+    Core::ECS::Components::Light * light;
 };
 
 class DepthPassAttachmentCreationEvent : public Event

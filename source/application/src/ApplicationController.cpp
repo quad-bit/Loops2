@@ -9,7 +9,7 @@ void ApplicationController::Init()
     mainObject = worldObj->CreateEntity();
     mainObject->GetEntity()->entityName = "mainObject";
     sceneManagerScript = new SceneManagerScript();
-    mainObject->AddComponent<ECS::Components::Scriptable>(sceneManagerScript);
+    mainObject->AddComponent<Core::ECS::Components::Scriptable>(sceneManagerScript);
 }
 
 void ApplicationController::Update()
@@ -19,7 +19,7 @@ void ApplicationController::Update()
 
 void ApplicationController::DeInit()
 {
-    mainObject->RemoveComponent<ECS::Components::Scriptable>(sceneManagerScript);
+    mainObject->RemoveComponent<Core::ECS::Components::Scriptable>(sceneManagerScript);
     delete sceneManagerScript;
     sceneManagerScript = NULL;
     worldObj->DestroyEntity(mainObject);

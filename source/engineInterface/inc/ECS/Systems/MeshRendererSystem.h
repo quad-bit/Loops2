@@ -7,12 +7,15 @@
 template <typename T>
 class GraphNode;
 
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class MeshRenderer;
-        class Transform;
+        namespace Components
+        {
+            class MeshRenderer;
+            class Transform;
+        }
     }
 }
 
@@ -30,7 +33,7 @@ private:
 
     SetWrapper * transformSetWrapper;
     std::vector<ShaderBindingDescription *> resDescriptionList;
-    std::map<ECS::Components::Transform *, ShaderBindingDescription *> transformToBindDescMap;
+    std::map<Core::ECS::Components::Transform *, ShaderBindingDescription *> transformToBindDescMap;
 
     uint32_t numDescriptorsPerBinding;
 /*

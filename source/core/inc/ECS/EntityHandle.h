@@ -3,22 +3,20 @@
 
 #include <iostream>
 
-namespace ECS
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-        class Transform;
+        namespace Components
+        {
+            class Transform;
+        }
+        template< typename ComponentType>
+        class ComponentHandle;
     }
 }
-
 class Entity;
 class World;
-
-namespace ECS
-{
-    template< typename ComponentType>
-    class ComponentHandle;
-}
 
 class EntityHandle
 {
@@ -40,7 +38,7 @@ public:
     }
 
     Entity * GetEntity() { return entityObj; }
-    ECS::Components::Transform * GetTransform(){ return entityObj->transform; }
+    Core::ECS::Components::Transform * GetTransform(){ return entityObj->transform; }
 
     template<typename ComponentType>
     void AddComponent(ComponentType* componentType);
@@ -49,7 +47,7 @@ public:
     void RemoveComponent(ComponentType* componentType);
 
     template<typename ComponentType>
-    ECS::ComponentHandle<ComponentType> GetComponent();
+    Core::ECS::ComponentHandle<ComponentType> GetComponent();
 
     ~EntityHandle()
     {
@@ -74,9 +72,9 @@ inline void EntityHandle::AddComponent(ComponentType * componentType)
 }
 
 template<>
-inline void EntityHandle::AddComponent(ECS::Components::Camera * componentType)
+inline void EntityHandle::AddComponent(Core::ECS::Components::Camera * componentType)
 {
-    worldObj->AddComponent<ECS::Components::Camera>(componentType, entityObj);
+    worldObj->AddComponent<Core::ECS::Components::Camera>(componentType, entityObj);
     
     CameraAdditionEvent evt;
     evt.cam = componentType;
@@ -84,9 +82,9 @@ inline void EntityHandle::AddComponent(ECS::Components::Camera * componentType)
 }
 
 template<>
-inline void EntityHandle::AddComponent(ECS::Components::MeshRenderer * componentType)
+inline void EntityHandle::AddComponent(Core::ECS::Components::MeshRenderer * componentType)
 {
-    worldObj->AddComponent<ECS::Components::MeshRenderer>(componentType, entityObj);
+    worldObj->AddComponent<Core::ECS::Components::MeshRenderer>(componentType, entityObj);
 
     MeshRendererAdditionEvent evt;
     evt.renderer = componentType;
@@ -94,17 +92,17 @@ inline void EntityHandle::AddComponent(ECS::Components::MeshRenderer * component
 }
 
 template<>
-inline void EntityHandle::AddComponent(ECS::Components::Scriptable * componentType)
+inline void EntityHandle::AddComponent(Core::ECS::Components::Scriptable * componentType)
 {
-    worldObj->AddComponent<ECS::Components::Scriptable>(componentType, entityObj);
+    worldObj->AddComponent<Core::ECS::Components::Scriptable>(componentType, entityObj);
     componentType->entityHandle = this;
     componentType->Activated();
 }
 
 template<>
-inline void EntityHandle::AddComponent(ECS::Components::Light * componentType)
+inline void EntityHandle::AddComponent(Core::ECS::Components::Light * componentType)
 {
-    worldObj->AddComponent<ECS::Components::Light>(componentType, entityObj);
+    worldObj->AddComponent<Core::ECS::Components::Light>(componentType, entityObj);
 
     LightAdditionEvent evt;
     evt.light = componentType;
@@ -118,9 +116,9 @@ inline void EntityHandle::RemoveComponent(ComponentType * componentType)
 }
 
 template<typename ComponentType>
-inline ECS::ComponentHandle<ComponentType> EntityHandle::GetComponent()
+inline Core::ECS::ComponentHandle<ComponentType> EntityHandle::GetComponent()
 {
-    ECS::ComponentHandle<ComponentType> componentHandle;  
+    Core::ECS::ComponentHandle<ComponentType> componentHandle;  
     worldObj->Unpack(entityObj, componentHandle);
     return componentHandle;
 }

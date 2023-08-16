@@ -4,16 +4,18 @@
 
 class EntityHandle;
 class CameraController;
-
-namespace ECS
+namescpace Core
 {
-    namespace Components
+namespace ECS
     {
-        class MeshRenderer;
+        namespace Components
+        {
+            class MeshRenderer;
+        }
     }
 }
 
-class PlayerHandlerScript : public ECS::Components::Scriptable
+class PlayerHandlerScript : public Core::ECS::Components::Scriptable
 {
 private:
     EntityHandle* playerHandle;
@@ -24,14 +26,14 @@ private:
     EntityHandle* rightLeg;
     EntityHandle* leftLeg;
 
-    ECS::Components::MeshRenderer * headMeshRenderer;
-    ECS::Components::MeshRenderer * torsoMeshRenderer;
-    ECS::Components::MeshRenderer * leftArmMeshRenderer;
-    ECS::Components::MeshRenderer * rightArmMeshRenderer;
-    ECS::Components::MeshRenderer * rightLegMeshRenderer;
-    ECS::Components::MeshRenderer * leftLegMeshRenderer;
+    Core::ECS::Components::MeshRenderer * headMeshRenderer;
+    Core::ECS::Components::MeshRenderer * torsoMeshRenderer;
+    Core::ECS::Components::MeshRenderer * leftArmMeshRenderer;
+    Core::ECS::Components::MeshRenderer * rightArmMeshRenderer;
+    Core::ECS::Components::MeshRenderer * rightLegMeshRenderer;
+    Core::ECS::Components::MeshRenderer * leftLegMeshRenderer;
 
-    ECS::Components::Scriptable * cameraController;
+    Core::ECS::Components::Scriptable * cameraController;
 
     float prevAngle, currentAngle;
 

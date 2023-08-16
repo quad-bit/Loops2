@@ -12,15 +12,18 @@ class GraphNode;
 
 class CameraAdditionEvent;
 
-namespace ECS
+namespace Core
 {
-    template <typename T>
-    class ComponentHandle;
-
-    namespace Components
+    namespace ECS
     {
-        class Camera;
-        enum class Camera_Movement;
+        template <typename T>
+        class ComponentHandle;
+
+        namespace Components
+        {
+            class Camera;
+            enum class Camera_Movement;
+        }
     }
 }
 
@@ -28,18 +31,18 @@ class CameraSystem : public System
 {
 private:
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(ECS::Components::Camera * cam, glm::vec3 * camTransformPos, ECS::Components::Camera_Movement * direction, float deltaTime);
+    void ProcessKeyboard(Core::ECS::Components::Camera * cam, glm::vec3 * camTransformPos, Core::ECS::Components::Camera_Movement * direction, float deltaTime);
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch = true);
+    void ProcessMouseMovement(Core::ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch = true);
     
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yOffset) {}
   
     // Calculates the front vector from the Camera's (updated) Eular Angles
-    void UpdateCameraVectors(ECS::Components::Camera * cam);
+    void UpdateCameraVectors(Core::ECS::Components::Camera * cam);
 
-    std::vector<ECS::Components::Camera *> cameraList;
+    std::vector<Core::ECS::Components::Camera *> cameraList;
     //std::vector<ShaderBindingDescription *> resDescriptionList;
     GlobalResourceAllocationConfig allocConfig;
     GlobalResourceSharingConfig resourceSharingConfig;

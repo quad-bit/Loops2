@@ -32,7 +32,7 @@ SceneManager::~SceneManager()
 }
 
 
-ECS::Components::Transform * const SceneManager::GetSceneRootTransform()
+Core::ECS::Components::Transform * const SceneManager::GetSceneRootTransform()
 {
     ASSERT_MSG_DEBUG(sceneRootTransform != nullptr, "scene root null");
     return sceneRootTransform;

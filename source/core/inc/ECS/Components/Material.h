@@ -7,36 +7,39 @@
 struct SetWrapper;
 class Texture;
 class Shader;
-namespace ECS
+
+namespace Core
 {
-    namespace Components
+    namespace ECS
     {
-
-        class Material : public Component<Material>
+        namespace Components
         {
-        public:
-            glm::vec4 color;
-            bool enableInstancing = false;
-            Texture* mainTexture; // main color map
-            glm::vec2 mainTextureScale;
-            glm::vec2 mainTextureOffset;
-            Texture* textures; // normal, heightmap, gloss map.. etc   
-            uint32_t numTextures;
-            Shader* shaders;
-            uint32_t numShaders;
-            std::vector<SetWrapper*> resourceLayoutList;
-            std::vector<uint32_t> meshList;
 
-            Material(Shader* shaders, const uint32_t& numShaders)
+            class Material : public Component<Material>
             {
-                this->shaders = shaders;
-                this->numShaders = numShaders;
-                componentType = COMPONENT_TYPE::MATERIAL;
-            }
-        };
+            public:
+                glm::vec4 color;
+                bool enableInstancing = false;
+                Texture* mainTexture; // main color map
+                glm::vec2 mainTextureScale;
+                glm::vec2 mainTextureOffset;
+                Texture* textures; // normal, heightmap, gloss map.. etc   
+                uint32_t numTextures;
+                Shader* shaders;
+                uint32_t numShaders;
+                std::vector<SetWrapper*> resourceLayoutList;
+                std::vector<uint32_t> meshList;
+
+                Material(Shader* shaders, const uint32_t& numShaders)
+                {
+                    this->shaders = shaders;
+                    this->numShaders = numShaders;
+                    componentType = COMPONENT_TYPE::MATERIAL;
+                }
+            };
+        }
     }
 }
-
 // unity ref
 /*
 
