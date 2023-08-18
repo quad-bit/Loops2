@@ -20,7 +20,7 @@ inline void HashCombine(std::size_t& seed, const T& v, Rest... rest)
     HashCombine(seed, rest...);
 }
 
-bool operator==(const VertexInputAttributeInfo & lhs, const VertexInputAttributeInfo & rhs)
+bool operator==(const Core::Wrappers::VertexInputAttributeInfo & lhs, const Core::Wrappers::VertexInputAttributeInfo & rhs)
 {
     if (lhs.binding == rhs.binding && lhs.format == rhs.format &&
         lhs.location == rhs.location && lhs.offset == rhs.offset)
@@ -29,7 +29,7 @@ bool operator==(const VertexInputAttributeInfo & lhs, const VertexInputAttribute
         return false;
 }
 
-bool operator==(const VertexInputBindingInfo & lhs, const VertexInputBindingInfo & rhs)
+bool operator==(const Core::Wrappers::VertexInputBindingInfo & lhs, const Core::Wrappers::VertexInputBindingInfo & rhs)
 {
     if (lhs.binding == rhs.binding && lhs.inputRate == rhs.inputRate &&
         lhs.stride == rhs.stride)
@@ -38,7 +38,7 @@ bool operator==(const VertexInputBindingInfo & lhs, const VertexInputBindingInfo
         return false;
 }
 
-bool operator==(const SetWrapper & lhs, const SetWrapper & rhs)
+bool operator==(const Core::Wrappers::SetWrapper & lhs, const Core::Wrappers::SetWrapper & rhs)
 {
     if (lhs.setValue == rhs.setValue && lhs.bindingWrapperList.size() == rhs.bindingWrapperList.size())
         return true;
@@ -47,7 +47,7 @@ bool operator==(const SetWrapper & lhs, const SetWrapper & rhs)
 }
 
 
-bool operator==(const StencilOpState & lhs, const StencilOpState & rhs)
+bool operator==(const Core::Wrappers::StencilOpState & lhs, const Core::Wrappers::StencilOpState & rhs)
 {
     if (lhs.compareMask == rhs.compareMask && 
         lhs.writeMask == rhs.writeMask &&
@@ -64,9 +64,9 @@ bool operator==(const StencilOpState & lhs, const StencilOpState & rhs)
 
 namespace std
 {
-    template<> struct hash<VertexInputAttributeInfo>
+    template<> struct hash<Core::Wrappers::VertexInputAttributeInfo>
     {
-        std::size_t operator()(VertexInputAttributeInfo const& s) const noexcept
+        std::size_t operator()(Core::Wrappers::VertexInputAttributeInfo const& s) const noexcept
         {
             std::size_t h1 = std::hash<std::uint32_t>{}(s.binding);
             std::size_t h2 = std::hash<std::uint32_t>{}(s.location);
@@ -80,9 +80,9 @@ namespace std
         }
     };
 
-    template<> struct hash<VertexInputBindingInfo>
+    template<> struct hash<Core::Wrappers::VertexInputBindingInfo>
     {
-        std::size_t operator()(VertexInputBindingInfo const& s) const noexcept
+        std::size_t operator()(Core::Wrappers::VertexInputBindingInfo const& s) const noexcept
         {
             std::size_t h1 = std::hash<std::uint32_t>{}(s.binding);
             std::size_t h2 = std::hash<std::uint32_t>{}(s.stride);
@@ -95,9 +95,9 @@ namespace std
         }
     };
 
-    template<> struct hash<StencilOpState>
+    template<> struct hash<Core::Wrappers::StencilOpState>
     {
-        std::size_t operator()(StencilOpState const& s) const noexcept
+        std::size_t operator()(Core::Wrappers::StencilOpState const& s) const noexcept
         {
             std::size_t h1 = std::hash<std::uint32_t>{}((uint32_t)s.compareOp);
             std::size_t h2 = std::hash<std::uint32_t>{}((uint32_t)s.depthFailOp);
@@ -114,9 +114,9 @@ namespace std
         }
     };
 
-    template<> struct hash<SetWrapper>
+    template<> struct hash<Core::Wrappers::SetWrapper>
     {
-        std::size_t operator()(SetWrapper const& s) const noexcept
+        std::size_t operator()(Core::Wrappers::SetWrapper const& s) const noexcept
         {
             std::size_t seed = 0UL;
             std::size_t h1 = std::hash<std::uint32_t>{}(s.setValue);
@@ -125,7 +125,7 @@ namespace std
 
             for (uint32_t i = 0; i < s.bindingWrapperList.size(); i++)
             {
-                BindingWrapper bindingWrapper = s.bindingWrapperList[i];
+                Core::Wrappers::BindingWrapper bindingWrapper = s.bindingWrapperList[i];
                 std::size_t h1 = std::hash<std::uint32_t>{}(bindingWrapper.bindingObj.binding);
                 std::size_t h2 = std::hash<std::uint32_t>{}(bindingWrapper.bindingObj.descriptorCount);
                 std::size_t h3 = std::hash<std::uint32_t>{}((std::uint32_t)bindingWrapper.bindingObj.descriptorType);

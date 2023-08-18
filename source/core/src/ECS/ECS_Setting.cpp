@@ -1,3 +1,3 @@
 #include "ECS/ECS_Setting.h"
 
-APP_STATE appState = APP_STATE::NONE;
+Core::ECS::APP_STATE appState = Core::ECS::APP_STATE::NONE;

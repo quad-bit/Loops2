@@ -6,15 +6,15 @@ void main()
 {
     ApplicationController appController;
 
-    EngineManager::GetInstance()->Init();
+    Engine::EngineManager::GetInstance()->Init();
     appController.Init();
 
     appController.Update();
-    EngineManager::GetInstance()->Update();
+    Engine::EngineManager::GetInstance()->Update();
 
     appController.DeInit();
-    EngineManager::GetInstance()->DeInit();
-    delete EngineManager::GetInstance();
+    Engine::EngineManager::GetInstance()->DeInit();
+    delete Engine::EngineManager::GetInstance();
 
-    //getchar();
+    getchar();
 }

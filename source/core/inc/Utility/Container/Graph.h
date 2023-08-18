@@ -7,146 +7,153 @@
 #include <deque>
 #include <map>
 
-template <class T>
-class Graph;
 
-template<class T>
-class GraphNode
+namespace Core
 {
-private:
-    std::uint32_t nodeId;
-    static std::uint32_t idCounter;
-
-    std::uint32_t GetId() { return idCounter++; }
-
-public:
-    T * node;
-    GraphNode(T * obj) :node(obj)
+    namespace Containers
     {
-        nodeId = GetId();
-    }
+        template <class T>
+        class Graph;
 
-    ~GraphNode()
-    {
-
-    }
-
-    T * GetNodeData()
-    {
-        return node;
-    }
-
-    const std::uint32_t & GetNodeId() { return nodeId; }
-
-    friend class Graph<T>;
-};
-
-template<typename T>
-std::uint32_t GraphNode<T>::idCounter = 0;
-
-
-template <class T>
-class Graph
-{
-private:
-    std::vector<GraphNode<T>*> vertices;
-    int maxVertices, numOfExistingVerts;
-    int matrixExtendingLimit = 20;// when the matrix gets exhausted relocate it with additional matrixExtendingLimit size
-    char **adjMatrix;
-    char ** localMat;
-    char *visitedVertices;
-    
-    void ValidateVisitation(std::map<std::uint32_t, std::uint32_t> & visitedMap);
-
-public:
-    Graph(int numVerts) : maxVertices(numVerts), adjMatrix(NULL)
-    {
-        assert(numVerts > 0);
-        numOfExistingVerts = 0;
-        vertices.reserve(maxVertices);
-
-        visitedVertices = new char[maxVertices];
-        assert(visitedVertices != NULL);
-
-        memset(visitedVertices, 0, maxVertices);
-
-        adjMatrix = new char*[maxVertices];
-        assert(adjMatrix != NULL);
-
-        localMat = new char*[maxVertices];
-        assert(localMat != NULL);
-
-        for (int i = 0; i < maxVertices; i++)
+        template<class T>
+        class GraphNode
         {
-            adjMatrix[i] = new char[maxVertices];
-            localMat[i] = new char[maxVertices];
+        private:
+            std::uint32_t nodeId;
+            static std::uint32_t idCounter;
 
-            assert(adjMatrix[i] != NULL);
-            memset(adjMatrix[i], 0, maxVertices);
-            memset(localMat[i], 0, maxVertices);
-        }
-    }
+            std::uint32_t GetId() { return idCounter++; }
 
-    ~Graph()
-    {
-        if (adjMatrix != NULL)
-        {
-            for (int i = 0; i < maxVertices; i++)
+        public:
+            T* node;
+            GraphNode(T* obj) :node(obj)
             {
-                if (adjMatrix[i] != NULL)
-                {
-                    delete[] adjMatrix[i];
-                    adjMatrix[i] = NULL;
-                }
+                nodeId = GetId();
+            }
 
-                if (localMat[i] != NULL)
+            ~GraphNode()
+            {
+
+            }
+
+            T* GetNodeData()
+            {
+                return node;
+            }
+
+            const std::uint32_t& GetNodeId() { return nodeId; }
+
+            friend class Graph<T>;
+        };
+
+        template<typename T>
+        std::uint32_t GraphNode<T>::idCounter = 0;
+
+
+        template <class T>
+        class Graph
+        {
+        private:
+            std::vector<GraphNode<T>*> vertices;
+            int maxVertices, numOfExistingVerts;
+            int matrixExtendingLimit = 20;// when the matrix gets exhausted relocate it with additional matrixExtendingLimit size
+            char** adjMatrix;
+            char** localMat;
+            char* visitedVertices;
+
+            void ValidateVisitation(std::map<std::uint32_t, std::uint32_t>& visitedMap);
+
+        public:
+            Graph(int numVerts) : maxVertices(numVerts), adjMatrix(NULL)
+            {
+                assert(numVerts > 0);
+                numOfExistingVerts = 0;
+                vertices.reserve(maxVertices);
+
+                visitedVertices = new char[maxVertices];
+                assert(visitedVertices != NULL);
+
+                memset(visitedVertices, 0, maxVertices);
+
+                adjMatrix = new char* [maxVertices];
+                assert(adjMatrix != NULL);
+
+                localMat = new char* [maxVertices];
+                assert(localMat != NULL);
+
+                for (int i = 0; i < maxVertices; i++)
                 {
-                    delete[] localMat[i];
-                    localMat[i] = NULL;
+                    adjMatrix[i] = new char[maxVertices];
+                    localMat[i] = new char[maxVertices];
+
+                    assert(adjMatrix[i] != NULL);
+                    memset(adjMatrix[i], 0, maxVertices);
+                    memset(localMat[i], 0, maxVertices);
                 }
             }
 
-            delete[] adjMatrix;
-            adjMatrix = NULL;
+            ~Graph()
+            {
+                if (adjMatrix != NULL)
+                {
+                    for (int i = 0; i < maxVertices; i++)
+                    {
+                        if (adjMatrix[i] != NULL)
+                        {
+                            delete[] adjMatrix[i];
+                            adjMatrix[i] = NULL;
+                        }
 
-            delete[] localMat;
-            localMat = NULL;
-        }
+                        if (localMat[i] != NULL)
+                        {
+                            delete[] localMat[i];
+                            localMat[i] = NULL;
+                        }
+                    }
+
+                    delete[] adjMatrix;
+                    adjMatrix = NULL;
+
+                    delete[] localMat;
+                    localMat = NULL;
+                }
 
 
-        if (visitedVertices != NULL)
-        {
-            delete[] visitedVertices;
-            visitedVertices = NULL;
-        }
+                if (visitedVertices != NULL)
+                {
+                    delete[] visitedVertices;
+                    visitedVertices = NULL;
+                }
 
-        vertices.clear();
+                vertices.clear();
+            }
+
+            bool Push(T* node);
+            bool Push(GraphNode<T>* graphNode);
+            void AttachEdge(int index1, int index2);
+            void AttachDirectedEdge(int index1, int index2);
+            void AttachDirectedEdge(GraphNode<T>* srcNode, GraphNode<T>* destNode);
+            int GetNextUnvisitedVertex(int index);
+            bool DepthFirstSearch(int startIndex, int endIndex);
+            bool BreadthFirstSearch(int startIndex, int endIndex);
+            bool BreadthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>* destNode);
+            bool DepthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>* destNode);
+            bool DepthFirstTraversal(const uint32_t& srcNodeId, const uint32_t& destNodeId);
+            void FindAllPaths(int startIndex, int endIndex);
+            void ExtendMatrix();
+            void CopyMat(char** src, char** dest);
+            void PrintAdjMatrix();
+        };
     }
-
-    bool Push(T * node);
-    bool Push(GraphNode<T> * graphNode);
-    void AttachEdge(int index1, int index2);
-    void AttachDirectedEdge(int index1, int index2);
-    void AttachDirectedEdge(GraphNode<T> * srcNode, GraphNode<T> * destNode);
-    int GetNextUnvisitedVertex(int index);
-    bool DepthFirstSearch(int startIndex, int endIndex);
-    bool BreadthFirstSearch(int startIndex, int endIndex);
-    bool BreadthFirstTraversal(GraphNode<T> * srcNode, GraphNode<T> * destNode);
-    bool DepthFirstTraversal(GraphNode<T> * srcNode, GraphNode<T> * destNode);
-    bool DepthFirstTraversal(const uint32_t & srcNodeId, const uint32_t & destNodeId);
-    void FindAllPaths(int startIndex, int endIndex);
-    void ExtendMatrix();
-    void CopyMat(char ** src, char ** dest);
-    void PrintAdjMatrix();
-};
+}
 
 template<class T>
-inline bool Graph<T>::Push(T * node)
+inline bool Core::Containers::Graph<T>::Push(T * node)
 {
     if ((int)vertices.size() >= maxVertices)
         ExtendMatrix();
 
-    GraphNode<T> * graphNode = new GraphNode<T>(node);
+    Core::Containers::GraphNode<T> * graphNode = new Core::Containers::GraphNode<T>(node);
 
     vertices.push_back(graphNode);
     numOfExistingVerts++;
@@ -154,7 +161,7 @@ inline bool Graph<T>::Push(T * node)
 }
 
 template<class T>
-inline bool Graph<T>::Push(GraphNode<T>* graphNode)
+inline bool Core::Containers::Graph<T>::Push(Core::Containers::GraphNode<T>* graphNode)
 {
     if ((int)vertices.size() >= maxVertices)
         ExtendMatrix();
@@ -166,7 +173,7 @@ inline bool Graph<T>::Push(GraphNode<T>* graphNode)
 }
 
 template<class T>
-inline void Graph<T>::AttachEdge(int index1, int index2)
+inline void Core::Containers::Graph<T>::AttachEdge(int index1, int index2)
 {
     assert(adjMatrix != NULL);
 
@@ -175,7 +182,7 @@ inline void Graph<T>::AttachEdge(int index1, int index2)
 }
 
 template<class T>
-inline void Graph<T>::AttachDirectedEdge(int index1, int index2)
+inline void Core::Containers::Graph<T>::AttachDirectedEdge(int index1, int index2)
 {
     assert(adjMatrix != NULL);
 
@@ -183,7 +190,7 @@ inline void Graph<T>::AttachDirectedEdge(int index1, int index2)
 }
 
 template<class T>
-inline void Graph<T>::AttachDirectedEdge(GraphNode<T> * srcNode, GraphNode<T> * destNode)
+inline void Core::Containers::Graph<T>::AttachDirectedEdge(Core::Containers::GraphNode<T> * srcNode, Core::Containers::GraphNode<T> * destNode)
 {
     assert(adjMatrix != NULL);
 
@@ -191,7 +198,7 @@ inline void Graph<T>::AttachDirectedEdge(GraphNode<T> * srcNode, GraphNode<T> * 
 }
 
 template<class T>
-inline int Graph<T>::GetNextUnvisitedVertex(int index)
+inline int Core::Containers::Graph<T>::GetNextUnvisitedVertex(int index)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -208,7 +215,7 @@ inline int Graph<T>::GetNextUnvisitedVertex(int index)
 }
 
 template<class T>
-inline bool Graph<T>::DepthFirstSearch(int startIndex, int endIndex)
+inline bool Core::Containers::Graph<T>::DepthFirstSearch(int startIndex, int endIndex)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -249,7 +256,7 @@ inline bool Graph<T>::DepthFirstSearch(int startIndex, int endIndex)
 }
 
 template<class T>
-inline bool Graph<T>::BreadthFirstSearch(int startIndex, int endIndex)
+inline bool Core::Containers::Graph<T>::BreadthFirstSearch(int startIndex, int endIndex)
 {
 
     assert(visitedVertices != NULL);
@@ -287,7 +294,7 @@ inline bool Graph<T>::BreadthFirstSearch(int startIndex, int endIndex)
 }
 
 template<class T>
-inline bool Graph<T>::BreadthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>* destNode)
+inline bool Core::Containers::Graph<T>::BreadthFirstTraversal(Core::Containers::GraphNode<T>* srcNode, Core::Containers::GraphNode<T>* destNode)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -332,7 +339,7 @@ inline bool Graph<T>::BreadthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>*
 }
 
 template<class T>
-inline bool Graph<T>::DepthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>* destNode)
+inline bool Core::Containers::Graph<T>::DepthFirstTraversal(Core::Containers::GraphNode<T>* srcNode, Core::Containers::GraphNode<T>* destNode)
 {
     int startIndex = srcNode->nodeId; int endIndex = destNode->nodeId;
     return DepthFirstTraversal(startIndex, endIndex);
@@ -384,7 +391,7 @@ inline bool Graph<T>::DepthFirstTraversal(GraphNode<T>* srcNode, GraphNode<T>* d
 }
 
 template<class T>
-inline bool Graph<T>::DepthFirstTraversal(const uint32_t & srcNodeId, const uint32_t & destNodeId)
+inline bool Core::Containers::Graph<T>::DepthFirstTraversal(const uint32_t & srcNodeId, const uint32_t & destNodeId)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -435,7 +442,7 @@ inline bool Graph<T>::DepthFirstTraversal(const uint32_t & srcNodeId, const uint
 
 
 template<class T>
-inline void Graph<T>::ValidateVisitation(std::map<std::uint32_t, std::uint32_t> & visitedMap)
+inline void Core::Containers::Graph<T>::ValidateVisitation(std::map<std::uint32_t, std::uint32_t> & visitedMap)
 {
     if (visitedMap.size() <= 1)
         return;
@@ -468,7 +475,7 @@ inline void Graph<T>::ValidateVisitation(std::map<std::uint32_t, std::uint32_t> 
 
 
 template<class T>
-inline void Graph<T>::FindAllPaths(int startIndex, int endIndex)
+inline void Core::Containers::Graph<T>::FindAllPaths(int startIndex, int endIndex)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -520,13 +527,13 @@ inline void Graph<T>::FindAllPaths(int startIndex, int endIndex)
 }
 
 template<class T>
-inline void Graph<T>::ExtendMatrix()
+inline void Core::Containers::Graph<T>::ExtendMatrix()
 {
     assert(0);
 }
 
 template<class T>
-inline void Graph<T>::CopyMat(char ** src, char ** dest)
+inline void Core::Containers::Graph<T>::CopyMat(char ** src, char ** dest)
 {
     for (int i = 0; i < maxVertices; i++)
     {
@@ -551,7 +558,7 @@ inline void Graph<T>::CopyMat(char ** src, char ** dest)
 }
 
 template<class T>
-inline void Graph<T>::PrintAdjMatrix()
+inline void Core::Containers::Graph<T>::PrintAdjMatrix()
 {
     std::cout << std::endl;
     for (std::uint32_t i = 0; i < (std::uint32_t)numOfExistingVerts; i++)

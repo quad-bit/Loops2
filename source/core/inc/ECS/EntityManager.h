@@ -1,34 +1,38 @@
 #pragma once
 #include <vector>
 
-class Entity;
-class EntityHandle;
-class World;
-
-class EntityManager
+namespace Core
 {
-public:
-    Entity* CreateEntity();
-    EntityHandle * CreateEntityHandle(Entity* obj, World * worldObj);
-    EntityHandle * const FindEntity(const std::string & name);
-    void DestroyEntity(Entity* entity);
+    namespace ECS
+    {
+        class Entity;
+        class EntityHandle;
+        class World;
 
-    static EntityManager* GetSingleton();
-    void Init();
-    void DeInit();
+        class EntityManager
+        {
+        public:
+            Entity* CreateEntity();
+            EntityHandle* CreateEntityHandle(Entity* obj, World* worldObj);
+            EntityHandle* const FindEntity(const std::string& name);
+            void DestroyEntity(Entity* entity);
 
-private:
-    int lastEntity = 0;
+            static EntityManager* GetSingleton();
+            void Init();
+            void DeInit();
 
-    std::vector <Entity*> entityList;
-    std::vector <EntityHandle*> entityHandleList;
+        private:
+            int lastEntity = 0;
 
-    EntityManager();
-    EntityManager(EntityManager const &) {}
-    EntityManager const & operator= (EntityManager const &) {}
+            std::vector <Entity*> entityList;
+            std::vector <EntityHandle*> entityHandleList;
 
-    static EntityManager* entityManagerInstance;
+            EntityManager();
+            EntityManager(EntityManager const&) {}
+            EntityManager const& operator= (EntityManager const&) {}
 
+            static EntityManager* entityManagerInstance;
 
-};
-
+        };
+    }
+}

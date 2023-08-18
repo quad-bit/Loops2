@@ -21,7 +21,7 @@ uint32_t LightSystem::GeneratedLightId()
     return idCounter++;
 }
 
-void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc, Core::ECS::Components::Light * light)
+void LightSystem::CreateLightUniformDescription(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light)
 {
 #if 0
     desc->set = (uint32_t)ResourceSets::LIGHT;
@@ -40,7 +40,7 @@ void LightSystem::CreateLightUniformDescription(ShaderBindingDescription * desc,
 #endif
 }
 
-void LightSystem::CreateLightUniformBuffer(ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam)
+void LightSystem::CreateLightUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam)
 {
 #if 0
     // Check if it can be fit into an existing buffer
@@ -99,7 +99,7 @@ Core::ECS::Components::Camera *  LightSystem::CreateLightCamera(Core::ECS::Compo
     return lightCam;
 }
 
-void LightSystem::CreateShadowMap(ShaderBindingDescription * desc)
+void LightSystem::CreateShadowMap(Core::Utility::ShaderBindingDescription * desc)
 {
 #if 0
     SamplerCreateInfo info = {};

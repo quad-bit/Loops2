@@ -3,9 +3,18 @@
 #include "ECS/Events/Event.h"
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
 
-class MeshToMatAdditionEvent : public Event
+namespace Core
 {
-public:
-    std::vector<SetWrapper *> setWrapperList;
-    uint32_t meshId; 
-};
+    namespace ECS
+    {
+        namespace Events
+        {
+            class MeshToMatAdditionEvent : public Event
+            {
+            public:
+                std::vector<Core::Wrappers::SetWrapper*> setWrapperList;
+                uint32_t meshId;
+            };
+        }
+    }
+}

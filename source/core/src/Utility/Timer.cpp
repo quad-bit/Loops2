@@ -4,49 +4,49 @@
 #include <ctime>   // localtime
 #include <plog/Log.h> 
 
-Timer* Timer::instance = nullptr;
+Core::Utility::Timer* Core::Utility::Timer::instance = nullptr;
 
-void Timer::Init()
+void Core::Utility::Timer::Init()
 {
     currentTimeStamp = std::chrono::high_resolution_clock::now();
     previousTimeStamp = std::chrono::high_resolution_clock::now();
 }
 
-void Timer::DeInit()
+void Core::Utility::Timer::DeInit()
 {
 
 }
 
-void Timer::Update()
+void Core::Utility::Timer::Update()
 {
 
 }
 
-Timer * Timer::GetInstance()
+Core::Utility::Timer * Core::Utility::Timer::GetInstance()
 {
     if (instance == nullptr)
     {
-        instance = new Timer();
+        instance = new Core::Utility::Timer();
     }
     return instance;
 }
 
-Timer::~Timer()
+Core::Utility::Timer::~Timer()
 {
 }
 
-void Timer::Tick()
+void Core::Utility::Timer::Tick()
 {
     currentTimeStamp = std::chrono::high_resolution_clock::now();
 }
 
-void Timer::Reset()
+void Core::Utility::Timer::Reset()
 {
     currentTimeStamp = std::chrono::high_resolution_clock::now();
     previousTimeStamp = std::chrono::high_resolution_clock::now();
 }
 
-uint32_t Timer::GetSeconds()
+uint32_t Core::Utility::Timer::GetSeconds()
 {
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);

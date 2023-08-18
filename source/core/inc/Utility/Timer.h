@@ -2,34 +2,39 @@
 #include <chrono>
 #include "Platform/Assertion.h"
 
-class Timer
+namespace Core
 {
+    namespace Utility
+    {
+        class Timer
+        {
+        private:
+            Timer() {}
+            Timer(Timer const&) {}
+            Timer const& operator= (Timer const&) {}
 
-private:
-    Timer(){}
-    Timer(Timer const &) {}
-    Timer const & operator= (Timer const &) {}
+            static Timer* instance;
+            std::chrono::high_resolution_clock::time_point currentTimeStamp, previousTimeStamp;
 
-    static Timer* instance;
-    std::chrono::high_resolution_clock::time_point currentTimeStamp, previousTimeStamp;
+        public:
+            void Init();
+            void DeInit();
+            void Update();
+            static Timer* GetInstance();
+            ~Timer();
 
-public:
-    void Init();
-    void DeInit();
-    void Update();
-    static Timer* GetInstance();
-    ~Timer();
+            void Tick();
+            void Reset();
+            template <typename T>
+            T GetDeltaTime();
 
-    void Tick();
-    void Reset();
-    template <typename T>
-    T GetDeltaTime();
-
-    uint32_t GetSeconds();
-};
+            uint32_t GetSeconds();
+        };
+    }
+}
 
 template<typename T>
-inline T Timer::GetDeltaTime()
+inline T Core::Utility::Timer::GetDeltaTime()
 {
     ASSERT_MSG_DEBUG(std::chrono::high_resolution_clock::is_steady, "Not a steady clock");
     //Tick();

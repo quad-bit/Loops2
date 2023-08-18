@@ -31,33 +31,33 @@ namespace Core
     }
 }
 
-class LightSystem : public System
+class LightSystem : public Core::ECS::System
 {
 private:
     std::vector<Core::ECS::Components::Light *> lightlist;
     std::map<Core::ECS::Components::Light *, Core::ECS::Components::Camera *> lightToCamList;
-    std::vector<ShaderBindingDescription *> resDescriptionList;
-    GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
-    GlobalResourceSharingConfig lightBufferSharingConfig;
+    std::vector<Core::Utility::ShaderBindingDescription *> resDescriptionList;
+    Core::Utility::GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
+    Core::Utility::GlobalResourceSharingConfig lightBufferSharingConfig;
 
     uint32_t idCounter = 0;
     uint32_t GeneratedLightId();
 
-    SetWrapper * lightSetWrapper;
+    Core::Wrappers::SetWrapper * lightSetWrapper;
 
     //std::vector<GraphNode<DrawGraphNode> *> lightGraphNodeList;
     //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
-    std::map<Core::ECS::Components::Light *, ShaderBindingDescription *> lightToDescriptionMap;
+    std::map<Core::ECS::Components::Light *, Core::Utility::ShaderBindingDescription *> lightToDescriptionMap;
 
     size_t memoryAlignedUniformSize;
     
     Core::ECS::Components::Material * shadowMappingMat = nullptr;
     System * cameraSystem;
 
-    void CreateLightUniformDescription(ShaderBindingDescription * desc, Core::ECS::Components::Light * light);
-    void CreateLightUniformBuffer(ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
+    void CreateLightUniformDescription(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light);
+    void CreateLightUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
     Core::ECS::Components::Camera * CreateLightCamera(Core::ECS::Components::Transform * transform);
-    void CreateShadowMap(ShaderBindingDescription * desc);
+    void CreateShadowMap(Core::Utility::ShaderBindingDescription * desc);
 
 public:
     virtual void Init() override;
@@ -68,7 +68,7 @@ public:
     //void HandleMeshAddition(MeshToMatAdditionEvent *  meshAdditionEvent);
     //void HandleRendererAddition(MeshRendererAdditionEvent *  rendererAdditionEvent);
     //void HandleDepthPrepassCreation(DepthPassAttachmentCreationEvent * evt);
-    void AssignCameraSystem(System * camSystem);
+    void AssignCameraSystem(Core::ECS::System * camSystem);
 
     LightSystem();
     virtual ~LightSystem();

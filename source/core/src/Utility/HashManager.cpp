@@ -5,7 +5,7 @@
 
 HashManager* HashManager::instance = nullptr;
 
-uint32_t HashManager::CheckForPipeLineObjectHash(const std::size_t & hash, const uint32_t & stateId, const PipelineStates & state)
+uint32_t HashManager::CheckForPipeLineObjectHash(const std::size_t & hash, const uint32_t & stateId, const Core::Enums::PipelineStates & state)
 {
     std::vector<PipelineObjectHashWrapper>::iterator it;
     it = std::find_if(pipelineHashList.begin(), pipelineHashList.end(), [&](PipelineObjectHashWrapper e) { return e.hash == hash; });
@@ -57,20 +57,20 @@ HashManager::~HashManager()
 {
 }
 
-int HashManager::FindVertexInputStateHash(VertexInputState * inputInfo, uint32_t stateId)
+int HashManager::FindVertexInputStateHash(Core::Wrappers::VertexInputState * inputInfo, uint32_t stateId)
 {
     std::size_t hash = 0UL;
     size_t hashAttrib, hashBinding, hashPipelineState;
 
     for (uint32_t i = 0; i < inputInfo->attribCount; i++)
     {
-        hashAttrib = std::hash<VertexInputAttributeInfo>{}(inputInfo->attribInfo[i]);
+        hashAttrib = std::hash<Core::Wrappers::VertexInputAttributeInfo>{}(inputInfo->attribInfo[i]);
         HashCombine(hash, hashAttrib);
     }
 
     for (uint32_t i = 0; i < inputInfo->bindingCount; i++)
     {
-        hashBinding = std::hash<VertexInputBindingInfo>{}(inputInfo->bindingInfo[i]);
+        hashBinding = std::hash<Core::Wrappers::VertexInputBindingInfo>{}(inputInfo->bindingInfo[i]);
         HashCombine(hash, hashBinding);
     }
 
@@ -80,7 +80,7 @@ int HashManager::FindVertexInputStateHash(VertexInputState * inputInfo, uint32_t
     return CheckForPipeLineObjectHash(hash, stateId, inputInfo->state);
 }
 
-int HashManager::FindInputAssemblyStateHash(InputAssemblyState * inputInfo, uint32_t stateId)
+int HashManager::FindInputAssemblyStateHash(Core::Wrappers::InputAssemblyState * inputInfo, uint32_t stateId)
 {
     std::size_t hash = 0UL;
     size_t hashPrimitive, hashRestart, hashState;
@@ -94,7 +94,7 @@ int HashManager::FindInputAssemblyStateHash(InputAssemblyState * inputInfo, uint
     return CheckForPipeLineObjectHash(hash, stateId, inputInfo->state);
 }
 
-int HashManager::FindShaderStateHash(Shader * shaders, const uint32_t & shaderCount, uint32_t stateId, PipelineStates * state)
+int HashManager::FindShaderStateHash(Shader * shaders, const uint32_t & shaderCount, uint32_t stateId, Core::Enums::PipelineStates * state)
 {
     // TODO : needs correction
     std::size_t hash = 0UL;
@@ -110,11 +110,11 @@ int HashManager::FindShaderStateHash(Shader * shaders, const uint32_t & shaderCo
         size_t shaderNameHash = std::hash<std::string>{}(shaders[i].shaderName);
         size_t shaderId = std::hash<uint32_t>{}(shaders[i].shaderId);
 
-        if (shaders[i].shaderType == ShaderType::VERTEX)
+        if (shaders[i].shaderType == Core::Enums::ShaderType::VERTEX)
         {
             HashCombine(vertexShaderHash, shaderTypeHash, shaderNameHash, shaderId);
         }
-        else if (shaders[i].shaderType == ShaderType::FRAGMENT)
+        else if (shaders[i].shaderType == Core::Enums::ShaderType::FRAGMENT)
         {
             HashCombine(fragmentShaderHash, shaderTypeHash, shaderNameHash, shaderId);
         }
@@ -125,12 +125,12 @@ int HashManager::FindShaderStateHash(Shader * shaders, const uint32_t & shaderCo
     return CheckForPipeLineObjectHash(hash, stateId, *state);
 }
 
-int HashManager::FindTessellationStateHash(TessellationState * inputInfo, uint32_t stateId)
+int HashManager::FindTessellationStateHash(Core::Wrappers::TessellationState * inputInfo, uint32_t stateId)
 {
     std::size_t hash = 0UL;
     hash = std::hash<uint32_t>{}(inputInfo->patchControlPoints);
 
-    int result = CheckForHashExistence<TessellationState>(tessellationStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::TessellationState>(tessellationStateHashWrapperList, hash, stateId);
     return result;
 
     //// check if the hash exist in the list 
@@ -160,7 +160,7 @@ int HashManager::FindTessellationStateHash(TessellationState * inputInfo, uint32
     //return id;
 }
 
-int HashManager::FindViewportStateHash(ViewportState * inputInfo, uint32_t stateId)
+int HashManager::FindViewportStateHash(Core::Wrappers::ViewportState * inputInfo, uint32_t stateId)
 {
     std::size_t hash = 0UL;
     std::size_t viewportCountHash = 0UL, scissorCountHash = 0UL;
@@ -216,7 +216,7 @@ int HashManager::FindViewportStateHash(ViewportState * inputInfo, uint32_t state
 
     HashCombine(hash, viewportCountHash, scissorCountHash, viewportHashes, scissorHashes);
 
-    int result = CheckForHashExistence<ViewportState>(viewportStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::ViewportState>(viewportStateHashWrapperList, hash, stateId);
     return result;
     
     //// check if the hash exist in the list 
@@ -240,7 +240,7 @@ int HashManager::FindViewportStateHash(ViewportState * inputInfo, uint32_t state
     //return -1;
 }
 
-int HashManager::FindRasterizationHash(RasterizationState * inputInfo, uint32_t stateId)
+int HashManager::FindRasterizationHash(Core::Wrappers::RasterizationState * inputInfo, uint32_t stateId)
 {
     /*
         bool depthClampEnable;
@@ -271,11 +271,11 @@ int HashManager::FindRasterizationHash(RasterizationState * inputInfo, uint32_t 
     HashCombine(hash, depthClampEnableHash, rasterizeHash, polygonHash, cullHash, frontHash,
         depthBiasEnableHash, depthConstHash, depthClampHash, depthbiasSlopeHash, lineWidthHash);
 
-    int result = CheckForHashExistence<RasterizationState>(rasterizationStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::RasterizationState>(rasterizationStateHashWrapperList, hash, stateId);
     return result;
 }
 
-int HashManager::FindMultiSampleHash(MultiSampleState * inputInfo, uint32_t stateId)
+int HashManager::FindMultiSampleHash(Core::Wrappers::MultiSampleState * inputInfo, uint32_t stateId)
 {
     size_t hash = 0UL;
     size_t sampleShadingEnableHash = std::hash<bool>{}(inputInfo->sampleShadingEnable);
@@ -295,11 +295,11 @@ int HashManager::FindMultiSampleHash(MultiSampleState * inputInfo, uint32_t stat
     Samples sampleCount;
     */
 
-    int result = CheckForHashExistence<MultiSampleState>(multisampleStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::MultiSampleState>(multisampleStateHashWrapperList, hash, stateId);
     return result;
 }
 
-int HashManager::FindDepthStencilHash(DepthStencilState * inputInfo, uint32_t stateId)
+int HashManager::FindDepthStencilHash(Core::Wrappers::DepthStencilState * inputInfo, uint32_t stateId)
 {
     /*
     bool depthTestEnable;
@@ -320,18 +320,18 @@ int HashManager::FindDepthStencilHash(DepthStencilState * inputInfo, uint32_t st
     size_t h3 = std::hash<bool>{}(inputInfo->depthBoundsTestEnable);
     size_t h4 = std::hash<bool>{}(inputInfo->stencilTestEnable);
     size_t h5 = std::hash<uint32_t>{}((uint32_t)inputInfo->depthCompareOp);
-    size_t h6 = std::hash<StencilOpState>{}(inputInfo->front);
-    size_t h7 = std::hash<StencilOpState>{}(inputInfo->back);
+    size_t h6 = std::hash<Core::Wrappers::StencilOpState>{}(inputInfo->front);
+    size_t h7 = std::hash<Core::Wrappers::StencilOpState>{}(inputInfo->back);
     size_t h8 = std::hash<float>{}(inputInfo->minDepthBounds);
     size_t h9 = std::hash<float>{}(inputInfo->maxDepthBounds);
 
     HashCombine(hash, h1, h2, h3, h4, h5, h6, h7, h8, h9);
 
-    int result = CheckForHashExistence<DepthStencilState>(depthStencilStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::DepthStencilState>(depthStencilStateHashWrapperList, hash, stateId);
     return result;
 }
 
-int HashManager::FindColorBlendHash(ColorBlendState * inputInfo, uint32_t stateId)
+int HashManager::FindColorBlendHash(Core::Wrappers::ColorBlendState * inputInfo, uint32_t stateId)
 {
     /*
         bool logicOpEnable;
@@ -368,11 +368,11 @@ int HashManager::FindColorBlendHash(ColorBlendState * inputInfo, uint32_t stateI
     
     HashCombine(hash, h1, h2, h3, h4, h5, h6, h7, hattachment);
 
-    int result = CheckForHashExistence<ColorBlendState>(ColorblendStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::ColorBlendState>(ColorblendStateHashWrapperList, hash, stateId);
     return result;
 }
 
-int HashManager::FindDynamicStateHash(DynamicStateList * inputInfo, uint32_t stateId)
+int HashManager::FindDynamicStateHash(Core::Wrappers::DynamicStateList * inputInfo, uint32_t stateId)
 {
     /*
         uint32_t                           dynamicStateCount;
@@ -391,17 +391,17 @@ int HashManager::FindDynamicStateHash(DynamicStateList * inputInfo, uint32_t sta
 
     HashCombine(hash, hCount, h0);
 
-    int result = CheckForHashExistence<DynamicStateList>(dynamicStateHashWrapperList, hash, stateId);
+    int result = CheckForHashExistence<Core::Wrappers::DynamicStateList>(dynamicStateHashWrapperList, hash, stateId);
     return result;
 }
 
-int HashManager::FindResourceLayoutHash(SetWrapper ** wrapperList, const uint32_t & setCount, uint32_t id)
+int HashManager::FindResourceLayoutHash(Core::Wrappers::SetWrapper ** wrapperList, const uint32_t & setCount, uint32_t id)
 {
     std::size_t accumulatedHash = 0UL;
     for (uint32_t i = 0; i < setCount; i++)
     {
-        SetWrapper obj = *wrapperList[i];
-        size_t hash = std::hash<SetWrapper>{}(obj);
+        Core::Wrappers::SetWrapper obj = *wrapperList[i];
+        size_t hash = std::hash<Core::Wrappers::SetWrapper>{}(obj);
         accumulatedHash += hash;
     }
     
@@ -455,9 +455,9 @@ int HashManager::FindMaterialHash(const std::vector<std::string>* shaderNames, c
     return 0;
 }
 
-int HashManager::FindDescriptorSetHash(SetWrapper * bindingObj, uint32_t id)
+int HashManager::FindDescriptorSetHash(Core::Wrappers::SetWrapper * bindingObj, uint32_t id)
 {
-    size_t hash = std::hash<SetWrapper>{}(*bindingObj);
+    size_t hash = std::hash<Core::Wrappers::SetWrapper>{}(*bindingObj);
 
     std::vector<DescriptorSetLayoutHashWrapper>::iterator it;
     it = std::find_if(descriptorSetLayoutWrapperHashList.begin(), descriptorSetLayoutWrapperHashList.end(), [&](DescriptorSetLayoutHashWrapper e) { return e.hash == hash; });

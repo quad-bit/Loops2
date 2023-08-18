@@ -8,9 +8,9 @@
 #include <Utility/Timer.h>
 #include "SceneManager.h"
 
-EngineManager* EngineManager::instance = nullptr;
+Engine::EngineManager* Engine::EngineManager::instance = nullptr;
 
-void EngineManager::Init()
+void Engine::EngineManager::Init()
 {
     //PLOGD << "ENGINE MANAGER Init";
     Settings::maxFrameRate = 60;
@@ -18,18 +18,18 @@ void EngineManager::Init()
     Settings::windowHeight = 1024;
     Settings::windowName = "Loops";
 
-    CoreManager::GetInstance()->Init();
+    Core::CoreManager::GetInstance()->Init();
     //GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
     //GraphicsManager::GetInstance()->SetupRenderer();
     ECS_Manager::GetInstance()->Init();
-    sceneManagerObj = new SceneManager();
-    Timer::GetInstance()->Init();
+    sceneManagerObj = new Engine::SceneManager();
+    Core::Utility::Timer::GetInstance()->Init();
 }
 
-void EngineManager::DeInit()
+void Engine::EngineManager::DeInit()
 {
-    Timer::GetInstance()->DeInit();
-    delete Timer::GetInstance();
+    Core::Utility::Timer::GetInstance()->DeInit();
+    delete Core::Utility::Timer::GetInstance();
 
     delete sceneManagerObj;
 
@@ -40,11 +40,11 @@ void EngineManager::DeInit()
     //GraphicsManager::GetInstance()->DeInit();
     //delete GraphicsManager::GetInstance();
 
-    CoreManager::GetInstance()->DeInit();
-    delete CoreManager::GetInstance();
+    Core::CoreManager::GetInstance()->DeInit();
+    delete Core::CoreManager::GetInstance();
 }
 
-void EngineManager::Update()
+void Engine::EngineManager::Update()
 {
 #if 0
     // Before the update, will run just once
@@ -135,16 +135,16 @@ void EngineManager::Update()
     }
 }
 */
-EngineManager * EngineManager::GetInstance()
+Engine::EngineManager * Engine::EngineManager::GetInstance()
 {
     if (instance == nullptr)
     {
-        instance = new EngineManager();
+        instance = new Engine::EngineManager();
     }
     return instance;
 }
 
-EngineManager::~EngineManager()
+Engine::EngineManager::~EngineManager()
 {
     
 }

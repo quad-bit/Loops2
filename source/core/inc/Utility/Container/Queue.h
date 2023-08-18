@@ -2,67 +2,73 @@
 #include "LinkedList.h"
 #include <stdint.h>
 
-template <class T>
-class Queue
+namespace Core
 {
-private:
-    LinkList<T> elems;
-    int maxSize;
-
-public:
-    Queue(int size);
-    ~Queue() {}
-    void Push(T val);
-    void Pop();
-    const T& Front();
-
-    int GetSize()
+    namespace Containers
     {
-    	return elems.size();
-    }
+        template <class T>
+        class Queue
+        {
+        private:
+            LinkList<T> elems;
+            int maxSize;
 
-    int GetMaxSize()
-    {
-    	return maxSize;
-    }
+        public:
+            Queue(int size);
+            ~Queue() {}
+            void Push(T val);
+            void Pop();
+            const T& Front();
 
-    bool IsEmpty()
-    {
-    	return (elems.GetSize() == 0);
-    }
+            int GetSize()
+            {
+                return elems.size();
+            }
 
-    void Resize(int size)
-    {
-    	assert(size > 0);
-    	this->maxSize = size;
+            int GetMaxSize()
+            {
+                return maxSize;
+            }
+
+            bool IsEmpty()
+            {
+                return (elems.GetSize() == 0);
+            }
+
+            void Resize(int size)
+            {
+                assert(size > 0);
+                this->maxSize = size;
+            }
+        };
     }
-};
+}
 
 template<class T>
-inline Queue<T>::Queue(int size)
+inline Core::Containers::Queue<T>::Queue(int size)
 {
     assert(size > 0);
     this->maxSize = size;
 }
 
 template<class T>
-inline void Queue<T>::Push(T val)
+inline void Core::Containers::Queue<T>::Push(T val)
 {
     if (elems.GetSize() < (uint32_t)maxSize)
     	elems.Push(val);
 }
 
 template<class T>
-inline void Queue<T>::Pop()
+inline void Core::Containers::Queue<T>::Pop()
 {
     elems.PopFront();
 }
 
 template<class T>
-inline const T & Queue<T>::Front()
+inline const T & Core::Containers::Queue<T>::Front()
 {
     // TODO: insert return statement here
-    LinkIterator<T> it;
+    Core::Containers::LinkIterator<T> it;
     it = elems.Begin();
 
     return *it;

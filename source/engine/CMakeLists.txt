@@ -21,7 +21,7 @@ set(SourceList
 )
 
 #create library
-set(TARGET_NAME "EngineInterface")
+set(TARGET_NAME "Engine")
 add_library(${TARGET_NAME} ${SourceList})
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 

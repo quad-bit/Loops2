@@ -2,12 +2,12 @@
 #include <ECS/Component.h>
 #include <string>
 
-class EntityHandle;
 
 namespace Core
 {
     namespace ECS
     {
+        class EntityHandle;
         namespace Components
         {
             class Scriptable : public Component<Scriptable>
@@ -17,7 +17,7 @@ namespace Core
 
             public:
                 //Entity * entity;
-                EntityHandle* entityHandle;
+                Core::ECS::EntityHandle* entityHandle;
                 std::string scriptName;
                 bool runInEditMode = false;
                 virtual void Activated() {};

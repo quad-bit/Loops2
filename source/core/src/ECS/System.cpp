@@ -2,18 +2,18 @@
 #include "ECS/World.h"
 #include "ECS/Entity.h"
 
-void System::RegisterWorld(World * world)
+void Core::ECS::System::RegisterWorld(Core::ECS::World * world)
 {
     worldObj = world;
 }
 
-void System::RegisterEntity(Entity * entity) 
+void Core::ECS::System::RegisterEntity(Core::ECS::Entity * entity)
 {
     registeredEntities.push_back(entity);
 }
 
 // This entity has stopped fitting our current requirements
-void System::UnRegisterEntity(Entity* entity) 
+void Core::ECS::System::UnRegisterEntity(Core::ECS::Entity* entity)
 {
     for (auto it = registeredEntities.begin(); it != registeredEntities.end(); ++it) 
     {

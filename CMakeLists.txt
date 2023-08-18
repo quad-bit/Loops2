@@ -24,8 +24,8 @@ add_subdirectory(source/core projects/core)
 # message ("\nGraphics ..\n")
 # add_subdirectory(Source/Graphics Projects/Graphics)
 
-# message ("\nConfiguring EngineInterface ..\n")
-add_subdirectory(source/EngineInterface projects/EngineInterface)
+message ("\nConfiguring EngineInterface ..\n")
+add_subdirectory(source/engine projects/engine)
 
-# message ("\nApp ..")
+message ("\nApp ..")
 add_subdirectory(source/application projects/application)

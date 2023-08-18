@@ -1,7 +1,15 @@
 #pragma once
-
-class Event
+namespace Core
 {
-protected:
-    virtual ~Event() {};
-};
+    namespace ECS
+    {
+        namespace Events
+        {
+            class Event
+            {
+            protected:
+                virtual ~Event() {};
+            };
+        }
+    }
+}

@@ -7,9 +7,9 @@
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include "Utility/HashManager.h"
 
-CoreManager* CoreManager::instance = nullptr;
+Core::CoreManager* Core::CoreManager::instance = nullptr;
 
-void CoreManager::Init()
+void Core::CoreManager::Init()
 {
     //plog::init(plog::debug, "Hello.txt"); // Step2: initialize the logger.
     static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
@@ -34,7 +34,7 @@ void CoreManager::Init()
     */
 }
 
-void CoreManager::DeInit()
+void Core::CoreManager::DeInit()
 {
     PLOGD << "Core manager DeInit";
 
@@ -42,20 +42,20 @@ void CoreManager::DeInit()
     delete HashManager::GetInstance();
 }
 
-void CoreManager::Update()
+void Core::CoreManager::Update()
 {
 
 }
 
-CoreManager * CoreManager::GetInstance()
+Core::CoreManager * Core::CoreManager::GetInstance()
 {
     if (instance == nullptr)
     {
-        instance = new CoreManager();
+        instance = new Core::CoreManager();
     }
     return instance;
 }
 
-CoreManager::~CoreManager()
+Core::CoreManager::~CoreManager()
 {
 }

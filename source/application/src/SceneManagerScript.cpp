@@ -316,7 +316,7 @@ void SceneManagerScript::Update(float dt)
     {
         Core::ECS::Components::Transform * transform = lightHandle->GetTransform();
 
-        float angle = MathUtil::lerp(prevAngle, currentAngle, dt);
+        float angle = Core::Math::lerp(prevAngle, currentAngle, dt);
         prevAngle = currentAngle;
 
         transform->SetLocalPosition(glm::vec3(x, y, transform->GetLocalPosition().z));

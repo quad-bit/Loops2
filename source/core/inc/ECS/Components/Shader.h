@@ -7,7 +7,7 @@ class Shader
 public:
     std::string shaderName;
     const char * shaderText;
-    ShaderType shaderType;
+    Core::Enums::ShaderType shaderType;
 
     uint32_t shaderId;
 

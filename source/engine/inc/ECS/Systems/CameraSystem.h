@@ -27,7 +27,7 @@ namespace Core
     }
 }
 
-class CameraSystem : public System
+class CameraSystem : public Core::ECS::System
 {
 private:
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -44,8 +44,8 @@ private:
 
     std::vector<Core::ECS::Components::Camera *> cameraList;
     //std::vector<ShaderBindingDescription *> resDescriptionList;
-    GlobalResourceAllocationConfig allocConfig;
-    GlobalResourceSharingConfig resourceSharingConfig;
+    Core::Utility::GlobalResourceAllocationConfig allocConfig;
+    Core::Utility::GlobalResourceSharingConfig resourceSharingConfig;
     
     uint32_t idCounter = 0;
     uint32_t GeneratedCamId();
@@ -53,7 +53,7 @@ private:
     //std::vector<size_t> CalculateOffsetsForDescInUniform(size_t dataSizePerDescriptor);
     //bool IsNewAllocationRequired();
 
-    SetWrapper * cameraSetWrapper;
+    Core::Wrappers::SetWrapper * cameraSetWrapper;
 
     //std::vector<GraphNode<DrawGraphNode> *> cameraGraphNodeList;
     //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;

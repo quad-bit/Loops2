@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-void GetFilesInFolder(const fs::path & folderPath, std::vector<std::string> & result)
+void Core::IO::GetFilesInFolder(const fs::path & folderPath, std::vector<std::string> & result)
 {
     for (const auto & entry : fs::directory_iterator(folderPath))
     {
@@ -15,7 +15,7 @@ void GetFilesInFolder(const fs::path & folderPath, std::vector<std::string> & re
 
 }
 
-const char * ReadTxtFile(uint32_t& length, const char* filename)
+const char * Core::IO::ReadTxtFile(uint32_t& length, const char* filename)
 {
     FILE* inFile;
     fopen_s(&inFile, filename, "r");
@@ -38,7 +38,7 @@ const char * ReadTxtFile(uint32_t& length, const char* filename)
     return outString;
 }
 
-const char* ReadSpvFile(uint32_t& length, const char* filename)
+const char* Core::IO::ReadSpvFile(uint32_t& length, const char* filename)
 {
     FILE* fp ;// = fopen(filename, "rb");
     fopen_s(&fp, filename, "rb");
@@ -69,7 +69,7 @@ const char* ReadSpvFile(uint32_t& length, const char* filename)
 }
 
 //loadFile(const char *const name, std::string) 
-const char* ReadFile(size_t& length, const char* filename)
+const char* Core::IO::ReadFile(size_t& length, const char* filename)
 {
     fs::path filepath(fs::absolute(fs::path(filename)));
 

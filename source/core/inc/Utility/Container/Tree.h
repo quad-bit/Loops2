@@ -2,42 +2,48 @@
 //#include "DoublyLinkedList.h"
 #include <iostream>
 #include <string>
-#include <Assertion.h>
+#include <Platform/Assertion.h>
 
-template <class T>
-class Tree;
-
-template <class T>
-class TreeNode
+namespace Core
 {
-    friend class Tree<T>;
+    namespace Containers
+    {
+        template <class T>
+        class Tree;
 
-private:
-    T * data;
-    TreeNode<T> * nodeParent;
-    TreeNode<T> *next, *prev, *child;
+        template <class T>
+        class TreeNode
+        {
+            friend class Tree<T>;
 
-    TreeNode<T> * treeRoot;
+        private:
+            T* data;
+            TreeNode<T>* nodeParent;
+            TreeNode<T>* next, * prev, * child;
 
-    uint32_t nodeId;
-    static uint32_t idCounter;
-    void AssignId();
-    void AddSibling(TreeNode<T> * node);
+            TreeNode<T>* treeRoot;
 
-public:
-	TreeNode(T * data);
-	~TreeNode();
-	void AddChild(TreeNode<T> * child);
-	void DetachChild(TreeNode<T> * child);
-	void DeleteChild(TreeNode<T> * child);
-	void SetParent(TreeNode<T> * nodeParent);
-};
+            uint32_t nodeId;
+            static uint32_t idCounter;
+            void AssignId();
+            void AddSibling(TreeNode<T>* node);
+
+        public:
+            TreeNode(T* data);
+            ~TreeNode();
+            void AddChild(TreeNode<T>* child);
+            void DetachChild(TreeNode<T>* child);
+            void DeleteChild(TreeNode<T>* child);
+            void SetParent(TreeNode<T>* nodeParent);
+        };
+    }
+}
 
 template <typename T>
-uint32_t TreeNode<T>::idCounter = 0;
+uint32_t Core::Containers::TreeNode<T>::idCounter = 0;
 
 template<class T>
-inline TreeNode<T>::TreeNode(T * data)
+inline Core::Containers::TreeNode<T>::TreeNode(T * data)
 {
 	this->data = data;
 	next = NULL;
@@ -49,11 +55,11 @@ inline TreeNode<T>::TreeNode(T * data)
 }
 
 template<class T>
-inline TreeNode<T>::~TreeNode()
+inline Core::Containers::TreeNode<T>::~TreeNode()
 {
     if (child != NULL)
     {
-        TreeNode<T> * ptr = child->next;
+        Core::Containers::TreeNode<T> * ptr = child->next;
         if (ptr == NULL)
         {
 
@@ -67,7 +73,7 @@ inline TreeNode<T>::~TreeNode()
 
             while (ptr->prev != NULL) // Need unique identifier for each node
             {
-                TreeNode<T> * temp = ptr;
+                Core::Containers::TreeNode<T> * temp = ptr;
                 ptr = ptr->prev;
                 delete temp;
                 temp = NULL;
@@ -96,7 +102,7 @@ inline TreeNode<T>::~TreeNode()
 }
 
 template<class T>
-inline void TreeNode<T>::AddChild(TreeNode<T>* node)
+inline void Core::Containers::TreeNode<T>::AddChild(Core::Containers::TreeNode<T>* node)
 {
 	if (this->child == NULL)
 	{
@@ -112,7 +118,7 @@ inline void TreeNode<T>::AddChild(TreeNode<T>* node)
 }
 
 template<class T>
-inline void TreeNode<T>::DetachChild(TreeNode<T>* child)
+inline void Core::Containers::TreeNode<T>::DetachChild(Core::Containers::TreeNode<T>* child)
 {
     if (child->nodeParent->nodeId == treeRoot->nodeId)
     {
@@ -152,14 +158,14 @@ inline void TreeNode<T>::DetachChild(TreeNode<T>* child)
 }
 
 template<class T>
-inline void TreeNode<T>::AssignId()
+inline void Core::Containers::TreeNode<T>::AssignId()
 {
     nodeId = idCounter;
     idCounter++;
 }
 
 template<class T>
-inline void TreeNode<T>::AddSibling(TreeNode<T>* node)
+inline void Core::Containers::TreeNode<T>::AddSibling(Core::Containers::TreeNode<T>* node)
 {
     TreeNode<T> * ptr = next;
 
@@ -179,14 +185,14 @@ inline void TreeNode<T>::AddSibling(TreeNode<T>* node)
 }
 
 template<class T>
-inline void TreeNode<T>::DeleteChild(TreeNode<T>* child)
+inline void Core::Containers::TreeNode<T>::DeleteChild(Core::Containers::TreeNode<T>* child)
 {
     DetachChild(child);
     delete child;
 }
 
 template<class T>
-inline void TreeNode<T>::SetParent(TreeNode<T>* nodeParent)
+inline void Core::Containers::TreeNode<T>::SetParent(Core::Containers::TreeNode<T>* nodeParent)
 {
     // initially when the node gets created its parent is NULL
     // when its pushed to the tree it gets added to the root node
@@ -231,46 +237,51 @@ inline void TreeNode<T>::SetParent(TreeNode<T>* nodeParent)
     }
 }
 
-
-template <class T>
-class Tree
+namespace Core
 {
-private:
-    TreeNode<T> * root;
+    namespace Containers
+    {
+        template <class T>
+        class Tree
+        {
+        private:
+            TreeNode<T>* root;
 
-public:
-    Tree();
-    Tree(TreeNode<T> * root);
-    ~Tree();
-    void AddToTree(TreeNode<T> * node);
-    bool Search(TreeNode<T> * root, T * data);
-    bool Search(T * data);
-    virtual void Traversal(TreeNode<T> * node);
-    virtual void Traversal();
+        public:
+            Tree();
+            Tree(TreeNode<T>* root);
+            ~Tree();
+            void AddToTree(TreeNode<T>* node);
+            bool Search(TreeNode<T>* root, T* data);
+            bool Search(T* data);
+            virtual void Traversal(TreeNode<T>* node);
+            virtual void Traversal();
 
-    const TreeNode<T> * GetRoot() const;
-};
+            const TreeNode<T>* GetRoot() const;
+        };
+    }
+}
 
 template<class T>
-inline Tree<T>::Tree()
+inline Core::Containers::Tree<T>::Tree()
 {
     //root = new TreeNode<T>(-1);
 }
 
 template<class T>
-inline Tree<T>::Tree(TreeNode<T>* root)
+inline Core::Containers::Tree<T>::Tree(Core::Containers::TreeNode<T>* root)
 {
     this->root = root;
 }
 
 template<class T>
-inline Tree<T>::~Tree()
+inline Core::Containers::Tree<T>::~Tree()
 {
     delete root; // TODO: Handle deletion.
 }
 
 template<class T>
-inline void Tree<T>::AddToTree(TreeNode<T>* node)
+inline void Core::Containers::Tree<T>::AddToTree(Core::Containers::TreeNode<T>* node)
 {
     if (node->nodeParent == NULL)
     {
@@ -282,7 +293,7 @@ inline void Tree<T>::AddToTree(TreeNode<T>* node)
 }
 
 template<class T>
-inline bool Tree<T>::Search(TreeNode<T>* nodeParent, T * data)
+inline bool Core::Containers::Tree<T>::Search(Core::Containers::TreeNode<T>* nodeParent, T * data)
 {
     if (nodeParent->data == data)
     	return true;
@@ -303,9 +314,9 @@ inline bool Tree<T>::Search(TreeNode<T>* nodeParent, T * data)
 }
 
 template<class T>
-inline bool Tree<T>::Search(T * data)
+inline bool Core::Containers::Tree<T>::Search(T * data)
 {
-    TreeNode<T> * nodeParent = root;
+    Core::Containers::TreeNode<T> * nodeParent = root;
 
     if (nodeParent->data == data)
     	return true;
@@ -326,7 +337,7 @@ inline bool Tree<T>::Search(T * data)
 }
 
 template<class T>
-inline void Tree<T>::Traversal(TreeNode<T> * node)
+inline void Core::Containers::Tree<T>::Traversal(Core::Containers::TreeNode<T> * node)
 {
     if (node->data != NULL)
         node->data->Entry();
@@ -348,9 +359,9 @@ inline void Tree<T>::Traversal(TreeNode<T> * node)
 }
 
 template<class T>
-inline void Tree<T>::Traversal()
+inline void Core::Containers::Tree<T>::Traversal()
 {
-    TreeNode<T> * node = root;
+    Core::Containers::TreeNode<T> * node = root;
 
     if (node->data != NULL)
     	node->data->Entry();
@@ -370,7 +381,7 @@ inline void Tree<T>::Traversal()
 }
 
 template<class T>
-inline const TreeNode<T>* Tree<T>::GetRoot() const
+inline const Core::Containers::TreeNode<T>* Core::Containers::Tree<T>::GetRoot() const
 {
     return root;
 }

@@ -3,11 +3,11 @@
 
 #include "Math/MathUtil.h"
 
-class Entity;
 namespace Core
 {
     namespace ECS
     {
+        class Entity;
         namespace Components
         {
             struct TransformUniform
@@ -15,7 +15,7 @@ namespace Core
                 glm::mat4 modelMat;
             };
 
-            class Transform : public Component<Transform>, public SceneNode
+            class Transform : public Component<Transform>, public Core::ECS::SceneNode
             {
             private:
                 Transform* parent;
@@ -41,7 +41,7 @@ namespace Core
 
                 bool isTransformUpdated;
 
-                Transform(Entity* entity);
+                Transform(Core::ECS::Entity* entity);
 
                 Transform* GetParent();
                 void SetParent(Transform* transform);

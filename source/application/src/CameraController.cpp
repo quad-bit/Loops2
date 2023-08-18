@@ -15,8 +15,8 @@ glm::vec2 CameraController::TransformMouse(const glm::vec2 & mouse)
     if (mouseScreenCoord.x > 0 && mouseScreenCoord.x < Settings::windowWidth &&
         mouseScreenCoord.y > 0 && mouseScreenCoord.y < Settings::windowHeight)
     {
-        x = MathUtil::RangeConversion<float>(mouseScreenCoord.x / Settings::windowWidth, -1, 1);
-        y = -MathUtil::RangeConversion<float>(mouseScreenCoord.y / Settings::windowHeight, -1, 1);
+        x = Core::Math::RangeConversion<float>(mouseScreenCoord.x / Settings::windowWidth, -1, 1);
+        y = -Core::Math::RangeConversion<float>(mouseScreenCoord.y / Settings::windowHeight, -1, 1);
 
         currentMousePos = glm::vec2(x, y);
     }

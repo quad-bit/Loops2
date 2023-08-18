@@ -2,9 +2,18 @@
 #pragma once
 #include "ECS/System.h"
 
-class Scriptable;
+namespace Core
+{
+    namespace ECS
+    {
+        namespace Components
+        {
+            class Scriptable;
+        }
+    }
+}
 
-class ScriptableSystem : public System
+class ScriptableSystem : public Core::ECS::System
 {
 private:
     

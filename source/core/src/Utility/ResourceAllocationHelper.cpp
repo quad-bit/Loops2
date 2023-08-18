@@ -1,6 +1,6 @@
 #include "Utility/ResourceAllocationHelper.h"
 
-std::vector<size_t> AllocationUtility::CalculateOffsetsForDescInUniform(const size_t & dataSizePerDescriptor, const GlobalResourceAllocationConfig & allocConfig,
+std::vector<size_t> Core::Utility::CalculateOffsetsForDescInUniform(const size_t & dataSizePerDescriptor, const GlobalResourceAllocationConfig & allocConfig,
     const GlobalResourceSharingConfig & resourceSharingConfig)
 {
     std::vector<size_t> offsets;
@@ -16,7 +16,7 @@ std::vector<size_t> AllocationUtility::CalculateOffsetsForDescInUniform(const si
 }
 
 
-bool AllocationUtility::IsNewAllocationRequired(const GlobalResourceSharingConfig & resourceSharingConfig)
+bool Core::Utility::IsNewAllocationRequired(const GlobalResourceSharingConfig & resourceSharingConfig)
 {
     if (resourceSharingConfig.allocatedUniformCount % resourceSharingConfig.maxUniformPerResource == 0)
         return true;
@@ -24,8 +24,8 @@ bool AllocationUtility::IsNewAllocationRequired(const GlobalResourceSharingConfi
         return false;
 }
 
-size_t AllocationUtility::GetDataSizeMeantForSharing(const size_t & sizeSingleDescriptor, const GlobalResourceAllocationConfig & allocConfig,
-    const GlobalResourceSharingConfig & resourceSharingConfig)
+size_t Core::Utility::GetDataSizeMeantForSharing(const size_t & sizeSingleDescriptor, const Core::Utility::GlobalResourceAllocationConfig & allocConfig,
+    const Core::Utility::GlobalResourceSharingConfig & resourceSharingConfig)
 {
     return sizeSingleDescriptor * allocConfig.numDescriptorSets * resourceSharingConfig.maxUniformPerResource;
 }

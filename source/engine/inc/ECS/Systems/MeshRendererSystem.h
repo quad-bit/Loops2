@@ -16,24 +16,28 @@ namespace Core
             class MeshRenderer;
             class Transform;
         }
+
+        namespace Events
+        {
+            class MeshRendererAdditionEvent;
+        }
     }
 }
 
-class MeshRendererAdditionEvent;
 
-class MeshRendererSystem : public System
+class MeshRendererSystem : public Core::ECS::System
 {
 private:
 
     uint32_t idCounter = 0;
     uint32_t GenerateId();
 
-    GlobalResourceAllocationConfig allocConfig;
-    GlobalResourceSharingConfig resourceSharingConfig;
+    Core::Utility::GlobalResourceAllocationConfig allocConfig;
+    Core::Utility::GlobalResourceSharingConfig resourceSharingConfig;
 
-    SetWrapper * transformSetWrapper;
-    std::vector<ShaderBindingDescription *> resDescriptionList;
-    std::map<Core::ECS::Components::Transform *, ShaderBindingDescription *> transformToBindDescMap;
+    Core::Wrappers::SetWrapper * transformSetWrapper;
+    std::vector<Core::Utility::ShaderBindingDescription *> resDescriptionList;
+    std::map<Core::ECS::Components::Transform *, Core::Utility::ShaderBindingDescription *> transformToBindDescMap;
 
     uint32_t numDescriptorsPerBinding;
 /*

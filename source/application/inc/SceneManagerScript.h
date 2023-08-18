@@ -2,13 +2,13 @@
 
 #include <ECS/Components/Scriptable.h>
 
-class EntityHandle;
 class CameraController;
 
 namespace Core
 {
     namespace ECS
     {
+        class EntityHandle;
         namespace Components
         {
             class MeshRenderer;
@@ -20,23 +20,23 @@ namespace Core
 class SceneManagerScript : public Core::ECS::Components::Scriptable
 {
 private:
-    EntityHandle* playerObject;
+    Core::ECS::EntityHandle* playerObject;
 
-    EntityHandle* camHandle0;
-    EntityHandle* camHandle1;
+    Core::ECS::EntityHandle* camHandle0;
+    Core::ECS::EntityHandle* camHandle1;
     Core::ECS::Components::Scriptable * cameraController;
     
     //EntityHandle* playerHandle;
     //Core::ECS::Components::Scriptable* playerHandlerScript;
     
-    EntityHandle* lightHandle;
+    Core::ECS::EntityHandle* lightHandle;
     Core::ECS::Components::Light * lightComponent;
     Core::ECS::Components::MeshRenderer * lightDebugRenderer;
     
-    EntityHandle* floorHandle, *wallHandle;
+    Core::ECS::EntityHandle* floorHandle, *wallHandle;
     Core::ECS::Components::MeshRenderer * floorRenderer, *wallRenderer;
 
-    std::vector<EntityHandle*> boxHandles;
+    std::vector<Core::ECS::EntityHandle*> boxHandles;
     std::vector<Core::ECS::Components::MeshRenderer*> boxRenderer;
     const uint32_t numBoxes = 10;
 

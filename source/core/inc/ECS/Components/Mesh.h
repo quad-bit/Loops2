@@ -24,7 +24,7 @@ namespace Core
             {
             public:
 
-                BoundingBox bounds;
+                Core::Math::BoundingBox bounds;
                 uint32_t submeshCount;
 
                 std::vector<glm::vec2*> uv;

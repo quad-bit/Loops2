@@ -1,13 +1,19 @@
 #pragma once
 
-#include <glm\glm.hpp>
+#include <glm/glm.hpp>
 #include <map>
 #include <vector>
-#include <Cube.h>
+#include <Math/Cube.h>
 #include <stdint.h>
 #include "RenderingWrapper.h"
 
-class Mesh;
+namespace ECS
+{
+    namespace Components
+    {
+        class Mesh;
+    }
+}
 
 enum class ATTRIBUTES
 {
@@ -26,7 +32,7 @@ enum class ATTRIBUTES
 struct VertexMetaData
 {
     uint32_t vertexDataStride, indexDataStride, attribCount;
-    VertexInputAttributeInfo * attribInfoList;
+    Core::Wrappers::VertexInputAttributeInfo * attribInfoList;
 };
 
 struct PC
@@ -66,13 +72,13 @@ struct AttribPC : public AttribStructBase
     {
         metaData.vertexDataStride = sizeof(PC);
         metaData.attribCount = 2;
-        metaData.attribInfoList = new VertexInputAttributeInfo[metaData.attribCount];
+        metaData.attribInfoList = new Core::Wrappers::VertexInputAttributeInfo[metaData.attribCount];
         
         // position
         {
-            VertexInputAttributeInfo info = {};
+            Core::Wrappers::VertexInputAttributeInfo info = {};
             info.binding = 0; // As a single vertex buffer is used per mesh
-            info.format = Format::R32G32B32_SFLOAT; //vec3 position
+            info.format = Core::Enums::Format::R32G32B32_SFLOAT; //vec3 position
             info.location = 0;
             info.offset = (uint32_t)offsetof(PC, PC::position);
             metaData.attribInfoList[0] = info;
@@ -80,9 +86,9 @@ struct AttribPC : public AttribStructBase
 
         //color
         {
-            VertexInputAttributeInfo info = {};
+            Core::Wrappers::VertexInputAttributeInfo info = {};
             info.binding = 0; // As a single vertex buffer is used per mesh
-            info.format = Format::R32G32B32A32_SFLOAT; //uvec4 color
+            info.format = Core::Enums::Format::R32G32B32A32_SFLOAT; //uvec4 color
             info.location = 1;
             info.offset = (uint32_t)offsetof(PC, PC::color);
             metaData.attribInfoList[1] = info;
@@ -95,10 +101,10 @@ struct AttribPC : public AttribStructBase
     }
 
     template<typename T>
-    void FillData(Mesh * mesh);
+    void FillData(Core::ECS::Components::Mesh * mesh);
 
     template<typename T>
-    void FillData(Mesh * mesh, const glm::vec4 & color);
+    void FillData(Core::ECS::Components::Mesh * mesh, const glm::vec4 & color);
 };
 
 struct AttribPCN : public AttribStructBase
@@ -109,13 +115,13 @@ struct AttribPCN : public AttribStructBase
     {
         metaData.vertexDataStride = sizeof(PCN);
         metaData.attribCount = 3;
-        metaData.attribInfoList = new VertexInputAttributeInfo[metaData.attribCount];
+        metaData.attribInfoList = new Core::Wrappers::VertexInputAttributeInfo[metaData.attribCount];
 
         // position
         {
-            VertexInputAttributeInfo info = {};
+            Core::Wrappers::VertexInputAttributeInfo info = {};
             info.binding = 0; // As a single vertex buffer is used per mesh
-            info.format = Format::R32G32B32_SFLOAT; //vec3 position
+            info.format = Core::Enums::Format::R32G32B32_SFLOAT; //vec3 position
             info.location = 0;
             info.offset = (uint32_t)offsetof(PCN, PCN::position);
             metaData.attribInfoList[0] = info;
@@ -123,9 +129,9 @@ struct AttribPCN : public AttribStructBase
 
         //color
         {
-            VertexInputAttributeInfo info = {};
+            Core::Wrappers::VertexInputAttributeInfo info = {};
             info.binding = 0; // As a single vertex buffer is used per mesh
-            info.format = Format::R32G32B32A32_SFLOAT; //uvec4 color
+            info.format = Core::Enums::Format::R32G32B32A32_SFLOAT; //uvec4 color
             info.location = 1;
             info.offset = (uint32_t)offsetof(PCN, PCN::color);
             metaData.attribInfoList[1] = info;
@@ -133,9 +139,9 @@ struct AttribPCN : public AttribStructBase
 
         //Normal
         {
-            VertexInputAttributeInfo info = {};
+            Core::Wrappers::VertexInputAttributeInfo info = {};
             info.binding = 0; // As a single vertex buffer is used per mesh
-            info.format = Format::R32G32B32_SFLOAT;  //uvec4 color
+            info.format = Core::Enums::Format::R32G32B32_SFLOAT;  //uvec4 color
             info.location = 2;
             info.offset = (uint32_t)offsetof(PCN, PCN::normal);
             metaData.attribInfoList[2] = info;
@@ -151,17 +157,17 @@ struct AttribPCN : public AttribStructBase
     }
 
     template<typename T>
-    void FillData(Mesh * mesh);
+    void FillData(Core::ECS::Components::Mesh * mesh);
 
     template<typename T>
-    void FillData(Mesh * mesh, const glm::vec4 & color);
+    void FillData(Core::ECS::Components::Mesh * mesh, const glm::vec4 & color);
 };
 
 
-#include <Mesh.h>
+#include <ECS/Components/Mesh.h>
 
 template<typename T>
-inline void AttribPC::FillData(Mesh * mesh)
+inline void AttribPC::FillData(Core::ECS::Components::Mesh * mesh)
 {
     T obj;
 
@@ -170,7 +176,7 @@ inline void AttribPC::FillData(Mesh * mesh)
 
     mesh->positions.resize(numVertices);
     mesh->colors.resize(numVertices);
-    
+
     for (uint32_t i = 0; i < numVertices; i++)
     {
         posColList[i].position = obj.positions[i];
@@ -201,7 +207,7 @@ inline void AttribPC::FillData(Mesh * mesh)
 }
 
 template<typename T>
-inline void AttribPC::FillData(Mesh * mesh, const glm::vec4 & color)
+inline void AttribPC::FillData(Core::ECS::Components::Mesh * mesh, const glm::vec4 & color)
 {
     T obj;
 
@@ -241,13 +247,13 @@ inline void AttribPC::FillData(Mesh * mesh, const glm::vec4 & color)
 }
 
 template<typename T>
-inline void AttribPCN::FillData(Mesh * mesh)
+inline void AttribPCN::FillData(Core::ECS::Components::Mesh * mesh)
 {
     T obj;
 
     size_t numVertices = obj.indices.size();
     posColList.resize(numVertices);
-    
+
     mesh->positions.resize(numVertices);
     mesh->colors.resize(numVertices);
 
@@ -260,7 +266,7 @@ inline void AttribPCN::FillData(Mesh * mesh)
         mesh->positions[i] = &posColList[i].position;
         mesh->colors[i] = &posColList[i].color;
     }
-    
+
     // normals
     mesh->normals.resize(numVertices);
     for (int i = 0; i < numVertices; i++)
@@ -282,7 +288,7 @@ inline void AttribPCN::FillData(Mesh * mesh)
 }
 
 template<typename T>
-inline void AttribPCN::FillData(Mesh * mesh, const glm::vec4 & color)
+inline void AttribPCN::FillData(Core::ECS::Components::Mesh * mesh, const glm::vec4 & color)
 {
     T obj;
 

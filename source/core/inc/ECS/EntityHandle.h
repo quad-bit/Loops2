@@ -13,48 +13,49 @@ namespace Core
         }
         template< typename ComponentType>
         class ComponentHandle;
+
+        class Entity;
+        class World;
+
+        class EntityHandle
+        {
+        private:
+            Entity* entityObj;
+            World* worldObj;
+            //Transform * transform;
+
+        public:
+            EntityHandle(Entity* entityObj, World* worldObj) {
+                this->entityObj = entityObj;
+                //this->transform = entityObj->transform;
+                this->worldObj = worldObj;
+            }
+
+            void Destroy()
+            {
+                this->worldObj->DestroyEntity(entityObj);
+            }
+
+            Entity* GetEntity() { return entityObj; }
+            Core::ECS::Components::Transform* GetTransform() { return entityObj->transform; }
+
+            template<typename ComponentType>
+            void AddComponent(ComponentType* componentType);
+
+            template<typename ComponentType>
+            void RemoveComponent(ComponentType* componentType);
+
+            template<typename ComponentType>
+            Core::ECS::ComponentHandle<ComponentType> GetComponent();
+
+            ~EntityHandle()
+            {
+                //std::cout << "entity handle deleted \n";
+            }
+
+        };
     }
 }
-class Entity;
-class World;
-
-class EntityHandle
-{
-private:
-    Entity * entityObj;
-    World * worldObj;
-    //Transform * transform;
-
-public:
-    EntityHandle(Entity * entityObj, World * worldObj) {
-        this->entityObj = entityObj;
-        //this->transform = entityObj->transform;
-        this->worldObj = worldObj;
-    }
-
-    void Destroy()
-    {
-        worldObj->DestroyEntity(entityObj);
-    }
-
-    Entity * GetEntity() { return entityObj; }
-    Core::ECS::Components::Transform * GetTransform(){ return entityObj->transform; }
-
-    template<typename ComponentType>
-    void AddComponent(ComponentType* componentType);
-
-    template<typename ComponentType>
-    void RemoveComponent(ComponentType* componentType);
-
-    template<typename ComponentType>
-    Core::ECS::ComponentHandle<ComponentType> GetComponent();
-
-    ~EntityHandle()
-    {
-        //std::cout << "entity handle deleted \n";
-    }
-
-};
 
 #include "ECS/Entity.h"
 #include "ECS/ComponentHandle.h"
@@ -66,33 +67,33 @@ public:
 #include "ECS/Components/Light.h"
 
 template<typename ComponentType>
-inline void EntityHandle::AddComponent(ComponentType * componentType)
+inline void Core::ECS::EntityHandle::AddComponent(ComponentType * componentType)
 {
     worldObj->AddComponent<ComponentType>(componentType, entityObj);
 }
 
 template<>
-inline void EntityHandle::AddComponent(Core::ECS::Components::Camera * componentType)
+inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Camera * componentType)
 {
     worldObj->AddComponent<Core::ECS::Components::Camera>(componentType, entityObj);
-    
-    CameraAdditionEvent evt;
+
+    Core::ECS::Events::CameraAdditionEvent evt;
     evt.cam = componentType;
-    EventBus::GetInstance()->Publish(&evt);
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&evt);
 }
 
 template<>
-inline void EntityHandle::AddComponent(Core::ECS::Components::MeshRenderer * componentType)
+inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::MeshRenderer * componentType)
 {
     worldObj->AddComponent<Core::ECS::Components::MeshRenderer>(componentType, entityObj);
 
-    MeshRendererAdditionEvent evt;
+    Core::ECS::Events::MeshRendererAdditionEvent evt;
     evt.renderer = componentType;
-    EventBus::GetInstance()->Publish(&evt);
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&evt);
 }
 
 template<>
-inline void EntityHandle::AddComponent(Core::ECS::Components::Scriptable * componentType)
+inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Scriptable * componentType)
 {
     worldObj->AddComponent<Core::ECS::Components::Scriptable>(componentType, entityObj);
     componentType->entityHandle = this;
@@ -100,23 +101,23 @@ inline void EntityHandle::AddComponent(Core::ECS::Components::Scriptable * compo
 }
 
 template<>
-inline void EntityHandle::AddComponent(Core::ECS::Components::Light * componentType)
+inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Light * componentType)
 {
     worldObj->AddComponent<Core::ECS::Components::Light>(componentType, entityObj);
 
-    LightAdditionEvent evt;
+    Core::ECS::Events::LightAdditionEvent evt;
     evt.light = componentType;
-    EventBus::GetInstance()->Publish(&evt);
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&evt);
 }
 
 template<typename ComponentType>
-inline void EntityHandle::RemoveComponent(ComponentType * componentType)
+inline void Core::ECS::EntityHandle::RemoveComponent(ComponentType * componentType)
 {
     worldObj->RemoveComponent<ComponentType>(componentType, entityObj);
 }
 
 template<typename ComponentType>
-inline Core::ECS::ComponentHandle<ComponentType> EntityHandle::GetComponent()
+inline Core::ECS::ComponentHandle<ComponentType> Core::ECS::EntityHandle::GetComponent()
 {
     Core::ECS::ComponentHandle<ComponentType> componentHandle;  
     worldObj->Unpack(entityObj, componentHandle);

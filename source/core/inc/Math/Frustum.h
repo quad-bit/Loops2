@@ -4,22 +4,27 @@
 #include "Math/Plane.h"
 #include <glm\glm.hpp>
 
-
-class Frustum
+namespace Core
 {
-private:
-    Vector<Plane> frustum;
+    namespace Math
+    {
+        class Frustum
+        {
+        private:
+            Core::Containers::Vector<Plane> frustum;
 
-public:
-    Frustum();
-    ~Frustum();
+        public:
+            Frustum();
+            ~Frustum();
 
-    void CalculateFrustum(float angle, float ratio, float near,
-    					    float far, vec3 &camPos, vec3 & lookAtPos, vec3 & up);
+            void CalculateFrustum(float angle, float ratio, float near,
+                float far, glm::vec3& camPos, glm::vec3& lookAtPos, glm::vec3& up);
 
-    void AddPlane(Plane& plane);
-    bool IsPointVisible(vec3 point);
-    bool IsSphereVisible(vec3 center, float rad);
-    bool IsBoxVisible(vec3 min, vec3 max);
-    int GetTotalPlanes();
-};
+            void AddPlane(Plane& plane);
+            bool IsPointVisible(glm::vec3 point);
+            bool IsSphereVisible(glm::vec3 center, float rad);
+            bool IsBoxVisible(glm::vec3 min, glm::vec3 max);
+            int GetTotalPlanes();
+        };
+    }
+}

@@ -26,21 +26,21 @@ void Core::ECS::Components::Transform::Init()
     nodeType = NODE_TYPE::TRANSFORM;
 
     // publish scene node creation event
-    NodeAdditionEvent event;
+    Core::ECS::Events::NodeAdditionEvent event;
     event.node = this;
-    EventBus::GetInstance()->Publish(&event);
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&event);
 }
 
 Core::ECS::Components::Transform::Transform()
 {
-    
+
 }
 
-Core::ECS::Components::Transform::Transform(Entity * entity)
+Core::ECS::Components::Transform::Transform(Core::ECS::Entity * entity)
 {
     owner = entity;
     entityName = &owner->entityName; 
-    componentType = COMPONENT_TYPE::TRANSFORM;
+    componentType = Core::ECS::COMPONENT_TYPE::TRANSFORM;
     Init();
 }
 
@@ -53,12 +53,12 @@ void Core::ECS::Components::Transform::SetParent(Core::ECS::Components::Transfor
 {
     parent = transform;
 
-    TreeModificationEvent event;
-    event.mod = TreeModificationEvent::ModType::SET_PARENT;
+    Core::ECS::Events::TreeModificationEvent event;
+    event.mod = Core::ECS::Events::TreeModificationEvent::ModType::SET_PARENT;
     event.node = this;
     event.newParent = transform;
 
-    EventBus::GetInstance()->Publish(&event);
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&event);
 }
 
 void Core::ECS::Components::Transform::UpdateGlobalParams()
@@ -243,7 +243,7 @@ void Core::ECS::Components::Transform::Entry()
     //PLOGD << "entry " << *entityName;
 
     glm::mat4 accumulateMatrix = glm::identity<glm::mat4>();
-    for(auto mat : SceneTreeUtil::matrixList)
+    for(auto mat : Core::ECS::SceneTreeUtil::matrixList)
     {
         accumulateMatrix = mat * accumulateMatrix;
     }
@@ -259,7 +259,7 @@ void Core::ECS::Components::Transform::Entry()
     //this->globalModelMatrix = accumulateMatrix * this->localModelMatrix;
     this->SetGlobalModelMatrix(accumulateMatrix * this->GetLocalModelMatrix());
 
-    SceneTreeUtil::matrixList.push_back(this->GetLocalModelMatrix());
+    Core::ECS::SceneTreeUtil::matrixList.push_back(this->GetLocalModelMatrix());
 }
 
 void Core::ECS::Components::Transform::Exit()
@@ -267,5 +267,5 @@ void Core::ECS::Components::Transform::Exit()
     // pop the transformation stack
     //PLOGD << "exit " << *entityName;
     //SceneTreeUtil::nameList.pop_back();
-    SceneTreeUtil::matrixList.pop_back();
+    Core::ECS::SceneTreeUtil::matrixList.pop_back();
 }

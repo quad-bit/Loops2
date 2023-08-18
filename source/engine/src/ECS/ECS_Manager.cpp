@@ -16,15 +16,15 @@
 #include "ECS/Systems/LightSystem.h"
 #include <ECS/Components/Light.h>
 
-ECS_Manager* ECS_Manager::instance = nullptr;
-World * worldObj;
+Engine::ECS_Manager* Engine::ECS_Manager::instance = nullptr;
+Core::ECS::World * worldObj;
 
-void ECS_Manager::Init()
+void Engine::ECS_Manager::Init()
 {
     PLOGD << "ECS Manager Init";
 
-    worldObj = new World();
-    
+    worldObj = new Core::ECS::World();
+
     scriptableManager = worldObj->CreateManager<Core::ECS::Components::Scriptable>();
     transformManager = worldObj->CreateManager<Core::ECS::Components::Transform>();
     meshManager = worldObj->CreateManager<Core::ECS::Components::Mesh>();
@@ -52,12 +52,12 @@ void ECS_Manager::Init()
     worldObj->Init();
 }
 
-void ECS_Manager::DeInit()
+void Engine::ECS_Manager::DeInit()
 {
     PLOGD << "ECS Manager DeInit";
 
-    EventBus::GetInstance()->DeInit();
-    delete EventBus::GetInstance();
+    Core::ECS::Events::EventBus::GetInstance()->DeInit();
+    delete Core::ECS::Events::EventBus::GetInstance();
 
     worldObj->DeInit();
 
@@ -70,25 +70,25 @@ void ECS_Manager::DeInit()
     delete worldObj;
 }
 
-void ECS_Manager::Update(float dt)
+void Engine::ECS_Manager::Update(float dt)
 {
     worldObj->Update(dt);
 }
 
-void ECS_Manager::Render(float dt)
+void Engine::ECS_Manager::Render(float dt)
 {
     worldObj->Render(dt);
 }
 
-ECS_Manager * ECS_Manager::GetInstance()
+Engine::ECS_Manager * Engine::ECS_Manager::GetInstance()
 {
     if (instance == nullptr)
     {
-        instance = new ECS_Manager();
+        instance = new Engine::ECS_Manager();
     }
     return instance;
 }
 
-ECS_Manager::~ECS_Manager()
+Engine::ECS_Manager::~ECS_Manager()
 {
 }

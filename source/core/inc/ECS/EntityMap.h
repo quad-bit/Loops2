@@ -5,59 +5,65 @@
 #include "Entity.h"
 #include <assert.h>
 
-class Entity;
-
-using ComponentIndex = uint32_t;
-
-class EntityMap
+namespace Core
 {
-
-private:
-    std::array<Entity * , MAX_NUM_OF_UNIQUE_COMPONENT> indexToEntity;
-    std::map<Entity *, ComponentIndex> entityToIndex;
-
-public:
-    ComponentIndex& GetComponentIndex(Entity* e)
+    namespace ECS
     {
-        std::map<Entity* , ComponentIndex>::iterator it = entityToIndex.find(e);
+        class Entity;
 
-        if (it == entityToIndex.end())
+        using ComponentIndex = uint32_t;
+
+        class EntityMap
         {
-            assert(0 && "Entity not found in the map ");
-            std::exit(-1);
-        }
 
-        return entityToIndex[e];
-    }
+        private:
+            std::array<Entity*, MAX_NUM_OF_UNIQUE_COMPONENT> indexToEntity;
+            std::map<Entity*, ComponentIndex> entityToIndex;
 
-    Entity* GetEntity(ComponentIndex* c)
-    {
-        /* std::array<Entity, MAX_NUM_OF_COMPONENTS>::iterator it = std::find_if(std::begin(indexToEntity), std::end(indexToEntity), [=](const EntityMap& e) {return e.indexToEntity. == valueToCompare; });
-
-            if (it == std::end(indexToEntity))
+        public:
+            ComponentIndex& GetComponentIndex(Entity* e)
             {
-                assert(0 && "Entity not found in the map ");
-                std::exit(-1);
-            }*/
+                std::map<Entity*, ComponentIndex>::iterator it = entityToIndex.find(e);
 
-        return indexToEntity[*c];
-    }
+                if (it == entityToIndex.end())
+                {
+                    assert(0 && "Entity not found in the map ");
+                    std::exit(-1);
+                }
 
-    void AddToMap(Entity* e, ComponentIndex* c)
-    {
-        entityToIndex.insert({ e, *c });
-        indexToEntity[*c] = e;
-    }
+                return entityToIndex[e];
+            }
 
-    void UpdateMap(Entity *e, ComponentIndex *c)
-    {
-        entityToIndex[e] = *c;
-        indexToEntity[*c] = e;
-    }
+            Entity* GetEntity(ComponentIndex* c)
+            {
+                /* std::array<Entity, MAX_NUM_OF_COMPONENTS>::iterator it = std::find_if(std::begin(indexToEntity), std::end(indexToEntity), [=](const EntityMap& e) {return e.indexToEntity. == valueToCompare; });
 
-    void RemoveFromMap(Entity *e)
-    {
-        entityToIndex.erase(e);
-        //indexToEntity    THINK..!!!!
+                    if (it == std::end(indexToEntity))
+                    {
+                        assert(0 && "Entity not found in the map ");
+                        std::exit(-1);
+                    }*/
+
+                return indexToEntity[*c];
+            }
+
+            void AddToMap(Entity* e, ComponentIndex* c)
+            {
+                entityToIndex.insert({ e, *c });
+                indexToEntity[*c] = e;
+            }
+
+            void UpdateMap(Entity* e, ComponentIndex* c)
+            {
+                entityToIndex[e] = *c;
+                indexToEntity[*c] = e;
+            }
+
+            void RemoveFromMap(Entity* e)
+            {
+                entityToIndex.erase(e);
+                //indexToEntity    THINK..!!!!
+            }
+        };
     }
-};
+}

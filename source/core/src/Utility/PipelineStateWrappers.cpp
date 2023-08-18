@@ -1,33 +1,33 @@
 #include "Utility/PipelineStateWrappers.h"
 
-std::map<PipelineStates, uint32_t> PipelineUtil::stateToIdMap;
-std::vector<uint32_t> PipelineUtil::pipelineStateMeshList;
-std::vector<SetWrapper *>  PipelineUtil::setsPerPipeline;
-uint32_t PipelineUtil::pipelineLayoutId;
-bool PipelineUtil::tagValidity = true;
-uint16_t PipelineUtil::globalTagMask = 0;
+std::map<Core::Enums::PipelineStates, uint32_t> Core::Utility::PipelineUtil::stateToIdMap;
+std::vector<uint32_t> Core::Utility::PipelineUtil::pipelineStateMeshList;
+std::vector<Core::Wrappers::SetWrapper *>  Core::Utility::PipelineUtil::setsPerPipeline;
+uint32_t Core::Utility::PipelineUtil::pipelineLayoutId;
+bool Core::Utility::PipelineUtil::tagValidity = true;
+uint16_t Core::Utility::PipelineUtil::globalTagMask = 0;
 
 
-uint32_t VertexInputWrapper::idCounter = 0;
-uint32_t InputAssemblyWrapper::idCounter = 0;
-uint32_t ShaderStateWrapper::idCounter = 0;
-uint32_t ShaderResourceStateWrapper::idCounter = 0;
-uint32_t TessellationStateWrapper::idCounter = 0;
-uint32_t DepthStencilStateWrapper::idCounter = 0;
-uint32_t RasterizationStateWrapper::idCounter = 0;
-uint32_t ColorBlendStateWrapper::idCounter = 0;
-uint32_t MultiSampleStateWrapper::idCounter = 0;
-uint32_t DynamicStateWrapper::idCounter = 0;
-uint32_t ViewPortStateWrapper::idCounter = 0;
+uint32_t Core::Utility::VertexInputWrapper::idCounter = 0;
+uint32_t Core::Utility::InputAssemblyWrapper::idCounter = 0;
+uint32_t Core::Utility::ShaderStateWrapper::idCounter = 0;
+uint32_t Core::Utility::ShaderResourceStateWrapper::idCounter = 0;
+uint32_t Core::Utility::TessellationStateWrapper::idCounter = 0;
+uint32_t Core::Utility::DepthStencilStateWrapper::idCounter = 0;
+uint32_t Core::Utility::RasterizationStateWrapper::idCounter = 0;
+uint32_t Core::Utility::ColorBlendStateWrapper::idCounter = 0;
+uint32_t Core::Utility::MultiSampleStateWrapper::idCounter = 0;
+uint32_t Core::Utility::DynamicStateWrapper::idCounter = 0;
+uint32_t Core::Utility::ViewPortStateWrapper::idCounter = 0;
 
-void PipelineUtil::FillGlobalMeshList(std::vector<uint32_t>& meshList, const PipelineStates & currentState)
+void Core::Utility::PipelineUtil::FillGlobalMeshList(std::vector<uint32_t>& meshList, const Core::Enums::PipelineStates & currentState)
 {
     if (meshList.size() != 0)
     {
         if (meshList.size() > 0)
         {
             // compare the mesh and pipelineStateMeshList
-            if (pipelineStateMeshList.size() == 0 && currentState == PipelineStates::VertexInputState)
+            if (pipelineStateMeshList.size() == 0 && currentState == Core::Enums::PipelineStates::VertexInputState)
             {
                 pipelineStateMeshList = meshList;
             }
@@ -64,34 +64,34 @@ void PipelineUtil::FillGlobalMeshList(std::vector<uint32_t>& meshList, const Pip
     }
 }
 
-void const PipelineUtil::CheckTagValidity(const uint16_t & tag)
+void const Core::Utility::PipelineUtil::CheckTagValidity(const uint16_t & tag)
 {
     // if pipeline tag mask == 0 skip
-    if ((tag == 0 ) || PipelineUtil::tagValidity == false)
+    if ((tag == 0 ) || Core::Utility::PipelineUtil::tagValidity == false)
         return;
 
     // if pipeline tag mask != 0 && global mask == 0 then global <- pipelineMask
-    if (tag != 0 && PipelineUtil::globalTagMask == 0)
+    if (tag != 0 && Core::Utility::PipelineUtil::globalTagMask == 0)
     {
-        PipelineUtil::globalTagMask = tag;
+        Core::Utility::PipelineUtil::globalTagMask = tag;
         return;
     }
 
     // if  both != 0 then
-    if (tag != 0 && PipelineUtil::globalTagMask != 0)
+    if (tag != 0 && Core::Utility::PipelineUtil::globalTagMask != 0)
     {
         // bitwise AND with global mask == 0 then invalid pipeline else global <- result of AND
         
-        uint16_t result = tag & PipelineUtil::globalTagMask;
+        uint16_t result = tag & Core::Utility::PipelineUtil::globalTagMask;
         
         if ((result) == 0)
         {
-            PipelineUtil::tagValidity = false;
-            PipelineUtil::globalTagMask = 0;
+            Core::Utility::PipelineUtil::tagValidity = false;
+            Core::Utility::PipelineUtil::globalTagMask = 0;
         }
         else
         {
-            PipelineUtil::globalTagMask = result;
+            Core::Utility::PipelineUtil::globalTagMask = result;
         }
     }
 }

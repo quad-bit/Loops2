@@ -7,7 +7,7 @@
 #include <ECS/Components/Transform.h>
 //#include <SceneGraphManager.h>
 
-SceneManager::SceneManager()
+Engine::SceneManager::SceneManager()
 {
     sceneRootEntityHandle = worldObj->CreateEntity();
     sceneRootTransform = sceneRootEntityHandle->GetEntity()->transform;
@@ -18,7 +18,7 @@ SceneManager::SceneManager()
     //EventBus::GetInstance()->Subscribe<SceneManager, KeyInputEvent>(this, &SceneManager::HandleSceneControls);
 }
 
-SceneManager::~SceneManager()
+Engine::SceneManager::~SceneManager()
 {
     /*scriptableParent->RemoveComponent<Scriptable>(playerHandlerScript);
     delete playerHandlerScript;
@@ -32,7 +32,7 @@ SceneManager::~SceneManager()
 }
 
 
-Core::ECS::Components::Transform * const SceneManager::GetSceneRootTransform()
+Core::ECS::Components::Transform * const Engine::SceneManager::GetSceneRootTransform()
 {
     ASSERT_MSG_DEBUG(sceneRootTransform != nullptr, "scene root null");
     return sceneRootTransform;

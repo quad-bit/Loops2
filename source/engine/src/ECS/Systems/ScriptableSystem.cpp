@@ -20,7 +20,7 @@ void ScriptableSystem::Update(float dt)
 {
     switch (appState)
     {
-    case APP_STATE::STARTED:
+    case Core::ECS::APP_STATE::STARTED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -28,10 +28,10 @@ void ScriptableSystem::Update(float dt)
 
             scriptableHandle->Init();
         }
-        appState = APP_STATE::RUNNING;
+        appState = Core::ECS::APP_STATE::RUNNING;
         break;
 
-    case APP_STATE::RUNNING:
+    case Core::ECS::APP_STATE::RUNNING:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -41,7 +41,7 @@ void ScriptableSystem::Update(float dt)
         }
         break;
 
-    case APP_STATE::PAUSED:
+    case Core::ECS::APP_STATE::PAUSED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -51,7 +51,7 @@ void ScriptableSystem::Update(float dt)
         }
         break;
 
-    case APP_STATE::STOPPED:
+    case Core::ECS::APP_STATE::STOPPED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -59,10 +59,10 @@ void ScriptableSystem::Update(float dt)
 
             scriptableHandle->DeInit();
         }
-        appState = APP_STATE::NONE;
+        appState = Core::ECS::APP_STATE::NONE;
         break;
 
-    case APP_STATE::NONE:
+    case Core::ECS::APP_STATE::NONE:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -81,7 +81,7 @@ void ScriptableSystem::Render(float dt)
 {
     switch (appState)
     {
-    case APP_STATE::STARTED:
+    case Core::ECS::APP_STATE::STARTED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -89,10 +89,10 @@ void ScriptableSystem::Render(float dt)
 
             scriptableHandle->Init();
         }
-        appState = APP_STATE::RUNNING;
+        appState = Core::ECS::APP_STATE::RUNNING;
         break;
 
-    case APP_STATE::RUNNING:
+    case Core::ECS::APP_STATE::RUNNING:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -102,7 +102,7 @@ void ScriptableSystem::Render(float dt)
         }
         break;
 
-    case APP_STATE::PAUSED:
+    case Core::ECS::APP_STATE::PAUSED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -112,7 +112,7 @@ void ScriptableSystem::Render(float dt)
         }
         break;
 
-    case APP_STATE::STOPPED:
+    case Core::ECS::APP_STATE::STOPPED:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;
@@ -120,10 +120,10 @@ void ScriptableSystem::Render(float dt)
 
             scriptableHandle->DeInit();
         }
-        appState = APP_STATE::NONE;
+        appState = Core::ECS::APP_STATE::NONE;
         break;
 
-    case APP_STATE::NONE:
+    case Core::ECS::APP_STATE::NONE:
         for (auto & entity : registeredEntities)
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Scriptable> scriptableHandle;

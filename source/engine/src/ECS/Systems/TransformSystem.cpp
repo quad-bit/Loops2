@@ -4,7 +4,7 @@
 //#include "SceneGraphManager.h"
 
 // deprecated
-void TransformSystem::UpdateTransform(Transform * transform)
+void TransformSystem::UpdateTransform(Core::ECS::Components::Transform * transform)
 {
     DEPRECATED;
     /*

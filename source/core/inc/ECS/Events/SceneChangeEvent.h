@@ -3,28 +3,38 @@
 #include "ECS/Events/Event.h"
 #include "ECS/SceneNode.h"
 
-struct NodeAdditionEvent : public Event
+namespace Core
 {
-    SceneNode * node;
-};
-
-struct NodeDeletionEvent : public Event
-{
-    SceneNode * node;
-
-};
-
-// parent changed
-struct TreeModificationEvent : public Event
-{
-    enum class ModType
+    namespace ECS
     {
-        SET_PARENT,
-        NODE_DELETION,
-        NONE
-    };
+        namespace Events
+        {
 
-    SceneNode * node;
-    SceneNode * newParent;
-    ModType mod;
-};
+            struct NodeAdditionEvent : public Event
+            {
+                Core::ECS::SceneNode* node;
+            };
+
+            struct NodeDeletionEvent : public Event
+            {
+                Core::ECS::SceneNode* node;
+
+            };
+
+            // parent changed
+            struct TreeModificationEvent : public Event
+            {
+                enum class ModType
+                {
+                    SET_PARENT,
+                    NODE_DELETION,
+                    NONE
+                };
+
+                Core::ECS::SceneNode* node;
+                Core::ECS::SceneNode* newParent;
+                ModType mod;
+            };
+        }
+    }
+}

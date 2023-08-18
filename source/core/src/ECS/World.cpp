@@ -3,12 +3,12 @@
 #include "ECS/EntityManager.h"
 #include "ECS/Components/Transform.h"
 
-EntityHandle* World::CreateEntity()
+Core::ECS::EntityHandle* Core::ECS::World::CreateEntity()
 {
-    Entity* obj = EntityManager::GetSingleton()->CreateEntity();
-    EntityHandle * handle = EntityManager::GetSingleton()->CreateEntityHandle(obj, this);
+    Core::ECS::Entity* obj = Core::ECS::EntityManager::GetSingleton()->CreateEntity();
+    Core::ECS::EntityHandle * handle = Core::ECS::EntityManager::GetSingleton()->CreateEntityHandle(obj, this);
 
-    ComponentMask mask;
+    Core::ECS::ComponentMask mask;
     entityMasks.insert({ obj, mask });
 
     Core::ECS::Components::Transform * transform = new Core::ECS::Components::Transform(obj);
@@ -18,25 +18,25 @@ EntityHandle* World::CreateEntity()
     return handle;
 }
 
-EntityHandle * World::CreateEntity(const std::string & name)
+Core::ECS::EntityHandle * Core::ECS::World::CreateEntity(const std::string & name)
 {
-    EntityHandle * handle = CreateEntity();
+    Core::ECS::EntityHandle * handle = CreateEntity();
     handle->GetEntity()->entityName = name;
     return handle;
 }
 
-EntityHandle * const World::FindEntity(const std::string & name)
+Core::ECS::EntityHandle * const Core::ECS::World::FindEntity(const std::string & name)
 {
-    return EntityManager::GetSingleton()->FindEntity(name);
+    return Core::ECS::EntityManager::GetSingleton()->FindEntity(name);
 }
 
-void World::UpdateEntityMask(Entity * entity, ComponentMask oldMask)
+void Core::ECS::World::UpdateEntityMask(Core::ECS::Entity * entity, Core::ECS::ComponentMask oldMask)
 {
-    ComponentMask newMask = entityMasks[entity];
+    Core::ECS::ComponentMask newMask = entityMasks[entity];
     // TODO : Complete the system integration
 
     for (auto &system : systemList) {
-        ComponentMask systemSignature = system->GetSignature();
+        Core::ECS::ComponentMask systemSignature = system->GetSignature();
         if (newMask.isNewMatch(oldMask, systemSignature)) {
             // We match but didn't match before
             system->RegisterEntity(entity);
@@ -47,13 +47,13 @@ void World::UpdateEntityMask(Entity * entity, ComponentMask oldMask)
     }
 }
 
-void World::AddSystem(System * system)
+void Core::ECS::World::AddSystem(Core::ECS::System * system)
 {
     systemList.push_back(system);
     system->RegisterWorld(this);
 }
 
-void World::Update(float dt)
+void Core::ECS::World::Update(float dt)
 {
     for (auto system : systemList)
     {
@@ -61,7 +61,7 @@ void World::Update(float dt)
     }
 }
 //not getting used
-void World::Render(float dt)
+void Core::ECS::World::Render(float dt)
 {
     return;
     for (auto system : systemList)
@@ -70,7 +70,7 @@ void World::Render(float dt)
     }
 }
 
-void World::DeInit()
+void Core::ECS::World::DeInit()
 {
     PLOGD << "World Deinit";
     
@@ -80,7 +80,7 @@ void World::DeInit()
         system->DeInit();
     }
 
-    EntityManager::GetSingleton()->DeInit();
+    Core::ECS::EntityManager::GetSingleton()->DeInit();
 
     for (uint32_t i = 0 ; i < managerList.size(); i++)
     {
@@ -88,14 +88,14 @@ void World::DeInit()
     }
     managerList.clear();
 
-    delete EntityManager::GetSingleton();
+    delete Core::ECS::EntityManager::GetSingleton();
 }
 
-void World::Init()
+void Core::ECS::World::Init()
 {
     PLOGD << "World init";
 
-    EntityManager::GetSingleton()->Init();
+    Core::ECS::EntityManager::GetSingleton()->Init();
 
     for (auto system : systemList)
     {
@@ -103,7 +103,7 @@ void World::Init()
     }
 }
 
-void World::DestroyEntity(Entity* entityObj)
+void Core::ECS::World::DestroyEntity(Core::ECS::Entity* entityObj)
 {
     for (auto system : systemList)
     {
@@ -120,10 +120,10 @@ void World::DestroyEntity(Entity* entityObj)
         delete entityObj;
     }*/
 
-    EntityManager::GetSingleton()->DestroyEntity(entityObj);
+    Core::ECS::EntityManager::GetSingleton()->DestroyEntity(entityObj);
 }
 
-void World::DestroyEntity(EntityHandle * entityHandleObj)
+void Core::ECS::World::DestroyEntity(Core::ECS::EntityHandle * entityHandleObj)
 {
     DestroyEntity(entityHandleObj->GetEntity());
 }
