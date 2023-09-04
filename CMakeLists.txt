@@ -15,14 +15,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(EFFECTS_PATH "${CMAKE_SOURCE_DIR}/assets/graphics/effects")
 set(RENDERING_API "VULKAN")
 
+find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
+find_package(plog REQUIRED)
+
 message ("\nConfiguring Core ..\n")
 add_subdirectory(source/core projects/core)
 
-# message ("\nConfiguring Vulkan Driver ..\n")
-# add_subdirectory(Source/Graphics/Drivers/Vulkan Projects/Vulkan)
+message ("\nConfiguring Vulkan Driver ..\n")
+add_subdirectory(source/graphicsApi/vulkan projects/vulkan)
 
-# message ("\nGraphics ..\n")
-# add_subdirectory(Source/Graphics Projects/Graphics)
+message ("\nGraphics ..\n")
+add_subdirectory(Source/Graphics Projects/Graphics)
 
 message ("\nConfiguring EngineInterface ..\n")
 add_subdirectory(source/engine projects/engine)

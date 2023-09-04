@@ -1,1 +1,0 @@
-The effects framework source.

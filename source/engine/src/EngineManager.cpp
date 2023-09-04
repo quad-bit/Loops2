@@ -2,7 +2,7 @@
 #include "EngineManager.h"
 #include <CoreManager.h>
 #include <Settings.h>
-//#include <GraphicsManager.h>
+#include <GraphicsManager.h>
 #include <ECS/ECS_Manager.h>
 //#include <InputManager.h>
 #include <Utility/Timer.h>
@@ -19,8 +19,8 @@ void Engine::EngineManager::Init()
     Settings::windowName = "Loops";
 
     Core::CoreManager::GetInstance()->Init();
-    //GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
-    //GraphicsManager::GetInstance()->SetupRenderer();
+    Renderer::GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
+    Renderer::GraphicsManager::GetInstance()->SetupRenderer();
     ECS_Manager::GetInstance()->Init();
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
@@ -36,9 +36,9 @@ void Engine::EngineManager::DeInit()
     ECS_Manager::GetInstance()->DeInit();
     delete ECS_Manager::GetInstance();
 
-    //GraphicsManager::GetInstance()->DislogeRenderer();
-    //GraphicsManager::GetInstance()->DeInit();
-    //delete GraphicsManager::GetInstance();
+    Renderer::GraphicsManager::GetInstance()->DislogeRenderer();
+    Renderer::GraphicsManager::GetInstance()->DeInit();
+    delete Renderer::GraphicsManager::GetInstance();
 
     Core::CoreManager::GetInstance()->DeInit();
     delete Core::CoreManager::GetInstance();

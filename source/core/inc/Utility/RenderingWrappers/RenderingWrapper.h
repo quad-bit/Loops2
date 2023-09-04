@@ -10,8 +10,6 @@
 
 namespace Core
 {
-    
-
     namespace Enums
     {
         enum class ImageViewType

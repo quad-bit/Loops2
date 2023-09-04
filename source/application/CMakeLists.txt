@@ -19,10 +19,10 @@ add_Executable(${TARGET_NAME} ${SourceList})
 
 find_package(plog REQUIRED)
 
-target_link_libraries(${TARGET_NAME} PRIVATE Loops::Core)
+target_link_libraries(${TARGET_NAME} PRIVATE Loops::core)
 # target_link_libraries(${TARGET_NAME} PRIVATE plog)
 # target_link_libraries(${TARGET_NAME} PUBLIC Renderer)
-target_link_libraries(${TARGET_NAME} PRIVATE Loops::Engine)
+target_link_libraries(${TARGET_NAME} PRIVATE Loops::engine)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC

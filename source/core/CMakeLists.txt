@@ -126,24 +126,18 @@ set(UTILITY_FILES
     src/Utility/Container/BitArray.cpp
 )
 
-find_package(glm REQUIRED)
-IF( glm_FOUND )
-    message (" found glm : ${glm_INCLUDE_DIR} ")
-ENDIF()
+# find_package(glm REQUIRED)
+# IF( glm_FOUND )
+#     message (" found glm : ${glm_INCLUDE_DIR} ")
+# ENDIF()
 
-find_package(plog REQUIRED)
-IF( plog_FOUND )
-    message ("found plog : ${plog_INCLUDE_DIR}")
-ENDIF()
-
-#find glfw
-find_package(glfw3 3.3)
-IF( glfw3_FOUND )
-    message (" found glfw ")
-ENDIF()
+# find_package(glfw3 3.3)
+# IF( glfw3_FOUND )
+#     message (" found glfw ")
+# ENDIF()
 
 #create library
-set(TARGET_NAME "Core")
+set(TARGET_NAME "core")
 add_library(${TARGET_NAME} 
     ${CORE_FILES} 
     ${ECS_COMPONENT_FILES} 
@@ -157,7 +151,6 @@ add_library(${TARGET_NAME}
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 
 target_link_libraries(${TARGET_NAME} PUBLIC glfw glm::glm plog::plog)
-
 target_include_directories(${TARGET_NAME}
     PUBLIC
         $<INSTALL_INTERFACE:inc>

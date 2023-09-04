@@ -21,12 +21,12 @@ set(SourceList
 )
 
 #create library
-set(TARGET_NAME "Engine")
+set(TARGET_NAME "engine")
 add_library(${TARGET_NAME} ${SourceList})
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 
-target_link_libraries(${TARGET_NAME} PRIVATE Core)
-# target_link_libraries(EngineInterface PUBLIC Renderer)
+target_link_libraries(${TARGET_NAME} PRIVATE Loops::core)
+target_link_libraries(${TARGET_NAME} PRIVATE Loops::renderer)
 
 target_include_directories(${TARGET_NAME}
     PUBLIC
