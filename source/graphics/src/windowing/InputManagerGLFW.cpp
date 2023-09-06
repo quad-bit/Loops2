@@ -230,9 +230,9 @@ namespace
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
-            Renderer::Windowing::WindowManager::GetInstance()->Close();
+            //Renderer::Windowing::WindowManager::GetInstance()->Close();
 
-            return;
+            //return;
         }
 
         const char* name = glfwGetKeyName(key, scancode);
@@ -283,13 +283,14 @@ namespace
     }
 }
 
-void Renderer::Windowing::InputManager::Init()
+void Renderer::Windowing::InputManager::Init(GLFWwindow* windowObj)
 {
     PLOGD << "Input manager Init";
 
-    glfwSetKeyCallback(WindowManager::GetInstance()->glfwWindow, key_callback);
-    glfwSetMouseButtonCallback(WindowManager::GetInstance()->glfwWindow, MouseButtonCallback);
-    glfwSetCursorPosCallback(WindowManager::GetInstance()->glfwWindow, CursorPositionCallback);
+    m_windowObj = windowObj;
+    glfwSetKeyCallback(m_windowObj, key_callback);
+    glfwSetMouseButtonCallback(m_windowObj, MouseButtonCallback);
+    glfwSetCursorPosCallback(m_windowObj, CursorPositionCallback);
 }
 
 

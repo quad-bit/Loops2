@@ -1,24 +1,26 @@
+#include "RenderingManager.h"
 #include "GraphicsManager.h"
 #include "windowing/WindowManager.h"
-#include <Settings.h>
 #include "VulkanInterface.h"
-#include "RenderingManager.h"
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
 #include "RendererSettings.h"
 #include "windowing/InputManager.h"
 #include "windowing/MouseInputManager.h"
 #include <CorePrecompiled.h>
+#include <Settings.h>
+#include <ECS/Events/EventBus.h>
 
-Renderer::GraphicsManager* Renderer::GraphicsManager::instance = nullptr;
 
-void Renderer::GraphicsManager::Init(uint32_t winWidth, uint32_t winHeight, std::string winName)
+void Renderer::GraphicsManager::Init()
 {
     PLOGD << "Graphics manager Init";
 
-    Settings::windowWidth   = winWidth;
-    Settings::windowHeight  = winHeight;
-    Settings::windowName    = winName;
-    Renderer::Windowing::WindowManager::GetInstance()->Init();
+    m_windowMngrObj->Init();
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe(this, &GraphicsManager::KeyBoardEventHandler);
+
+    //m_renderingMngrObj->Init();
+
+    /*
     Renderer::Windowing::InputManager::GetInstance()->Init();
     Renderer::Windowing::MouseInputManager::GetInstance()->Init();
 
@@ -39,22 +41,33 @@ void Renderer::GraphicsManager::Init(uint32_t winWidth, uint32_t winHeight, std:
     Core::RendererSettings::queueReq[3].queueType = new Core::Enums::PipelineType{ Core::Enums::PipelineType::TRANSFER };
     
     apiInterface = new Renderer::VulkanInterface();
-    renderingMngrObj = new Renderer::RenderingManager();
+    m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>();
 
 #elif (RENDERING_API == DX)
     apiInterface = new DxInterface();
 #endif
-    
-    renderingMngrObj->Init(apiInterface);
+    */
+    //m_renderingMngrObj->Init(apiInterface);
+}
+
+Renderer::GraphicsManager::GraphicsManager()
+{
+}
+
+Renderer::GraphicsManager::GraphicsManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName)
+{
+    m_settings = std::make_unique<Core::Settings>(winName, winWidth, winHeight, renderWidth, renderHeight);
+    m_windowMngrObj = std::make_unique<Windowing::WindowManager>(winWidth, winHeight, renderWidth, renderHeight, winName);
+    m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>();
 }
 
 void Renderer::GraphicsManager::DeInit()
 {
     PLOGD << "Graphics manager DeInit";
 
-    renderingMngrObj->DeInit();
-    delete renderingMngrObj;
-
+    m_renderingMngrObj->DeInit();
+    m_renderingMngrObj.reset();
+    /*
     delete apiInterface;
 
     for (uint32_t i = 0; i < 4; i++)
@@ -64,30 +77,24 @@ void Renderer::GraphicsManager::DeInit()
     }
 
     delete[] Core::RendererSettings::queueReq;
+    */
 
-    Renderer::Windowing::MouseInputManager::GetInstance()->DeInit();
-    delete Renderer::Windowing::MouseInputManager::GetInstance();
-
-    Renderer::Windowing::InputManager::GetInstance()->DeInit();
-    delete Renderer::Windowing::InputManager::GetInstance();
-
-    Renderer::Windowing::WindowManager::GetInstance()->DeInit();
-    delete Renderer::Windowing::WindowManager::GetInstance();
+    m_windowMngrObj->DeInit();
+    m_windowMngrObj.reset();
 }
 
 void Renderer::GraphicsManager::Update()
 {
-    Renderer::Windowing::MouseInputManager::GetInstance()->Update();
-    renderingMngrObj->Render();
+    //Renderer::Windowing::MouseInputManager::GetInstance()->Update();
+    m_renderingMngrObj->Render();
 }
 
-Renderer::GraphicsManager * Renderer::GraphicsManager::GetInstance()
+void Renderer::GraphicsManager::KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent* evt)
 {
-    if (instance == nullptr)
+    if (strcmp(evt->keyname, "ESCAPE") == 0 && evt->keyState == Renderer::Windowing::KeyState::PRESSED)
     {
-        instance = new Renderer::GraphicsManager();
+        m_windowMngrObj->Close();
     }
-    return instance;
 }
 
 Renderer::GraphicsManager::~GraphicsManager()
@@ -96,25 +103,30 @@ Renderer::GraphicsManager::~GraphicsManager()
 
 void Renderer::GraphicsManager::SetupRenderer()
 {
-    renderingMngrObj->SetupRenderer();
+    m_renderingMngrObj->SetupRenderer();
 }
 
 void Renderer::GraphicsManager::DislogeRenderer()
 {
-    renderingMngrObj->DislogeRenderer();
+    m_renderingMngrObj->DislogeRenderer();
 }
 
 void Renderer::GraphicsManager::PreUpdate()
 {
-    renderingMngrObj->PreRender();
+    m_renderingMngrObj->PreRender();
 }
 
 void Renderer::GraphicsManager::PostUpdate()
 {
-    renderingMngrObj->PostRenderLoopEnd();
+    m_renderingMngrObj->PostRenderLoopEnd();
 }
 
 bool Renderer::GraphicsManager::IsWindowActive()
 {
-    return Renderer::Windowing::WindowManager::GetInstance()->Update();
+    return m_windowMngrObj->Update();
+}
+
+GLFWwindow* Renderer::GraphicsManager::GetGlfwWindow()
+{
+    return m_windowMngrObj->glfwWindow;
 }

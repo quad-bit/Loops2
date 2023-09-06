@@ -83,7 +83,7 @@ namespace Core
 
                 Transform* transform;
                 // Constructor with vectors
-                Camera(Transform* transform, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH, CameraType projectionType = CameraType::PERSPECTIVE);
+                Camera(Transform* transform, float aspectRatio, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH, CameraType projectionType = CameraType::PERSPECTIVE);
 
                 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
                 glm::mat4 GetViewMatrix();

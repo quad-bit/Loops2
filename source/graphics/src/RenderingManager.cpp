@@ -1,36 +1,5 @@
 #include "RenderingManager.h"
 #include "RendererSettings.h"
-//#include "ForwardInterface.h"
-//#include "VulkanInterface.h"
-
-//
-//void RenderingInterface::Init()
-//{
-//#if (RENDERING_API == VULKAN)
-//    forwardRenderer = new ForwardRendering<VulkanInterface>();
-//#elif (RENDERING_API == DX)
-//    forwardRenderer = new ForwardRendering<DxInterface>();
-//#endif
-//
-//    forwardRenderer->Init();
-//}
-//
-//void RenderingInterface::SetupRenderer()
-//{
-//    forwardRenderer->SetupRenderer();
-//}
-//
-//void RenderingInterface::DislogeRenderer()
-//{
-//    forwardRenderer->DislogeRenderer();
-//}
-//
-//void RenderingInterface::DeInit()
-//{
-//    forwardRenderer->DeInit();
-//    delete forwardRenderer;
-//}
-
 
 //#include "ForwardInterface.h"
 //#include "CommandBufferManager.h"
@@ -48,7 +17,7 @@
 void Renderer::RenderingManager::BeginRenderLoop()
 {
     //get swapchain image index to be used for rendering the current frame.
-
+    /*
     currentFenceId = getSwapChainImageFences[currentFrameIndex];
     currentRenderSemaphoreId = renderSemaphores[currentFrameIndex];
     currentPresentationSemaphoreId = presentationSemaphores[currentFrameIndex];
@@ -56,7 +25,7 @@ void Renderer::RenderingManager::BeginRenderLoop()
     currentSwapchainIndex = apiInterface->GetAvailableSwapchainIndex(currentFenceId, currentRenderSemaphoreId);
     Settings::currentSwapChainIndex = currentSwapchainIndex;
     
-    /*activeDrawCommandBuffer = drawCommandBufferList[currentSwapchainIndex];
+    activeDrawCommandBuffer = drawCommandBufferList[currentSwapchainIndex];
 
     DrawGraphNode::dcb = activeDrawCommandBuffer;
 
@@ -100,8 +69,8 @@ void Renderer::RenderingManager::EndRenderLoop()
     ////TODO : send the correct presentation queue id, DONE.
     //apiInterface->PresentSwapchainImage(&Core::RendererSettings::queueReq[1], &presentInfo, 0);
 
-    currentFrameIndex = (currentFrameIndex + 1) % Settings::maxFramesInFlight;
-    Settings::currentFrameInFlight = currentFrameIndex;
+    //currentFrameIndex = (currentFrameIndex + 1) % Settings::maxFramesInFlight;
+    //Settings::currentFrameInFlight = currentFrameIndex;
 }
 
 void Renderer::RenderingManager::RenderLoop()
@@ -154,7 +123,6 @@ void Renderer::RenderingManager::Init(VulkanInterface* apiInterface)
 {
     PLOGD << "Rendering interface Init";
 
-
     Core::RendererSettings::shadowMapHeight = 2048;
     Core::RendererSettings::shadowMapWidth = 2048;
     Core::RendererSettings::MSAA_Enabled = true;
@@ -162,7 +130,7 @@ void Renderer::RenderingManager::Init(VulkanInterface* apiInterface)
     //forwardRenderer = new ForwardRendering<T>();
     //forwardRenderer->Init(apiInterface);
 
-    CheckForMSAA();
+    //CheckForMSAA();
 
     /*CommandBufferManager<T>::GetInstance()->Init(apiInterface);
     MeshFactory::GetInstance()->Init(apiInterface);
@@ -171,17 +139,17 @@ void Renderer::RenderingManager::Init(VulkanInterface* apiInterface)
     ShaderFactory::GetInstance()->Init(apiInterface);
     UniformFactory::GetInstance()->Init(apiInterface);
     DrawGraphManager::GetInstance()->Init(RendererType::Forward);*/
-    this->apiInterface = apiInterface;
+    //this->apiInterface = apiInterface;
 
-    Settings::clearColorValue[0] = 34.0f / 256.0f; // Red
-    Settings::clearColorValue[1] = 30.0f / 256.0f;  // Green
-    Settings::clearColorValue[2] = 34.0f / 256.0f;  // Blue
-    Settings::clearColorValue[3] = 1.0f;
+    //Settings::clearColorValue[0] = 34.0f / 256.0f; // Red
+    //Settings::clearColorValue[1] = 30.0f / 256.0f;  // Green
+    //Settings::clearColorValue[2] = 34.0f / 256.0f;  // Blue
+    //Settings::clearColorValue[3] = 1.0f;
 
-    Settings::depthClearValue = 1.0f;
-    Settings::stencilClearValue = 0.0f;
+    //Settings::depthClearValue = 1.0f;
+    //Settings::stencilClearValue = 0.0f;
 
-    Settings::currentFrameInFlight = currentFrameIndex;
+    //Settings::currentFrameInFlight = currentFrameIndex;
 
 }
 
@@ -228,7 +196,7 @@ void Renderer::RenderingManager::SetupRenderer()
 
 void Renderer::RenderingManager::DislogeRenderer()
 {
-    apiInterface->IsApplicationSafeForClosure();
+    //apiInterface->IsApplicationSafeForClosure();
 
     /*for (uint32_t i = 0; i < Settings::maxFramesInFlight; i++)
     {
@@ -298,5 +266,13 @@ void Renderer::RenderingManager::Render()
 
 void Renderer::RenderingManager::PostRenderLoopEnd()
 {
-    apiInterface->IsApplicationSafeForClosure();
+    //apiInterface->IsApplicationSafeForClosure();
+}
+
+Renderer::RenderingManager::~RenderingManager()
+{
+}
+
+Renderer::RenderingManager::RenderingManager()
+{
 }

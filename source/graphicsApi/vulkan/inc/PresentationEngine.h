@@ -9,6 +9,7 @@ namespace Core
     {
         struct AttachmentInfo;
     }
+    class Settings;
 }
 
 namespace GfxVk
@@ -26,7 +27,7 @@ namespace GfxVk
 
             VkSurfaceKHR* surfaceObj;
             VkSurfaceFormatKHR* surfaceFormat;
-            uint32_t swapChainImageCount;
+            uint32_t m_swapchainImageCount;
             VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
             VkSwapchainKHR swapchainObj;
             VkPresentModeKHR presentMode;
@@ -38,9 +39,8 @@ namespace GfxVk
             //vector<VkImageView *> swapChainImageViewList;
 
             uint32_t activeSwapchainImageID;
-
         public:
-            void Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR* surfaceFormat);
+            void Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR* surfaceFormat, Core::Settings* settings);
             void CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo);
             void CreateSwapChain(Core::Wrappers::ImageInfo swapChainCreateInfo);
 

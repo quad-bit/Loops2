@@ -1,19 +1,18 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-#include <Settings.h>
+#include <memory>
 
+#include <PlatformSettings.h>
 
-#if (RENDERING_API == VULKAN)
-
-namespace Renderer
-{
-    class VulkanInterface;
-    class RenderingManager;
-}
+#if defined(GLFW_ENABLED)
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#endif
 
 namespace Core
 {
+    class Settings;
     namespace Wrappers
     {
         struct QueueWrapper;
@@ -25,34 +24,39 @@ namespace Core
     }
 }
 
-#elif (RENDERING_API == DX)
-class DxInterface;
-#endif
-
 namespace Renderer
 {
+    class VulkanInterface;
+    class RenderingManager;
+
+    namespace Windowing
+    {
+        class WindowManager;
+        struct KeyInputEvent;
+    }
+
     class GraphicsManager
     {
     private:
-        GraphicsManager() {}
-        GraphicsManager(GraphicsManager const&) {}
-        GraphicsManager const& operator= (GraphicsManager const&) {}
+        GraphicsManager(GraphicsManager const&) = delete;
+        GraphicsManager const& operator= (GraphicsManager const&) = delete;
 
-        static GraphicsManager* instance;
+        std::unique_ptr<Core::Settings> m_settings;
 
-#if (RENDERING_API == VULKAN)
         VulkanInterface* apiInterface;
-        RenderingManager* renderingMngrObj;
-#elif (RENDERING_API == DX)
-        DxInterface* apiInterface;
-#endif
+        std::unique_ptr <Renderer::RenderingManager> m_renderingMngrObj;
+        std::unique_ptr <Windowing::WindowManager> m_windowMngrObj;
+
+        void KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent * evt);
 
     public:
-        void Init(uint32_t winWidth, uint32_t winHeight, std::string winName);
+        ~GraphicsManager();
+        GraphicsManager();
+        GraphicsManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName);
+        void Init();
         void DeInit();
         void Update();
         static GraphicsManager* GetInstance();
-        ~GraphicsManager();
 
         void SetupRenderer();
         void DislogeRenderer();
@@ -61,5 +65,7 @@ namespace Renderer
         void PostUpdate();
 
         bool IsWindowActive();
+
+        GLFWwindow* GetGlfwWindow();
     };
 }

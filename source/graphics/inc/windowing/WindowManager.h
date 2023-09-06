@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Settings.h>
+//#include <Settings.h>
 #include <stdint.h>
 #include <string>
 #include <PlatformSettings.h>
@@ -14,8 +14,6 @@ namespace Renderer
 {
     namespace Windowing
     {
-
-        //using namespace std;
         class WindowManager
         {
         private:
@@ -23,15 +21,19 @@ namespace Renderer
             void                                DeInitOSWindow();
             void                                UpdateOSWindow();
 
-            WindowManager() {}
-            WindowManager(WindowManager const&) {}
-            WindowManager const& operator= (WindowManager const&) {}
+            WindowManager() = delete;
+            WindowManager(WindowManager const&) = delete;
+            WindowManager const& operator= (WindowManager const&) = delete;
 
-            static WindowManager* windowManagerInstance;
+            uint32_t m_windowWidth;
+            uint32_t m_windowHeight;
+            uint32_t m_renderWidth;
+            uint32_t m_renderHeight;
+            std::string m_windowName;
 
         public:
-            ~WindowManager();
-            static WindowManager* GetInstance();
+            ~WindowManager(){}
+            WindowManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName);
             void                                Init();
             void                                DeInit();
             void                                Close();

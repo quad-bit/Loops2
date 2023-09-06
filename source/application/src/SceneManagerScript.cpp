@@ -24,7 +24,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 35, 50));
     camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(-27.0f), 0, 0));
 
-    Core::ECS::Components::Camera * camera = new Core::ECS::Components::Camera(camHandle0->GetTransform());
+    Core::ECS::Components::Camera * camera = new Core::ECS::Components::Camera(camHandle0->GetTransform(), 1024.0f/1024.0f);
     camHandle0->AddComponent<Core::ECS::Components::Camera>(camera);
     
     cameraController = new CameraController();

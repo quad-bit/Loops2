@@ -305,7 +305,7 @@ void GfxVk::Utility::VulkanManager::Init(Core::Wrappers::QueueWrapper * queueReq
 
 void GfxVk::Utility::VulkanManager::InitializeFactories()
 {
-    GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanManager::GetInstance()->GetSurface(), GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat());
+    //GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanManager::GetInstance()->GetSurface(), GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat());
     GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->Init();
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
     GfxVk::Framebuffer::VkFrameBufferFactory::GetInstance()->Init();

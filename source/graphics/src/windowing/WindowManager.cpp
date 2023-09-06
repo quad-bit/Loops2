@@ -1,32 +1,20 @@
 #include "windowing/WindowManager.h"
 #include <CorePrecompiled.h>
 
-Renderer::Windowing::WindowManager* Renderer::Windowing::WindowManager::windowManagerInstance = nullptr;
-
-Renderer::Windowing::WindowManager::~WindowManager()
+Renderer::Windowing::WindowManager::WindowManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName):
+    m_windowWidth(winWidth), m_windowHeight(winHeight), m_renderHeight(renderHeight), m_renderWidth(renderHeight), m_windowName(winName)
 {
-}
-
-Renderer::Windowing::WindowManager * Renderer::Windowing::WindowManager::GetInstance()
-{
-    if (windowManagerInstance == nullptr)
-    {
-        windowManagerInstance = new Renderer::Windowing::WindowManager();
-    }
-    return windowManagerInstance;
 }
 
 void Renderer::Windowing::WindowManager::Init()
 {
     PLOGD << "Window manager Init";
-
     InitOSWindow();
 }
 
 void Renderer::Windowing::WindowManager::DeInit()
 {
     PLOGD << "Graphics manager DeInit";
-
     DeInitOSWindow();
 }
 

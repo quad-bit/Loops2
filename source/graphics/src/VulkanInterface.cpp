@@ -442,9 +442,9 @@ void Renderer::VulkanInterface::Init()
 {
     PLOGD << "Vulkan interface Init";
 
-    GfxVk::Utility::VulkanManager::GetInstance()->Init(Core::RendererSettings::queueReq, Core::RendererSettings::queueRequirementCount);
-    GfxVk::Utility::VulkanManager::GetInstance()->CreateSurface(Renderer::Windowing::WindowManager::GetInstance()->glfwWindow);
-    GfxVk::Utility::VulkanManager::GetInstance()->InitializeFactories();
+    //GfxVk::Utility::VulkanManager::GetInstance()->Init(Core::RendererSettings::queueReq, Core::RendererSettings::queueRequirementCount);
+    //GfxVk::Utility::VulkanManager::GetInstance()->CreateSurface(Renderer::Windowing::WindowManager::GetInstance()->glfwWindow);
+    //GfxVk::Utility::VulkanManager::GetInstance()->InitializeFactories();
     /*VulkanManager::GetInstance()->CreateSurface(WindowManager::GetInstance()->glfwWindow);
     PresentationEngine::GetInstance()->Init(VulkanManager::GetInstance()->GetSurface(), VulkanManager::GetInstance()->GetSurfaceFormat());
     GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->Init();

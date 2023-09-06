@@ -38,5 +38,7 @@ namespace Renderer
         void PreRender();
         void Render();
         void PostRenderLoopEnd();
+        ~RenderingManager();
+        RenderingManager();
     };
 }

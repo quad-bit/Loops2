@@ -3,6 +3,12 @@
 #include <Settings.h>
 #include <vector>
 #include "windowing/InputEvents.h"
+#include <PlatformSettings.h>
+
+#if defined(GLFW_ENABLED)
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#endif
 
 namespace Renderer
 {
@@ -21,9 +27,10 @@ namespace Renderer
             std::vector<KeyInputEvent*> keyEventPool;
             uint16_t poolSize = 10;
             uint16_t eventCounter = 0;
+            GLFWwindow* m_windowObj;
 
         public:
-            void Init();
+            void Init(GLFWwindow* windowObj);
             void DeInit();
             void Update();
             static InputManager* GetInstance();

@@ -1,7 +1,7 @@
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Transform.h"
 
-Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transform, glm::vec3 up, float yaw, float pitch, CameraType projectionType) : movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
+Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transform, float aspectRatio, glm::vec3 up, float yaw, float pitch, CameraType projectionType) : movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
 {
     this->transform = transform;
     //this->position = position;
@@ -9,7 +9,7 @@ Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transfo
     this->worldUp = up;
     this->yaw = yaw;
     this->pitch = pitch;
-    this->aspect = (float)(Settings::windowWidth / Settings::windowHeight);
+    this->aspect = aspectRatio;
     this->projectionType = projectionType;
     //this->updateCameraVectors();
 

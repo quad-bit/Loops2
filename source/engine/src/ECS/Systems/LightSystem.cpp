@@ -84,9 +84,9 @@ void LightSystem::CreateLightUniformBuffer(Core::Utility::ShaderBindingDescripti
 Core::ECS::Components::Camera *  LightSystem::CreateLightCamera(Core::ECS::Components::Transform * transform)
 {
     // create a camera 
-    Core::ECS::Components::Camera * lightCam = new Core::ECS::Components::Camera(transform);
+    Core::ECS::Components::Camera * lightCam = new Core::ECS::Components::Camera(transform, 1024.0f/1024.0f);
     //lightCam->SetProjectionType(CameraType::ORTHOGONAL);
-    lightCam->SetFOV((90.0f));
+    lightCam->SetFOV(90.0f);
     lightCam->SetNearPlane(2.0f);
     lightCam->SetFarPlane(1000.0f);
 

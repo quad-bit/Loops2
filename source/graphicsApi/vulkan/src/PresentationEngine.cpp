@@ -10,7 +10,7 @@
 
 GfxVk::Utility::PresentationEngine* GfxVk::Utility::PresentationEngine::instance = nullptr;
 
-void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR * surfaceFormat)
+void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR * surfaceFormat, Core::Settings* settings)
 {
     PLOGD << "PresentationEngine Init";
 
@@ -20,11 +20,11 @@ void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfac
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*GfxVk::Utility::CoreObjects::physicalDeviceObj, *surfaceObj, &surfaceCapabilities);
 
     if (surfaceCapabilities.maxImageCount > 0)
-        if (swapChainImageCount > surfaceCapabilities.maxImageCount)
-            swapChainImageCount = surfaceCapabilities.maxImageCount;
+        if (m_swapchainImageCount > surfaceCapabilities.maxImageCount)
+            m_swapchainImageCount = surfaceCapabilities.maxImageCount;
 
-    if (swapChainImageCount < surfaceCapabilities.minImageCount + 1)
-        swapChainImageCount = surfaceCapabilities.minImageCount + 1;
+    if (m_swapchainImageCount < surfaceCapabilities.minImageCount + 1)
+        m_swapchainImageCount = surfaceCapabilities.minImageCount + 1;
 
     presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
     {
@@ -38,13 +38,13 @@ void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfac
             if (obj == VK_PRESENT_MODE_MAILBOX_KHR)
             {
                 presentMode = obj;
-                swapChainImageCount = 3;
+                m_swapchainImageCount = 3;
                 break;
             }
         }
     }
 
-    Settings::swapBufferCount = swapChainImageCount;
+    settings->SetSwapBufferCount(m_swapchainImageCount);
 }
 
 void GfxVk::Utility::PresentationEngine::CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo)
@@ -66,7 +66,7 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageIn
     swapChainCreateInfo.imageFormat = GfxVk::Unwrap::UnWrapFormat(info.format);
     swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapChainCreateInfo.imageUsage = GfxVk::Unwrap::UnwrapUsage(info.usage);
-    swapChainCreateInfo.minImageCount = Settings::swapBufferCount;
+    swapChainCreateInfo.minImageCount = m_swapchainImageCount;
     swapChainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapChainCreateInfo.presentMode = presentMode;
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE; // useful when resizing the window
@@ -89,7 +89,7 @@ std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(C
     swapChainCreateInfo.imageFormat = surfaceFormat->format;
     swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    swapChainCreateInfo.minImageCount = swapChainImageCount;
+    swapChainCreateInfo.minImageCount = m_swapchainImageCount;
     swapChainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapChainCreateInfo.presentMode = presentMode;
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE; // useful when resizing the window
@@ -100,21 +100,21 @@ std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(C
 
     ErrorCheck(vkCreateSwapchainKHR(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &swapChainCreateInfo, CoreObjects::pAllocator, &swapchainObj));
 
-    ErrorCheck(vkGetSwapchainImagesKHR(*GfxVk::Utility::CoreObjects::logicalDeviceObj, swapchainObj, &swapChainImageCount, nullptr));
+    ErrorCheck(vkGetSwapchainImagesKHR(*GfxVk::Utility::CoreObjects::logicalDeviceObj, swapchainObj, &m_swapchainImageCount, nullptr));
 
-    ASSERT_MSG_DEBUG(count == swapChainImageCount, "Swapchain count mis match");
+    ASSERT_MSG_DEBUG(count == m_swapchainImageCount, "Swapchain count mis match");
 
-    swapChainImageList.resize(swapChainImageCount);
-    swapChainImageViewList.resize(swapChainImageCount);
+    swapChainImageList.resize(m_swapchainImageCount);
+    swapChainImageViewList.resize(m_swapchainImageCount);
 
-    ErrorCheck(vkGetSwapchainImagesKHR(*GfxVk::Utility::CoreObjects::logicalDeviceObj, swapchainObj, &swapChainImageCount, swapChainImageList.data()));
+    ErrorCheck(vkGetSwapchainImagesKHR(*GfxVk::Utility::CoreObjects::logicalDeviceObj, swapchainObj, &m_swapchainImageCount, swapChainImageList.data()));
 
     return &swapChainImageList;
 }
 
 std::vector<VkImageView>* GfxVk::Utility::PresentationEngine::CreateSwapchainImageViews(Core::Wrappers::AttachmentInfo * info, uint32_t count)
 {
-    for (uint32_t i = 0; i <swapChainImageCount; i++)
+    for (uint32_t i = 0; i <m_swapchainImageCount; i++)
     {
         VkImageViewCreateInfo createInfo{};
         createInfo.components = { VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY };
@@ -178,7 +178,7 @@ void GfxVk::Utility::PresentationEngine::DestroySwapChain()
 void GfxVk::Utility::PresentationEngine::DestroySwapChainImageView()
 {
     DEPRECATED;
-    for (uint32_t i = 0; i <swapChainImageCount; i++)
+    for (uint32_t i = 0; i <m_swapchainImageCount; i++)
     {
         vkDestroyImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, swapChainImageViewList[i], CoreObjects::pAllocator);
     }

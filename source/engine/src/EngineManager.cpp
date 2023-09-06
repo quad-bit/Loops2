@@ -1,26 +1,33 @@
 #include "CorePrecompiled.h"
+#include <GraphicsManager.h>
 #include "EngineManager.h"
 #include <CoreManager.h>
 #include <Settings.h>
-#include <GraphicsManager.h>
 #include <ECS/ECS_Manager.h>
-//#include <InputManager.h>
+#include <Windowing/InputManager.h>
+#include <Windowing/MouseInputManager.h>
 #include <Utility/Timer.h>
 #include "SceneManager.h"
 
 Engine::EngineManager* Engine::EngineManager::instance = nullptr;
 
-void Engine::EngineManager::Init()
+void Engine::EngineManager::Init(const std::string& windowName,
+    uint32_t windowWidth,
+    uint32_t windowHeight,
+    uint32_t renderWidth,
+    uint32_t renderHeight)
 {
     //PLOGD << "ENGINE MANAGER Init";
-    Settings::maxFrameRate = 60;
-    Settings::windowWidth = 1024;
-    Settings::windowHeight = 1024;
-    Settings::windowName = "Loops";
 
     Core::CoreManager::GetInstance()->Init();
-    Renderer::GraphicsManager::GetInstance()->Init(1024, 1024, "Loops");
-    Renderer::GraphicsManager::GetInstance()->SetupRenderer();
+    
+    m_graphicsMngrObj = new Renderer::GraphicsManager(windowWidth, windowHeight, renderWidth, renderHeight, "Loops");
+    m_graphicsMngrObj->Init();
+    m_graphicsMngrObj->SetupRenderer();
+
+    Renderer::Windowing::InputManager::GetInstance()->Init(m_graphicsMngrObj->GetGlfwWindow());
+    Renderer::Windowing::MouseInputManager::GetInstance()->Init();
+
     ECS_Manager::GetInstance()->Init();
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
@@ -36,9 +43,14 @@ void Engine::EngineManager::DeInit()
     ECS_Manager::GetInstance()->DeInit();
     delete ECS_Manager::GetInstance();
 
-    Renderer::GraphicsManager::GetInstance()->DislogeRenderer();
-    Renderer::GraphicsManager::GetInstance()->DeInit();
-    delete Renderer::GraphicsManager::GetInstance();
+    Renderer::Windowing::MouseInputManager::GetInstance()->DeInit();
+    delete Renderer::Windowing::MouseInputManager::GetInstance();
+
+    Renderer::Windowing::InputManager::GetInstance()->DeInit();
+    delete Renderer::Windowing::InputManager::GetInstance();
+
+    m_graphicsMngrObj->DeInit();
+    delete m_graphicsMngrObj;
 
     Core::CoreManager::GetInstance()->DeInit();
     delete Core::CoreManager::GetInstance();
@@ -46,27 +58,26 @@ void Engine::EngineManager::DeInit()
 
 void Engine::EngineManager::Update()
 {
-#if 0
     // Before the update, will run just once
     {
-        GraphicsManager::GetInstance()->PreUpdate();
+        m_graphicsMngrObj->PreUpdate();
     }
 
     typedef double precision;
 
-    precision msPerUpdate = 1000.0f / (precision)Settings::maxFrameRate;
+    precision msPerUpdate = 1000.0f / (precision)60.0f;// Settings::maxFrameRate;
     precision lag = 0.0f;
 
-    Timer::GetInstance()->Reset();
-    while (GraphicsManager::GetInstance()->IsWindowActive())
+    Core::Utility::Timer::GetInstance()->Reset();
+    while (m_graphicsMngrObj->IsWindowActive())
     {
-        precision delta = Timer::GetInstance()->GetDeltaTime<precision>();
+        precision delta = Core::Utility::Timer::GetInstance()->GetDeltaTime<precision>();
         lag += delta;
         //if (delta > msPerUpdate)
             //delta = msPerUpdate;
         //PLOGD << "delta : " << delta << "  lag : " << lag;
-        InputManager::GetInstance()->Update();
-        CoreManager::GetInstance()->Update();
+        Renderer::Windowing::InputManager::GetInstance()->Update();
+        Core::CoreManager::GetInstance()->Update();
 
         uint16_t iterations = 0, maxIterations = 5;
         while (lag >= msPerUpdate && iterations < maxIterations)
@@ -80,14 +91,15 @@ void Engine::EngineManager::Update()
         // to make it more smooth pass this(lag / MS_PER_UPDATE) to renderer, advance the render
         ECS_Manager::GetInstance()->Update((float)(lag / msPerUpdate));
         // lag = msPerUpdate;
-        GraphicsManager::GetInstance()->Update();
+
+        Renderer::Windowing::MouseInputManager::GetInstance()->Update();
+        m_graphicsMngrObj->Update();
     }
 
     // After the update, will run just once
     {
-        GraphicsManager::GetInstance()->PostUpdate();
+        m_graphicsMngrObj->PostUpdate();
     }
-#endif
 }
 
 

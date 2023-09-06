@@ -59,6 +59,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
     const uint32_t & attachmentCount, const VkSubpassDescription * subpassList, const uint32_t & subpassCount,
     const VkSubpassDependency * dependencyList, const uint32_t & dependencyCount, uint32_t & renderPassId)
 {
+    /*
     GfxVk::Renderpass::RenderpassWrapper * info = new GfxVk::Renderpass::RenderpassWrapper();
     info->id = GetId();
 
@@ -115,7 +116,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
         info->clearValue = clearValue;
         info->clearValueCount = 2;
     }
-    
+*/
 }
 
 void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachmentDescription * renderpassAttachmentList, 
@@ -124,6 +125,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
     const uint32_t & dependencyCount, const VkRenderPassBeginInfo beginInfo, uint32_t & renderPassId)
 {
     DEPRECATED;
+    /*
     GfxVk::Renderpass::RenderpassWrapper * info = new GfxVk::Renderpass::RenderpassWrapper();
     info->id = GetId();
 
@@ -151,6 +153,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
     info->clearValue[0].color.float32[1] = Settings::clearColorValue[1];
     info->clearValue[0].color.float32[2] = Settings::clearColorValue[2];
     info->clearValue[0].color.float32[3] = Settings::clearColorValue[3];
+    */
 }
 
 void GfxVk::Renderpass::VkRenderPassFactory::SetRenderPassBeginInfo(const VkRenderPassBeginInfo beginInfo, const uint32_t & renderpassId)
