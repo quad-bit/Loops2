@@ -16,12 +16,18 @@ void Engine::EngineManager::Init(const std::string& windowName,
     uint32_t windowHeight,
     uint32_t renderWidth,
     uint32_t renderHeight)
+
 {
     //PLOGD << "ENGINE MANAGER Init";
+    m_windowSettings.m_windowWidth = windowWidth;
+    m_windowSettings.m_windowHeight = windowHeight;
+    m_windowSettings.m_renderWidth = renderWidth;
+    m_windowSettings.m_renderHeight = renderHeight;
+    m_windowSettings.m_windowName = windowName;
 
     Core::CoreManager::GetInstance()->Init();
     
-    m_graphicsMngrObj = new Renderer::GraphicsManager(windowWidth, windowHeight, renderWidth, renderHeight, "Loops");
+    m_graphicsMngrObj = new Renderer::GraphicsManager(m_windowSettings);
     m_graphicsMngrObj->Init();
     m_graphicsMngrObj->SetupRenderer();
 

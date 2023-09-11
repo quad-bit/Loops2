@@ -71,7 +71,7 @@ int GfxVk::Framebuffer::VkAttachmentFactory::FindBestDepthFormat(Core::Enums::Fo
     for (uint32_t i = 0; i < count; i++)
     {
         formatList[i] = GfxVk::Unwrap::UnWrapFormat( imageFormat[i] );
-        vkGetPhysicalDeviceFormatProperties(*GfxVk::Utility::CoreObjects::physicalDeviceObj, formatList[i], &props);
+        vkGetPhysicalDeviceFormatProperties(DeviceInfo::GetPhysicalDevice(), formatList[i], &props);
         if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
         {
             delete[] formatList;
@@ -147,11 +147,11 @@ void GfxVk::Framebuffer::VkAttachmentFactory::CreateAttachment(VkImageCreateInfo
         temp->usage = info[i].usage;
         ids[i] = (temp->id);
 
-        GfxVk::Utility::ErrorCheck(vkCreateImage(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info[i], GfxVk::Utility::CoreObjects::pAllocator, &temp->image));
+        GfxVk::Utility::ErrorCheck(vkCreateImage(DeviceInfo::GetLogicalDevice(), &info[i], DeviceInfo::GetAllocationCallback(), &temp->image));
 
         /*VulkanMemoryManager::GetSingleton()->AllocateImageMemory(temp->image, 
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, temp->imageMemory);
-        vkBindImageMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *temp->image, *temp->imageMemory, 0);
+        vkBindImageMemory(DeviceInfo::GetLogicalDevice(), *temp->image, *temp->imageMemory, 0);
         */
         /*
         bool stencilAvailable = false;
@@ -163,7 +163,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::CreateAttachment(VkImageCreateInfo
         viewInfo[i].image = temp->image;
         viewInfo[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | (stencilAvailable ? VK_IMAGE_ASPECT_STENCIL_BIT : 0);
 
-        GfxVk::Utility::ErrorCheck(vkCreateImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &viewInfo[i],GfxVk::Utility::CoreObjects::pAllocator, &temp->imageView));
+        GfxVk::Utility::ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &viewInfo[i],DeviceInfo::GetAllocationCallback(), &temp->imageView));
         */
         attachmentList.push_back(temp);
     }
@@ -215,7 +215,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::CreateImageView(VkImageViewCreateI
 {
     for (uint32_t i = 0; i < count; i++)
     {
-        GfxVk::Utility::ErrorCheck(vkCreateImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info[i], GfxVk::Utility::CoreObjects::pAllocator, &(wrappers)[i]->imageView));
+        GfxVk::Utility::ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &info[i], DeviceInfo::GetAllocationCallback(), &(wrappers)[i]->imageView));
     }
 }
 //deprecated.
@@ -258,7 +258,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::DestroyAttachment(uint32_t * ids, 
         uint32_t count = 0;
         if ((*it)->image != VK_NULL_HANDLE)
         {
-            vkDestroyImage(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->image, GfxVk::Utility::CoreObjects::pAllocator);
+            vkDestroyImage(DeviceInfo::GetLogicalDevice(), (*it)->image, DeviceInfo::GetAllocationCallback());
             (*it)->image = VK_NULL_HANDLE;
             count++;
         }
@@ -267,7 +267,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::DestroyAttachment(uint32_t * ids, 
         {
             if ((*it)->imageView != VK_NULL_HANDLE)
             {
-                vkDestroyImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->imageView, GfxVk::Utility::CoreObjects::pAllocator);
+                vkDestroyImageView(DeviceInfo::GetLogicalDevice(), (*it)->imageView, DeviceInfo::GetAllocationCallback());
                 (*it)->imageView = VK_NULL_HANDLE;
                 count++;
             }
@@ -277,7 +277,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::DestroyAttachment(uint32_t * ids, 
         {
             if ((*it)->imageMemory != VK_NULL_HANDLE)
             {
-                //vkFreeMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->imageMemory, GfxVk::Utility::CoreObjects::pAllocator);
+                //vkFreeMemory(DeviceInfo::GetLogicalDevice(), (*it)->imageMemory, DeviceInfo::GetAllocationCallback());
                 GfxVk::Utility::VulkanMemoryManager::GetSingleton()->FreeMemory((*it)->memoryId);
                 (*it)->imageMemory = VK_NULL_HANDLE;
                 count++;
@@ -321,7 +321,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::DestroySwapChainImageViews(uint32_
         it = std::find_if(attachmentList.begin(), attachmentList.end(), [&](GfxVk::Framebuffer::AttachmentWrapper * e) { return e->id == ids[i]; });
         ASSERT_MSG_DEBUG(it != attachmentList.end(), "Image id not found");
 
-        vkDestroyImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->imageView, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), (*it)->imageView, DeviceInfo::GetAllocationCallback());
         
         delete (*it);
         attachmentList.erase(it);
@@ -357,7 +357,7 @@ void GfxVk::Framebuffer::VkAttachmentFactory::BindImageMemory(const uint32_t & i
     (*it)->memoryId = memId;
     (*it)->imageMemory = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
 
-    GfxVk::Utility::ErrorCheck( vkBindImageMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->image, (*it)->imageMemory, offset));
+    GfxVk::Utility::ErrorCheck( vkBindImageMemory(DeviceInfo::GetLogicalDevice(), (*it)->image, (*it)->imageMemory, offset));
 }
 
 uint32_t GfxVk::Framebuffer::VkAttachmentFactory::GetId()
@@ -368,11 +368,11 @@ uint32_t GfxVk::Framebuffer::VkAttachmentFactory::GetId()
 void GfxVk::Framebuffer::AttachmentWrapper::DeActivateAttachment()
 {
     if (imageView != VK_NULL_HANDLE)
-        vkDestroyImageView(*GfxVk::Utility::CoreObjects::logicalDeviceObj, imageView, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), imageView, DeviceInfo::GetAllocationCallback());
     if (imageMemory != VK_NULL_HANDLE)
-        vkFreeMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, imageMemory, GfxVk::Utility::CoreObjects::pAllocator);
+        vkFreeMemory(DeviceInfo::GetLogicalDevice(), imageMemory, DeviceInfo::GetAllocationCallback());
     if (image != VK_NULL_HANDLE)
-        vkDestroyImage(*GfxVk::Utility::CoreObjects::logicalDeviceObj, image, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyImage(DeviceInfo::GetLogicalDevice(), image, DeviceInfo::GetAllocationCallback());
 
     attachmentActive = false;
 }

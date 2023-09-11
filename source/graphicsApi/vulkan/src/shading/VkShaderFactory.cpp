@@ -26,7 +26,7 @@ VkShaderModule * GfxVk::Shading::VkShaderFactory::CreateShaderModule(uint32_t * 
     createInfo.pCode = shaderCode;
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
-    GfxVk::Utility::ErrorCheck(vkCreateShaderModule(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &createInfo, GfxVk::Utility::CoreObjects::pAllocator, shaderModuleObj));
+    GfxVk::Utility::ErrorCheck(vkCreateShaderModule(DeviceInfo::GetLogicalDevice(), &createInfo, DeviceInfo::GetAllocationCallback(), shaderModuleObj));
 
     return shaderModuleObj;
 }
@@ -101,7 +101,7 @@ void GfxVk::Shading::VkShaderFactory::DeInit()
 {
     for each (ShaderModuleWrapper* var in shaderModuleList)
     {
-        vkDestroyShaderModule(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *var->module, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyShaderModule(DeviceInfo::GetLogicalDevice(), *var->module, DeviceInfo::GetAllocationCallback());
         delete var->module;
         delete var->shaderType;
         delete var;

@@ -6,7 +6,7 @@ GfxVk::Utility::VkQueueFactory* GfxVk::Utility::VkQueueFactory::instance = nullp
 
 GfxVk::Utility::VkQueueWrapper * GfxVk::Utility::VkQueueFactory::MapQueueWrapper(const Core::Wrappers::QueueWrapper * wrapper)
 {
-    if (*wrapper->queueType == Core::Enums::PipelineType::GRAPHICS)
+    if (wrapper->queueType == Core::Enums::PipelineType::GRAPHICS)
         for (uint32_t i = 0; i < graphicsQueueWrapperList.size(); i++)
         {
             if (wrapper->queueId == graphicsQueueWrapperList[i].queueId && wrapper->purpose == graphicsQueueWrapperList[i].purpose)
@@ -15,7 +15,7 @@ GfxVk::Utility::VkQueueWrapper * GfxVk::Utility::VkQueueFactory::MapQueueWrapper
             }
         }
 
-    if (*wrapper->queueType == Core::Enums::PipelineType::COMPUTE)
+    if (wrapper->queueType == Core::Enums::PipelineType::COMPUTE)
         for (uint32_t i = 0; i < computeQueueWrapperList.size(); i++)
         {
             if (wrapper->queueId == computeQueueWrapperList[i].queueId && wrapper->purpose == computeQueueWrapperList[i].purpose)
@@ -24,7 +24,7 @@ GfxVk::Utility::VkQueueWrapper * GfxVk::Utility::VkQueueFactory::MapQueueWrapper
             }
         }
 
-    if (*wrapper->queueType == Core::Enums::PipelineType::TRANSFER)
+    if (wrapper->queueType == Core::Enums::PipelineType::TRANSFER)
         for (uint32_t i = 0; i < transferQueueWrapperList.size(); i++)
         {
             if (wrapper->queueId == transferQueueWrapperList[i].queueId && wrapper->purpose == transferQueueWrapperList[i].purpose)
@@ -46,9 +46,9 @@ void GfxVk::Utility::VkQueueFactory::Init()
     uint32_t transferReq = VK_QUEUE_TRANSFER_BIT;
 
     uint32_t qFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(*GfxVk::Utility::CoreObjects::physicalDeviceObj, &qFamilyCount, nullptr);
+    vkGetPhysicalDeviceQueueFamilyProperties(DeviceInfo::GetPhysicalDevice(), &qFamilyCount, nullptr);
     propertyList.resize(qFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(*GfxVk::Utility::CoreObjects::physicalDeviceObj, &qFamilyCount, propertyList.data());
+    vkGetPhysicalDeviceQueueFamilyProperties(DeviceInfo::GetPhysicalDevice(), &qFamilyCount, propertyList.data());
 
     for (uint32_t j = 0; j < qFamilyCount; j++)
     {
@@ -259,21 +259,21 @@ void GfxVk::Utility::VkQueueFactory::InitQueues()
 {
     for (uint32_t i = 0; i < minGraphicQueueRequired; i++)
     {
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, graphicsQueueWrapperList[i].queueFamilyIndex,
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), graphicsQueueWrapperList[i].queueFamilyIndex,
             graphicsQueueWrapperList[i].indexInFamily, graphicsQueueWrapperList[i].queue);
         ASSERT_MSG_DEBUG(*graphicsQueueWrapperList[i].queue != VK_NULL_HANDLE, "Graphics Queue not available ");
     }
 
     for (uint32_t i = 0; i < minCopmuteQueueRequired; i++)
     {
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, computeQueueWrapperList[i].queueFamilyIndex,
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), computeQueueWrapperList[i].queueFamilyIndex,
             computeQueueWrapperList[i].indexInFamily, computeQueueWrapperList[i].queue);
         ASSERT_MSG_DEBUG(*computeQueueWrapperList[i].queue != VK_NULL_HANDLE, "Compute Queue not available ");
     }
 
     for (uint32_t i = 0; i < minTransferQueueRequired; i++)
     {
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, transferQueueWrapperList[i].queueFamilyIndex, 
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), transferQueueWrapperList[i].queueFamilyIndex, 
             transferQueueWrapperList[i].indexInFamily, transferQueueWrapperList[i].queue);
         ASSERT_MSG_DEBUG(*transferQueueWrapperList[i].queue != VK_NULL_HANDLE, "Transfer Queue not available ");
     }
@@ -364,7 +364,7 @@ VkQueue * GfxVk::Utility::VkQueueFactory::GetQueue(const Core::Wrappers::QueueWr
     return vkWrapper->queue;
 }
 
-void GfxVk::Utility::VkQueueFactory::SetQueuePurpose(Core::Enums::QueueType* purpose, Core::Enums::PipelineType qType, const uint32_t & queueId)
+void GfxVk::Utility::VkQueueFactory::SetQueuePurpose(const Core::Enums::QueueType& purpose, const Core::Enums::PipelineType& qType, const uint32_t & queueId)
 {
     std::vector<GfxVk::Utility::VkQueueWrapper>::iterator it;
 
@@ -489,7 +489,7 @@ void GfxVk::Utility::VkQueueFactory::CreateGraphicsQueues(uint32_t * ids, const 
     {
         ASSERT_MSG_DEBUG(graphicQueueInitCounter <= minGraphicQueueRequired, "Graphics Queue exhausted ");
 
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, graphicsQueueWrapperList[graphicQueueInitCounter].queueFamilyIndex,
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), graphicsQueueWrapperList[graphicQueueInitCounter].queueFamilyIndex,
             graphicsQueueWrapperList[graphicQueueInitCounter].indexInFamily, graphicsQueueWrapperList[graphicQueueInitCounter].queue);
         ASSERT_MSG_DEBUG(*graphicsQueueWrapperList[graphicQueueInitCounter].queue != VK_NULL_HANDLE, "Graphics Queue not available ");
 
@@ -506,7 +506,7 @@ void GfxVk::Utility::VkQueueFactory::CreateComputeQueues(uint32_t * ids, const u
     {
         ASSERT_MSG_DEBUG(computeQueueInitCounter <= minCopmuteQueueRequired, "Compute Queue exhausted ");
 
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, computeQueueWrapperList[computeQueueInitCounter].queueFamilyIndex,
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), computeQueueWrapperList[computeQueueInitCounter].queueFamilyIndex,
             computeQueueWrapperList[computeQueueInitCounter].indexInFamily, computeQueueWrapperList[computeQueueInitCounter].queue);
         ASSERT_MSG_DEBUG(*computeQueueWrapperList[computeQueueInitCounter].queue != VK_NULL_HANDLE, "Compute Queue not available ");
 
@@ -524,7 +524,7 @@ void GfxVk::Utility::VkQueueFactory::CreateTransferQueues(uint32_t * ids, const 
     {
         ASSERT_MSG_DEBUG(transferQueueInitCounter <= minTransferQueueRequired, "Compute Queue exhausted ");
 
-        vkGetDeviceQueue(*GfxVk::Utility::CoreObjects::logicalDeviceObj, transferQueueWrapperList[transferQueueInitCounter].queueFamilyIndex,
+        vkGetDeviceQueue(DeviceInfo::GetLogicalDevice(), transferQueueWrapperList[transferQueueInitCounter].queueFamilyIndex,
             transferQueueWrapperList[transferQueueInitCounter].indexInFamily, transferQueueWrapperList[transferQueueInitCounter].queue);
         ASSERT_MSG_DEBUG(*transferQueueWrapperList[transferQueueInitCounter].queue != VK_NULL_HANDLE, "Transfer Queue not available ");
         ids[i] = transferQueueWrapperList[transferQueueInitCounter].queueId;

@@ -13,19 +13,38 @@
 //#include "ForwardDrawGraph.h"
 
 #include "VulkanInterface.h"
+#include "VulkanManager.h"
+
+
+uint32_t Renderer::RendererSettings::m_renderQueueId;
+uint32_t Renderer::RendererSettings::m_presentationQueueId;
+uint32_t Renderer::RendererSettings::m_computeQueueId;
+uint32_t Renderer::RendererSettings::m_transferQueueId;
+
+std::vector<Core::Wrappers::QueueWrapper> Renderer::RendererSettings::m_queueReq;
+
+bool Renderer::RendererSettings::m_msaaEnabled;
+bool Renderer::RendererSettings::m_sampleRateShadingEnabled;
+bool Renderer::RendererSettings::m_multiSamplingAvailable;
+
+Core::Enums::Samples Renderer::RendererSettings::m_maxSampleCountAvailable;
+
+std::vector<uint32_t> Renderer::RendererSettings::depthPrepassImageId;
+uint32_t Renderer::RendererSettings::m_shadowMapWidth, Renderer::RendererSettings::m_shadowMapHeight;
+
 
 void Renderer::RenderingManager::BeginRenderLoop()
 {
     //get swapchain image index to be used for rendering the current frame.
     /*
-    currentFenceId = getSwapChainImageFences[currentFrameIndex];
-    currentRenderSemaphoreId = renderSemaphores[currentFrameIndex];
-    currentPresentationSemaphoreId = presentationSemaphores[currentFrameIndex];
+    m_currentFenceId = m_getSwapChainImageFences[m_currentFrameIndex];
+    m_currentRenderSemaphoreId = m_renderSemaphores[m_currentFrameIndex];
+    m_currentPresentationSemaphoreId = m_presentationSemaphores[m_currentFrameIndex];
 
-    currentSwapchainIndex = apiInterface->GetAvailableSwapchainIndex(currentFenceId, currentRenderSemaphoreId);
-    Settings::currentSwapChainIndex = currentSwapchainIndex;
+    m_currentSwapchainIndex = apiInterface->GetAvailableSwapchainIndex(m_currentFenceId, m_currentRenderSemaphoreId);
+    Settings::currentSwapChainIndex = m_currentSwapchainIndex;
     
-    activeDrawCommandBuffer = drawCommandBufferList[currentSwapchainIndex];
+    activeDrawCommandBuffer = drawCommandBufferList[m_currentSwapchainIndex];
 
     DrawGraphNode::dcb = activeDrawCommandBuffer;
 
@@ -35,7 +54,7 @@ void Renderer::RenderingManager::BeginRenderLoop()
     CommandBufferManager<T>::GetInstance()->BeginDrawCommandBufferRecording(activeDrawCommandBuffer,
         &usage, nullptr);
 
-    forwardRenderer->BeginRender(activeDrawCommandBuffer, currentSwapchainIndex);*/
+    forwardRenderer->BeginRender(activeDrawCommandBuffer, m_currentSwapchainIndex);*/
 }
 
 void Renderer::RenderingManager::EndRenderLoop()
@@ -54,78 +73,95 @@ void Renderer::RenderingManager::EndRenderLoop()
     //info.pipelineStage = PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT;
     //info.purpose = &purpose;
     //info.signalSemaphoreCount = 1;
-    //info.signalSemaphoreIds = &presentationSemaphores[currentFrameIndex];
+    //info.signalSemaphoreIds = &m_presentationSemaphores[m_currentFrameIndex];
     //info.waitSemaphoreCount = 1;
-    //info.waitSemaphoreIds = &renderSemaphores[currentFrameIndex];
+    //info.waitSemaphoreIds = &m_renderSemaphores[m_currentFrameIndex];
 
-    //apiInterface->SubmitJob(&Core::RendererSettings::queueReq[0], &info, 1, getSwapChainImageFences[currentFrameIndex]);
+    //apiInterface->SubmitJob(&Renderer::RendererSettings::m_queueReq[0], &info, 1, m_getSwapChainImageFences[m_currentFrameIndex]);
 
     //// submit for presentation
     //PresentInfo presentInfo = {};
     //presentInfo.waitSemaphoreCount = 1;
-    //presentInfo.pWaitSemaphoreIds = &presentationSemaphores[currentFrameIndex];
-    //presentInfo.pImageIndices = &currentSwapchainIndex;
+    //presentInfo.pWaitSemaphoreIds = &m_presentationSemaphores[m_currentFrameIndex];
+    //presentInfo.pImageIndices = &m_currentSwapchainIndex;
 
     ////TODO : send the correct presentation queue id, DONE.
-    //apiInterface->PresentSwapchainImage(&Core::RendererSettings::queueReq[1], &presentInfo, 0);
+    //apiInterface->PresentSwapchainImage(&Renderer::RendererSettings::m_queueReq[1], &presentInfo, 0);
 
-    //currentFrameIndex = (currentFrameIndex + 1) % Settings::maxFramesInFlight;
-    //Settings::currentFrameInFlight = currentFrameIndex;
+    //m_currentFrameIndex = (m_currentFrameIndex + 1) % Settings::maxFramesInFlight;
+    //Settings::currentFrameInFlight = m_currentFrameIndex;
 }
 
 void Renderer::RenderingManager::RenderLoop()
 {
-    //forwardRenderer->Render(activeDrawCommandBuffer, currentSwapchainIndex);
+    //forwardRenderer->Render(activeDrawCommandBuffer, m_currentSwapchainIndex);
 }
 
 void Renderer::RenderingManager::CheckForMSAA()
 {
-    //Samples sampleCount;
-
-    Core::RendererSettings::sampleCount = new Core::Enums::Samples;
-    if (Core::RendererSettings::MSAA_Enabled)
+    if (Renderer::RendererSettings::m_msaaEnabled)
     {
-        *Core::RendererSettings::sampleCount = apiInterface->GetMaxUsableSampleCount();
+        Renderer::RendererSettings::m_maxSampleCountAvailable = VulkanInterfaceAlias::GetMaxUsableSampleCount();
 
-        ASSERT_MSG_DEBUG(*Core::RendererSettings::sampleCount != Core::Enums::Samples::SAMPLE_COUNT_1_BIT, "MSAA not available");
+        ASSERT_MSG_DEBUG(Renderer::RendererSettings::m_maxSampleCountAvailable != Core::Enums::Samples::SAMPLE_COUNT_1_BIT, "MSAA not available");
 
 
-        if (*Core::RendererSettings::sampleCount != Core::Enums::Samples::SAMPLE_COUNT_1_BIT)
+        if (Renderer::RendererSettings::m_maxSampleCountAvailable != Core::Enums::Samples::SAMPLE_COUNT_1_BIT)
         {
-            if (apiInterface->IsSampleRateShadingAvailable())
+            if (VulkanInterfaceAlias::IsSampleRateShadingAvailable())
             {
-                Core::RendererSettings::sampleRateShadingEnabled = true;
+                Renderer::RendererSettings::m_sampleRateShadingEnabled = true;
             }
 
-            Core::RendererSettings::multiSamplingAvailable = true;
-            if (*Core::RendererSettings::sampleCount < desiredSampleCountForMSAA)
+            Renderer::RendererSettings::m_multiSamplingAvailable = true;
+            if (Renderer::RendererSettings::m_maxSampleCountAvailable < m_desiredSampleCountForMSAA)
             {
 
             }
-            else if (*Core::RendererSettings::sampleCount > desiredSampleCountForMSAA)
+            else if (Renderer::RendererSettings::m_maxSampleCountAvailable > m_desiredSampleCountForMSAA)
             {
-                *Core::RendererSettings::sampleCount = desiredSampleCountForMSAA;
+                Renderer::RendererSettings::m_maxSampleCountAvailable = m_desiredSampleCountForMSAA;
             }
         }
         else
         {
-            Core::RendererSettings::multiSamplingAvailable = false;
+            Renderer::RendererSettings::m_multiSamplingAvailable = false;
         }
     }
     else
     {
-        Core::RendererSettings::multiSamplingAvailable = false;
-        *Core::RendererSettings::sampleCount = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
+        Renderer::RendererSettings::m_multiSamplingAvailable = false;
+        Renderer::RendererSettings::m_maxSampleCountAvailable = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
     }
 }
 
-void Renderer::RenderingManager::Init(VulkanInterface* apiInterface)
+void Renderer::RenderingManager::Init()
 {
     PLOGD << "Rendering interface Init";
 
-    Core::RendererSettings::shadowMapHeight = 2048;
-    Core::RendererSettings::shadowMapWidth = 2048;
-    Core::RendererSettings::MSAA_Enabled = true;
+    Renderer::RendererSettings::m_shadowMapHeight = 2048;
+    Renderer::RendererSettings::m_shadowMapWidth = 2048;
+    Renderer::RendererSettings::m_msaaEnabled = true;
+
+    Renderer::RendererSettings::m_queueReq.resize(4);
+
+    Renderer::RendererSettings::m_queueReq[0].purpose = Core::Enums::QueueType::RENDER;
+    Renderer::RendererSettings::m_queueReq[0].queueType = Core::Enums::PipelineType::GRAPHICS;
+
+    Renderer::RendererSettings::m_queueReq[1].purpose = Core::Enums::QueueType::PRESENT;
+    Renderer::RendererSettings::m_queueReq[1].queueType = Core::Enums::PipelineType::GRAPHICS;
+
+    Renderer::RendererSettings::m_queueReq[2].purpose = Core::Enums::QueueType::COMPUTE;
+    Renderer::RendererSettings::m_queueReq[2].queueType = Core::Enums::PipelineType::COMPUTE;
+
+    Renderer::RendererSettings::m_queueReq[3].purpose = Core::Enums::QueueType::TRANSFER;
+    Renderer::RendererSettings::m_queueReq[3].queueType = Core::Enums::PipelineType::TRANSFER;
+
+    m_vulkanMngrObj->Init(Renderer::RendererSettings::m_queueReq,
+        Renderer::RendererSettings::m_renderQueueId,
+        Renderer::RendererSettings::m_presentationQueueId,
+        Renderer::RendererSettings::m_computeQueueId,
+        Renderer::RendererSettings::m_transferQueueId);
 
     //forwardRenderer = new ForwardRendering<T>();
     //forwardRenderer->Init(apiInterface);
@@ -149,8 +185,7 @@ void Renderer::RenderingManager::Init(VulkanInterface* apiInterface)
     //Settings::depthClearValue = 1.0f;
     //Settings::stencilClearValue = 0.0f;
 
-    //Settings::currentFrameInFlight = currentFrameIndex;
-
+    //Settings::currentFrameInFlight = m_currentFrameIndex;
 }
 
 void Renderer::RenderingManager::SetupRenderer()
@@ -158,13 +193,13 @@ void Renderer::RenderingManager::SetupRenderer()
     /*PipelineType pipelineType = PipelineType::GRAPHICS;
     CommandPoolProperty prop = CommandPoolProperty::TRANS_RESET;
 
-    graphicCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
+    m_graphicCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
 
     pipelineType = PipelineType::COMPUTE;
-    computeCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
+    m_computeCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
 
     pipelineType = PipelineType::GRAPHICS;
-    guiCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);*/
+    m_guiCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);*/
 
     //=============================================================================================
 
@@ -176,38 +211,38 @@ void Renderer::RenderingManager::SetupRenderer()
     {
         CommandBufferLevel* level = new CommandBufferLevel;
         *level = CommandBufferLevel::PRIMARY;
-        drawCommandBufferList[i] = CommandBufferManager<T>::GetInstance()->CreateDrawCommandBuffer(level, graphicCommandPoolId);
+        drawCommandBufferList[i] = CommandBufferManager<T>::GetInstance()->CreateDrawCommandBuffer(level, m_graphicCommandPoolId);
     }
     DrawGraphNode::dcb = drawCommandBufferList[0];*/
 
     /*Settings::maxFramesInFlight = Settings::swapBufferCount - 1;
 
-    renderSemaphores = new uint32_t[Settings::maxFramesInFlight];
-    presentationSemaphores = new uint32_t[Settings::maxFramesInFlight];
-    getSwapChainImageFences = new uint32_t[Settings::maxFramesInFlight];
+    m_renderSemaphores = new uint32_t[Settings::maxFramesInFlight];
+    m_presentationSemaphores = new uint32_t[Settings::maxFramesInFlight];
+    m_getSwapChainImageFences = new uint32_t[Settings::maxFramesInFlight];
 
     for (uint32_t i = 0; i < Settings::maxFramesInFlight; i++)
     {
-        renderSemaphores[i] = apiInterface->Create_Semaphore(false);
-        presentationSemaphores[i] = apiInterface->Create_Semaphore(false);
-        getSwapChainImageFences[i] = apiInterface->CreateFence(true);
+        m_renderSemaphores[i] = apiInterface->Create_Semaphore(false);
+        m_presentationSemaphores[i] = apiInterface->Create_Semaphore(false);
+        m_getSwapChainImageFences[i] = apiInterface->CreateFence(true);
     }*/
 }
 
 void Renderer::RenderingManager::DislogeRenderer()
 {
-    //apiInterface->IsApplicationSafeForClosure();
+    VulkanInterfaceAlias::IsApplicationSafeForClosure();
 
     /*for (uint32_t i = 0; i < Settings::maxFramesInFlight; i++)
     {
-        apiInterface->DestroyFence(getSwapChainImageFences[i]);
-        apiInterface->DestroySemaphore(renderSemaphores[i]);
-        apiInterface->DestroySemaphore(presentationSemaphores[i]);
+        apiInterface->DestroyFence(m_getSwapChainImageFences[i]);
+        apiInterface->DestroySemaphore(m_renderSemaphores[i]);
+        apiInterface->DestroySemaphore(m_presentationSemaphores[i]);
     }
 
-    delete[] getSwapChainImageFences;
-    delete[] presentationSemaphores;
-    delete[] renderSemaphores;*/
+    delete[] m_getSwapChainImageFences;
+    delete[] m_presentationSemaphores;
+    delete[] m_renderSemaphores;*/
 
     /*for (uint32_t i = 0; i < Settings::swapBufferCount; i++)
     {
@@ -218,9 +253,9 @@ void Renderer::RenderingManager::DislogeRenderer()
 
     forwardRenderer->DislogeRenderer();*/
 
-    /*CommandBufferManager<T>::GetInstance()->DestroyCommandPool(guiCommandPoolId);
-    CommandBufferManager<T>::GetInstance()->DestroyCommandPool(computeCommandPoolId);
-    CommandBufferManager<T>::GetInstance()->DestroyCommandPool(graphicCommandPoolId);*/
+    /*CommandBufferManager<T>::GetInstance()->DestroyCommandPool(m_guiCommandPoolId);
+    CommandBufferManager<T>::GetInstance()->DestroyCommandPool(m_computeCommandPoolId);
+    CommandBufferManager<T>::GetInstance()->DestroyCommandPool(m_graphicCommandPoolId);*/
 }
 
 void Renderer::RenderingManager::DeInit()
@@ -266,13 +301,56 @@ void Renderer::RenderingManager::Render()
 
 void Renderer::RenderingManager::PostRenderLoopEnd()
 {
-    //apiInterface->IsApplicationSafeForClosure();
+    VulkanInterfaceAlias::IsApplicationSafeForClosure();
 }
 
 Renderer::RenderingManager::~RenderingManager()
 {
+    m_vulkanMngrObj.reset();
 }
 
-Renderer::RenderingManager::RenderingManager()
+Renderer::RenderingManager::RenderingManager(const Core::WindowSettings& windowSettings/*, Core::Settings* settings*/):
+    m_windowSettings(windowSettings)
 {
+    m_vulkanMngrObj = std::make_unique<GfxVk::Utility::VulkanManager>(windowSettings);
+}
+
+uint32_t Renderer::RendererSettings::GetRenderQueueId()
+{
+    return m_renderQueueId;
+}
+
+uint32_t Renderer::RendererSettings::GetPresentationQueueId()
+{
+    return m_presentationQueueId;
+}
+
+uint32_t Renderer::RendererSettings::GetComputeQueueId()
+{
+    return m_computeQueueId;
+}
+
+uint32_t Renderer::RendererSettings::GetTransferQueueId()
+{
+    return m_transferQueueId;
+}
+
+Core::Enums::Samples Renderer::RendererSettings::GetMaxSampleCountAvailable()
+{
+    return m_maxSampleCountAvailable;
+}
+
+bool Renderer::RendererSettings::IsMsaaEnabled()
+{
+    return m_msaaEnabled;
+}
+
+bool Renderer::RendererSettings::IsSampleRateShadingAvailable()
+{
+    return m_sampleRateShadingEnabled;
+}
+
+bool Renderer::RendererSettings::IsMultiSamplingAvailable()
+{
+    return m_multiSamplingAvailable;
 }

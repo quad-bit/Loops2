@@ -72,7 +72,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
     renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassCreateInfo.subpassCount = subpassCount;
 
-    GfxVk::Utility::ErrorCheck(vkCreateRenderPass(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &renderPassCreateInfo,GfxVk::Utility::CoreObjects::pAllocator, &info->renderPass));
+    GfxVk::Utility::ErrorCheck(vkCreateRenderPass(DeviceInfo::GetLogicalDevice(), &renderPassCreateInfo,DeviceInfo::GetAllocationCallback(), &info->renderPass));
 
     renderpassList.push_back(info);
     renderPassId = info->id;
@@ -138,7 +138,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::CreateRenderPass(const VkAttachment
     renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassCreateInfo.subpassCount = subpassCount;
 
-    GfxVk::Utility::ErrorCheck(vkCreateRenderPass(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &renderPassCreateInfo,GfxVk::Utility::CoreObjects::pAllocator, &info->renderPass));
+    GfxVk::Utility::ErrorCheck(vkCreateRenderPass(DeviceInfo::GetLogicalDevice(), &renderPassCreateInfo,DeviceInfo::GetAllocationCallback(), &info->renderPass));
     info->beginInfo = beginInfo;
 
     renderpassList.push_back(info);
@@ -175,7 +175,7 @@ void GfxVk::Renderpass::VkRenderPassFactory::DestroyRenderPass(const uint32_t & 
 
     ASSERT_MSG_DEBUG(it != renderpassList.end(), "Image id not found");
 
-    vkDestroyRenderPass(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->renderPass,GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroyRenderPass(DeviceInfo::GetLogicalDevice(), (*it)->renderPass,DeviceInfo::GetAllocationCallback());
 }
 
 VkRenderPass * GfxVk::Renderpass::VkRenderPassFactory::GetRenderPass(const uint32_t & id)

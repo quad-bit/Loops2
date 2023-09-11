@@ -19,12 +19,12 @@ void GfxVk::Utility::VulkanMemoryManager::Init(VkPhysicalDeviceMemoryProperties 
     PLOGD << "VulkanMemoryManager init";
 
     this->physicalDeviceMemoryPropertiesObj = physicalDeviceMemoryPropertiesObj;
-    vulkanLogicalDevice = *GfxVk::Utility::CoreObjects::logicalDeviceObj;
+    vulkanLogicalDevice = DeviceInfo::GetLogicalDevice();
 
     VmaAllocatorCreateInfo allocatorInfo = {};
-    allocatorInfo.physicalDevice = *GfxVk::Utility::CoreObjects::physicalDeviceObj;
-    allocatorInfo.device = *GfxVk::Utility::CoreObjects::logicalDeviceObj;
-    allocatorInfo.instance = *GfxVk::Utility::CoreObjects::instanceObj;
+    allocatorInfo.physicalDevice = DeviceInfo::GetPhysicalDevice();
+    allocatorInfo.device = DeviceInfo::GetLogicalDevice();
+    allocatorInfo.instance = DeviceInfo::GetVkInstance();
 
     vmaCreateAllocator(&allocatorInfo, &allocator);
 
@@ -57,7 +57,7 @@ void GfxVk::Utility::VulkanMemoryManager::DeInit()
     vmaDestroyAllocator(allocator);
     for (uint32_t i = 0; i < memoryWrapperList.size(); i++)
     {
-        vkFreeMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *memoryWrapperList[i].memory, CoreObjects::pAllocator);
+        vkFreeMemory(DeviceInfo::GetLogicalDevice(), *memoryWrapperList[i].memory, DeviceInfo::GetAllocationCallback());
         delete memoryWrapperList[i].memory;
     }
     memoryWrapperList.clear();
@@ -97,7 +97,7 @@ void GfxVk::Utility::VulkanMemoryManager::AllocateImageMemory(VkImage * imageObj
     allocateInfo.memoryTypeIndex = memIndex;
     allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfo, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfo, DeviceInfo::GetAllocationCallback(), memoryObj));
     // allocated memory
 }
 
@@ -116,7 +116,7 @@ VkMemoryRequirements GfxVk::Utility::VulkanMemoryManager::AllocateBufferMemory(V
     allocateInfoObj.memoryTypeIndex = memIndex;
     allocateInfoObj.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, DeviceInfo::GetAllocationCallback(), memoryObj));
 
     return memoryReqObj;
 }
@@ -140,7 +140,7 @@ uint32_t GfxVk::Utility::VulkanMemoryManager::AllocateMemory(VkMemoryRequirement
     allocateInfoObj.memoryTypeIndex = memIndex;
     allocateInfoObj.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, DeviceInfo::GetAllocationCallback(), memoryObj));
 
     VkMemoryWrapper wrapper = {};
     wrapper.memory = memoryObj;
@@ -162,7 +162,7 @@ uint32_t GfxVk::Utility::VulkanMemoryManager::AllocateMemory(VkMemoryRequirement
     allocateInfoObj.memoryTypeIndex = memIndex;
     allocateInfoObj.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, DeviceInfo::GetAllocationCallback(), memoryObj));
 
     VkMemoryWrapper wrapper = {};
     wrapper.memory = memoryObj;
@@ -185,7 +185,7 @@ uint32_t GfxVk::Utility::VulkanMemoryManager::AllocateMemory(VkMemoryRequirement
     allocateInfoObj.memoryTypeIndex = memIndex;
     allocateInfoObj.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, DeviceInfo::GetAllocationCallback(), memoryObj));
 
     VkMemoryWrapper wrapper = {};
     wrapper.memory = memoryObj;
@@ -208,7 +208,7 @@ uint32_t GfxVk::Utility::VulkanMemoryManager::AllocateMemory(VkMemoryRequirement
     allocateInfoObj.memoryTypeIndex = memIndex;
     allocateInfoObj.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, CoreObjects::pAllocator, memoryObj));
+    ErrorCheck(vkAllocateMemory(vulkanLogicalDevice, &allocateInfoObj, DeviceInfo::GetAllocationCallback(), memoryObj));
 
     VkMemoryWrapper wrapper = {};
     wrapper.memory = memoryObj;
@@ -243,7 +243,7 @@ void GfxVk::Utility::VulkanMemoryManager::FreeMemory(uint32_t id)
 
     ASSERT_MSG_DEBUG(it != memoryWrapperList.end(), "Memory id not found");
 
-    vkFreeMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->memory, CoreObjects::pAllocator);
+    vkFreeMemory(DeviceInfo::GetLogicalDevice(), *it->memory, DeviceInfo::GetAllocationCallback());
     delete it->memory;
 
     memoryWrapperList.erase(it);

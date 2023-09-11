@@ -1,8 +1,8 @@
 #include "windowing/WindowManager.h"
 #include <CorePrecompiled.h>
 
-Renderer::Windowing::WindowManager::WindowManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName):
-    m_windowWidth(winWidth), m_windowHeight(winHeight), m_renderHeight(renderHeight), m_renderWidth(renderHeight), m_windowName(winName)
+Renderer::Windowing::WindowManager::WindowManager(const Core::WindowSettings& windowSettings):
+    m_windowSettings(windowSettings)
 {
 }
 

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <PlatformSettings.h>
+#include <Settings.h>
 
 #if defined(GLFW_ENABLED)
 #define GLFW_INCLUDE_VULKAN
@@ -26,7 +27,6 @@ namespace Core
 
 namespace Renderer
 {
-    class VulkanInterface;
     class RenderingManager;
 
     namespace Windowing
@@ -42,8 +42,8 @@ namespace Renderer
         GraphicsManager const& operator= (GraphicsManager const&) = delete;
 
         std::unique_ptr<Core::Settings> m_settings;
+        const Core::WindowSettings& m_windowSettings;
 
-        VulkanInterface* apiInterface;
         std::unique_ptr <Renderer::RenderingManager> m_renderingMngrObj;
         std::unique_ptr <Windowing::WindowManager> m_windowMngrObj;
 
@@ -51,8 +51,8 @@ namespace Renderer
 
     public:
         ~GraphicsManager();
-        GraphicsManager();
-        GraphicsManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName);
+        GraphicsManager() = delete;
+        GraphicsManager(const Core::WindowSettings& windowSettings);
         void Init();
         void DeInit();
         void Update();

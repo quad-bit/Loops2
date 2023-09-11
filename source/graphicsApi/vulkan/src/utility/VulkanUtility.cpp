@@ -3,15 +3,104 @@
 #include <Platform/Assertion.h>
 #include <iostream>
 
-//using namespace std;
+//VkInstance * GfxVk::Utility::CoreObjects::instanceObj = nullptr;
+//VkPhysicalDevice * GfxVk::Utility::CoreObjects::physicalDeviceObj = nullptr;
+//VkDevice * GfxVk::Utility::CoreObjects::logicalDeviceObj = nullptr;
+//VkAllocationCallbacks * GfxVk::Utility::CoreObjects::pAllocator = nullptr;
+//VkFormat GfxVk::Utility::CoreObjects::bestDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
+//uint32_t GfxVk::Utility::CoreObjects::renderQueueId = 0, GfxVk::Utility::CoreObjects::presentationQueuedId = 0;
+//uint32_t GfxVk::Utility::CoreObjects::computeQueueId = 0, GfxVk::Utility::CoreObjects::transferQueueId = 0;
 
-VkInstance * GfxVk::Utility::CoreObjects::instanceObj = nullptr;
-VkPhysicalDevice * GfxVk::Utility::CoreObjects::physicalDeviceObj = nullptr;
-VkDevice * GfxVk::Utility::CoreObjects::logicalDeviceObj = nullptr;
-VkAllocationCallbacks * GfxVk::Utility::CoreObjects::pAllocator = nullptr;
-VkFormat GfxVk::Utility::CoreObjects::bestDepthFormat = VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
-uint32_t GfxVk::Utility::CoreObjects::renderQueueId = 0, GfxVk::Utility::CoreObjects::presentationQueuedId = 0;
-uint32_t GfxVk::Utility::CoreObjects::computeQueueId = 0, GfxVk::Utility::CoreObjects::transferQueueId = 0;
+VkAllocationCallbacks* GfxVk::Utility::VulkanSettings::pAllocator = nullptr;
+
+VkInstance GfxVk::Utility::VulkanDeviceInfo::m_instanceObj = VK_NULL_HANDLE;
+VkPhysicalDevice GfxVk::Utility::VulkanDeviceInfo::m_physicalDeviceObj = VK_NULL_HANDLE;
+VkDevice GfxVk::Utility::VulkanDeviceInfo::m_logicalDeviceObj = VK_NULL_HANDLE;
+VkAllocationCallbacks* GfxVk::Utility::VulkanDeviceInfo::m_pAllocator = VK_NULL_HANDLE;
+VkFormat GfxVk::Utility::VulkanDeviceInfo::m_bestDepthFormat;
+VkSurfaceFormatKHR GfxVk::Utility::VulkanDeviceInfo::m_surfaceFormat;
+VkSurfaceKHR GfxVk::Utility::VulkanDeviceInfo::m_surface;
+VkSampleCountFlags GfxVk::Utility::VulkanDeviceInfo::m_maxUsableSampleCount;
+VkSurfaceCapabilitiesKHR GfxVk::Utility::VulkanDeviceInfo::m_surfaceCapabilities;
+VkPhysicalDeviceProperties GfxVk::Utility::VulkanDeviceInfo::m_physicalDeviceProps;
+VkPhysicalDeviceMemoryProperties GfxVk::Utility::VulkanDeviceInfo::m_physicalDeviceMemProps;
+VkPhysicalDeviceFeatures GfxVk::Utility::VulkanDeviceInfo::m_physicalDeviceFeatures;
+VkPhysicalDeviceFeatures GfxVk::Utility::VulkanDeviceInfo::m_enabledPhysicalDeviceFeatures;
+bool GfxVk::Utility::VulkanDeviceInfo::m_isSampleRateShadingAvailable;
+VkQueue GfxVk::Utility::VulkanDeviceInfo::m_renderQueueObj = VK_NULL_HANDLE;
+uint32_t GfxVk::Utility::VulkanDeviceInfo::m_surfaceWidth;
+uint32_t GfxVk::Utility::VulkanDeviceInfo::m_surfaceHeight;
+
+VkInstance GfxVk::Utility::VulkanDeviceInfo::GetVkInstance()
+{
+    return m_instanceObj;
+}
+
+VkPhysicalDevice GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDevice()
+{
+    return m_physicalDeviceObj;
+}
+
+VkDevice GfxVk::Utility::VulkanDeviceInfo::GetLogicalDevice()
+{
+    return m_logicalDeviceObj;
+}
+
+VkAllocationCallbacks* GfxVk::Utility::VulkanDeviceInfo::GetAllocationCallback()
+{
+    return m_pAllocator;
+}
+
+VkFormat GfxVk::Utility::VulkanDeviceInfo::GetDepthFormat()
+{
+    return m_bestDepthFormat;
+}
+
+VkSurfaceFormatKHR GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat()
+{
+    return m_surfaceFormat;
+}
+
+VkSampleCountFlags GfxVk::Utility::VulkanDeviceInfo::GetMaxSampleCount()
+{
+    return m_maxUsableSampleCount;
+}
+
+VkPhysicalDeviceProperties GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceProps()
+{
+    return m_physicalDeviceProps;
+}
+
+VkSurfaceCapabilitiesKHR GfxVk::Utility::VulkanDeviceInfo::GetSurfaceCapabilities()
+{
+    return m_surfaceCapabilities;
+}
+
+VkPhysicalDeviceMemoryProperties GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceMemProps()
+{
+    return m_physicalDeviceMemProps;
+}
+
+VkPhysicalDeviceFeatures GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceFeatures()
+{
+    return m_physicalDeviceFeatures;
+}
+
+VkPhysicalDeviceFeatures GfxVk::Utility::VulkanDeviceInfo::GetEnabledPhysicalDeviceFeatures()
+{
+    return m_enabledPhysicalDeviceFeatures;
+}
+
+bool GfxVk::Utility::VulkanDeviceInfo::IsSampleRateShadingAvailable()
+{
+    return m_isSampleRateShadingAvailable;
+}
+
+VkQueue GfxVk::Utility::VulkanDeviceInfo::GetRenderQueue()
+{
+    return m_renderQueueObj;
+}
+
 
 void GfxVk::Utility::ErrorCheck(VkResult result)
 {

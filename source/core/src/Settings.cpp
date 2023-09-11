@@ -6,11 +6,6 @@ Core::Settings::Settings(
     uint32_t windowHeight,
     uint32_t renderWidth,
     uint32_t renderHeight):
-    m_windowName(windowName),
-    m_windowWidth(windowWidth),
-    m_windowHeight(windowHeight),
-    m_renderWidth(renderWidth),
-    m_renderHeight(renderHeight),
     m_depthClearValue(1.0f),
     m_stencilClearValue(0.0),
     m_clearColorValue{{34.0f/256.0f}, {34.0f/256.0f}, {34.0f/256.0f}, {1.0f }},
@@ -41,12 +36,12 @@ void Core::Settings::SetClearColorValue(float clearColorValue[4])
     m_clearColorValue[3] = clearColorValue[3];
 }
 
-std::tuple<uint32_t, uint32_t> Core::Settings::GetWindowResolution() const
-{
-    return { m_windowWidth, m_windowHeight };
-}
-
-std::tuple<uint32_t, uint32_t> Core::Settings::GetRenderResolution() const
-{
-    return { m_renderWidth, m_renderHeight };
-}
+//std::tuple<uint32_t, uint32_t> Core::Settings::GetWindowResolution() const
+//{
+//    return { m_windowWidth, m_windowHeight };
+//}
+//
+//std::tuple<uint32_t, uint32_t> Core::Settings::GetRenderResolution() const
+//{
+//    return { m_renderWidth, m_renderHeight };
+//}

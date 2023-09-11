@@ -16,8 +16,8 @@ uint32_t GfxVk::Shading::VkBufferFactory::GetId()
 void GfxVk::Shading::VkBufferFactory::Init()
 {
     PLOGD << "VKBUfferFactory init";
-    physicalDeviceProps = GfxVk::Utility::VulkanManager::GetInstance()->GetPhysicalDeviceProps();
-
+    //physicalDeviceProps = GfxVk::Utility::VulkanManager::GetInstance()->GetPhysicalDeviceProps();
+    ASSERT_MSG_DEBUG(0, "props need to be initialised");
 }
 
 void GfxVk::Shading::VkBufferFactory::DeInit()
@@ -66,18 +66,18 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffer(VkBufferUsageFlags * bu
     bufferCreateInfo.usage = *bufferType;
     bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 
-    ErrorCheck(vkCreateBuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &bufferCreateInfo, CoreObjects::pAllocator, bufWrapper.buffer));
+    ErrorCheck(vkCreateBuffer(DeviceInfo::GetLogicalDevice(), &bufferCreateInfo, DeviceInfo::GetAllocationCallback(), bufWrapper.buffer));
 
     VkMemoryRequirements memoryReqObj = VulkanMemoryManager::GetSingleton()->AllocateBufferMemory(bufWrapper.buffer, *memType, bufWrapper.bufferMemory);
     bufWrapper.bufMemReq = memoryReqObj;
 
-    ErrorCheck(vkMapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *bufWrapper.bufferMemory, 0,
+    ErrorCheck(vkMapMemory(DeviceInfo::GetLogicalDevice(), *bufWrapper.bufferMemory, 0,
         memoryReqObj.size, 0, (void**)&bufWrapper.pGpuMem));
     memcpy(bufWrapper.pGpuMem, data, dataSize);
 
-    vkUnmapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *bufWrapper.bufferMemory);
+    vkUnmapMemory(DeviceInfo::GetLogicalDevice(), *bufWrapper.bufferMemory);
 
-    vkBindBufferMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *bufWrapper.buffer, *bufWrapper.bufferMemory, 0);
+    vkBindBufferMemory(DeviceInfo::GetLogicalDevice(), *bufWrapper.buffer, *bufWrapper.bufferMemory, 0);
 
     bufferWrapperList.push_back(bufWrapper);
     pGpuMem = bufferWrapperList[bufferWrapperList.size() - 1].pGpuMem;
@@ -106,9 +106,9 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & buffe
         bufferCreateInfo.size = dataSizes[i];
         bufferCreateInfo.usage = bufferType[i];
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        GfxVk::Utility::ErrorCheck(vkCreateBuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &bufferCreateInfo, GfxVk::Utility::CoreObjects::pAllocator, bufWrapper.buffer));
+        GfxVk::Utility::ErrorCheck(vkCreateBuffer(DeviceInfo::GetLogicalDevice(), &bufferCreateInfo, DeviceInfo::GetAllocationCallback(), bufWrapper.buffer));
 
-        vkGetBufferMemoryRequirements(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *bufWrapper.buffer, &bufWrapper.bufMemReq);
+        vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), *bufWrapper.buffer, &bufWrapper.bufMemReq);
         
         ids[i] = bufWrapper.id;
         bufferWrapperList.push_back(bufWrapper);
@@ -128,7 +128,7 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & buffe
         bufWrapper.buffer = new VkBuffer;
         bufWrapper.bufferType = info[i].usage;
         
-        GfxVk::Utility::ErrorCheck(vkCreateBuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info[i], GfxVk::Utility::CoreObjects::pAllocator, bufWrapper.buffer));
+        GfxVk::Utility::ErrorCheck(vkCreateBuffer(DeviceInfo::GetLogicalDevice(), &info[i], DeviceInfo::GetAllocationCallback(), bufWrapper.buffer));
 
         ids[i] = bufWrapper.id;
         bufferWrapperList.push_back(bufWrapper);
@@ -150,7 +150,7 @@ void GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & bufferCount
         out_buffIds[i] = ids[i];
         VkBuffer * buf = idToBufferMap[ids[i]];
         VkMemoryRequirements req;
-        vkGetBufferMemoryRequirements(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *buf, &req);
+        vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), *buf, &req);
 
         out_bufferMemRequirementSize[i] = req.size;
     }
@@ -175,7 +175,7 @@ uint32_t * GfxVk::Shading::VkBufferFactory::AllocateBufferMemory(uint32_t * buff
         it->memoryOffset = 0;
         it->isBufferSharingMemory = false;
         // binding happens as the size is not explicitly mentioned hence it will be memreq.size and the offset will be 0
-        vkBindBufferMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->buffer, *it->bufferMemory, 0);
+        vkBindBufferMemory(DeviceInfo::GetLogicalDevice(), *it->buffer, *it->bufferMemory, 0);
     }
 
     return ids;
@@ -221,7 +221,7 @@ uint32_t GfxVk::Shading::VkBufferFactory::AllocateSharedBufferMemory(uint32_t * 
         it = std::find_if(bufferWrapperList.begin(), bufferWrapperList.end(), [&](GfxVk::Shading::VkBufferWrapper e) { return e.id == bufferId[i]; });
         it->bufferMemory = memory;
 
-        vkBindBufferMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->buffer, *it->bufferMemory, it->memoryOffset);
+        vkBindBufferMemory(DeviceInfo::GetLogicalDevice(), *it->buffer, *it->bufferMemory, it->memoryOffset);
     }
     return id;
 }
@@ -233,10 +233,10 @@ void GfxVk::Shading::VkBufferFactory::CopyBufferDataToMemory(const uint32_t & bu
     ASSERT_MSG_DEBUG(it != bufferWrapperList.end(), "buffer id not found");
 
     void * gpuMem;
-    GfxVk::Utility::ErrorCheck(vkMapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->bufferMemory, memoryMapOffset,
+    GfxVk::Utility::ErrorCheck(vkMapMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory, memoryMapOffset,
         dataSize, 0, (void**)&gpuMem));
     memcpy(gpuMem, data, dataSize);
-    vkUnmapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->bufferMemory);
+    vkUnmapMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory);
 }
 
 void GfxVk::Shading::VkBufferFactory::CopyBufferDataToMemory(const uint32_t & bufId, const VkDeviceSize & dataSize, const VkDeviceSize & memAlignedSize, void * data, const VkDeviceSize & memoryMapOffset, bool keepMemoryMounted)
@@ -246,10 +246,10 @@ void GfxVk::Shading::VkBufferFactory::CopyBufferDataToMemory(const uint32_t & bu
     ASSERT_MSG_DEBUG(it != bufferWrapperList.end(), "buffer id not found");
 
     void * gpuMem;
-    GfxVk::Utility::ErrorCheck(vkMapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->bufferMemory, memoryMapOffset,
+    GfxVk::Utility::ErrorCheck(vkMapMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory, memoryMapOffset,
         memAlignedSize, 0, (void**)&gpuMem));
     memcpy(gpuMem, data, dataSize);
-    vkUnmapMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->bufferMemory);
+    vkUnmapMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory);
 }
 
 void GfxVk::Shading::VkBufferFactory::DestroyBuffer(uint32_t id)
@@ -261,10 +261,10 @@ void GfxVk::Shading::VkBufferFactory::DestroyBuffer(uint32_t id)
         return;
     /*if (it->isBufferSharingMemory == false)
     {
-        vkFreeMemory(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->bufferMemory, CoreObjects::pAllocator);
+        vkFreeMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory, DeviceInfo::GetAllocationCallback());
         delete it->bufferMemory;
     }*/
-    vkDestroyBuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->buffer, GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroyBuffer(DeviceInfo::GetLogicalDevice(), *it->buffer, DeviceInfo::GetAllocationCallback());
 
     delete it->buffer;
 
@@ -277,13 +277,14 @@ VkBuffer * GfxVk::Shading::VkBufferFactory::GetBuffer(const uint32_t & id)
     it = std::find_if(bufferWrapperList.begin(), bufferWrapperList.end(), [&](GfxVk::Shading::VkBufferWrapper e) { return e.id == id; });
 
     ASSERT_MSG_DEBUG(it != bufferWrapperList.end(), "Buffer not found");
-    
+
     return it->buffer;
 }
 
 size_t GfxVk::Shading::VkBufferFactory::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
     size_t alignedDataSize;
+
     VkDeviceSize minUniformAlignment = physicalDeviceProps.limits.minUniformBufferOffsetAlignment;
     if (minUniformAlignment)
         alignedDataSize = (dataSize + minUniformAlignment - 1) & ~(minUniformAlignment - 1);

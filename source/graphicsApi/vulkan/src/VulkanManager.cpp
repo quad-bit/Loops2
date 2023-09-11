@@ -23,13 +23,10 @@
 #include "utility/VkRenderingUnwrapper.h"
 #include <algorithm>
 
-//using namespace std;
-
-GfxVk::Utility::VulkanManager* GfxVk::Utility::VulkanManager::instance = nullptr;
-
-GfxVk::Utility::VulkanManager::VulkanManager()
+GfxVk::Utility::VulkanManager::VulkanManager(const Core::WindowSettings& windowSettings):
+    m_windowSettings{windowSettings}
 {
-    validationManagerObj = new ValidationManager();
+    m_validationManagerObj = new ValidationManager();
 }
 
 void GfxVk::Utility::VulkanManager::CreateInstance()
@@ -45,21 +42,19 @@ void GfxVk::Utility::VulkanManager::CreateInstance()
     VkInstanceCreateInfo createInfoObj{};
     createInfoObj.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfoObj.pApplicationInfo = &appInfo;
-    createInfoObj.enabledExtensionCount = (uint32_t)validationManagerObj->instanceExtensionNameList.size();
-    createInfoObj.enabledLayerCount = (uint32_t)validationManagerObj->instanceLayerNameList.size();
-    createInfoObj.pNext = &(validationManagerObj->VkDebugReportCallbackCreateInfoEXTObj);
-    createInfoObj.ppEnabledExtensionNames = validationManagerObj->instanceExtensionNameList.data();
-    createInfoObj.ppEnabledLayerNames = validationManagerObj->instanceLayerNameList.data();
+    createInfoObj.enabledExtensionCount = (uint32_t)m_validationManagerObj->instanceExtensionNameList.size();
+    createInfoObj.enabledLayerCount = (uint32_t)m_validationManagerObj->instanceLayerNameList.size();
+    createInfoObj.pNext = nullptr;// &(m_validationManagerObj->VkDebugReportCallbackCreateInfoEXTObj);
+    createInfoObj.ppEnabledExtensionNames = m_validationManagerObj->instanceExtensionNameList.data();
+    createInfoObj.ppEnabledLayerNames = m_validationManagerObj->instanceLayerNameList.data();
 
-    ErrorCheck(vkCreateInstance(&createInfoObj, pAllocator, &vkInstanceObj));
-
-    GfxVk::Utility::CoreObjects::instanceObj = &vkInstanceObj;
+    ErrorCheck(vkCreateInstance(&createInfoObj, GfxVk::Utility::VulkanSettings::pAllocator, &DeviceInfo::m_instanceObj));
 }
 
 void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
 {
-    if(IsSampleRateShadingAvailable())
-        enabledPhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
+    if(DeviceInfo::m_physicalDeviceFeatures.sampleRateShading)
+        DeviceInfo::m_enabledPhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
 
     std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfoList = VkQueueFactory::GetInstance()->FindQueue();
 
@@ -67,22 +62,20 @@ void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
     vkDeviceCreateInfoObj.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     vkDeviceCreateInfoObj.queueCreateInfoCount = (uint32_t)deviceQueueCreateInfoList.size();
     vkDeviceCreateInfoObj.pQueueCreateInfos = deviceQueueCreateInfoList.data();
-    vkDeviceCreateInfoObj.enabledExtensionCount = (uint32_t)validationManagerObj->deviceExtensionNameList.size();
+    vkDeviceCreateInfoObj.enabledExtensionCount = (uint32_t)m_validationManagerObj->deviceExtensionNameList.size();
     vkDeviceCreateInfoObj.enabledLayerCount = 0;
-    vkDeviceCreateInfoObj.pEnabledFeatures = &enabledPhysicalDeviceFeatures;
-    vkDeviceCreateInfoObj.ppEnabledExtensionNames = validationManagerObj->deviceExtensionNameList.data();
+    vkDeviceCreateInfoObj.pEnabledFeatures = &GfxVk::Utility::VulkanDeviceInfo::m_enabledPhysicalDeviceFeatures;
+    vkDeviceCreateInfoObj.ppEnabledExtensionNames = m_validationManagerObj->deviceExtensionNameList.data();
     vkDeviceCreateInfoObj.ppEnabledLayerNames = nullptr;
 
-    ErrorCheck(vkCreateDevice(vkPhysicalDeviceObj, &vkDeviceCreateInfoObj, pAllocator, &vkLogicalDeviceObj));
-
-    GfxVk::Utility::CoreObjects::logicalDeviceObj = &vkLogicalDeviceObj;
+    ErrorCheck(vkCreateDevice(DeviceInfo::m_physicalDeviceObj, &vkDeviceCreateInfoObj, GfxVk::Utility::VulkanSettings::pAllocator, &DeviceInfo::m_logicalDeviceObj));
 }
 
 
 void GfxVk::Utility::VulkanManager::CreateSurface(GLFWwindow * glfwWindow)
 {
 #if defined(GLFW_ENABLED)
-    if (VK_SUCCESS != glfwCreateWindowSurface(vkInstanceObj, glfwWindow, nullptr, &surface)) 
+    if (VK_SUCCESS != glfwCreateWindowSurface(DeviceInfo::m_instanceObj, glfwWindow, GfxVk::Utility::VulkanSettings::pAllocator, &DeviceInfo::m_surface))
     {
         glfwTerminate();
         ASSERT_MSG_DEBUG(0, "GLFW could not create the window surface.");
@@ -94,88 +87,78 @@ void GfxVk::Utility::VulkanManager::CreateSurface(GLFWwindow * glfwWindow)
 #endif
 
     VkBool32 WSI_supported = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDeviceObj, 
+    vkGetPhysicalDeviceSurfaceSupportKHR(DeviceInfo::m_physicalDeviceObj, 
         VkQueueFactory::GetInstance()->GetGraphicsQueueFamilyIndex(), 
-        surface, &WSI_supported);
+        DeviceInfo::m_surface, &WSI_supported);
     if (!WSI_supported) 
     {
         ASSERT_MSG_DEBUG(0, "WSI not supported");
         std::exit(-1);
     }
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDeviceObj, surface, &surfaceCapabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(DeviceInfo::m_physicalDeviceObj, DeviceInfo::m_surface, &DeviceInfo::m_surfaceCapabilities);
 
-    if (surfaceCapabilities.currentExtent.width < UINT32_MAX)
+    if (DeviceInfo::m_surfaceCapabilities.currentExtent.width < UINT32_MAX)
     {
-        surfaceWidth = surfaceCapabilities.currentExtent.width;
-        surfaceHeight = surfaceCapabilities.currentExtent.height;
+        DeviceInfo::m_surfaceWidth = DeviceInfo::m_surfaceCapabilities.currentExtent.width;
+        DeviceInfo::m_surfaceHeight = DeviceInfo::m_surfaceCapabilities.currentExtent.height;
     }
 
     {
         uint32_t format_count = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDeviceObj, surface, &format_count, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(DeviceInfo::m_physicalDeviceObj, DeviceInfo::m_surface, &format_count, nullptr);
         if (format_count == 0) 
         {
             ASSERT_MSG_DEBUG(0, "Surface formats missing.");
             std::exit(-1);
         }
         std::vector<VkSurfaceFormatKHR> formats(format_count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDeviceObj, surface, &format_count, formats.data());
+        vkGetPhysicalDeviceSurfaceFormatsKHR(DeviceInfo::m_physicalDeviceObj, DeviceInfo::m_surface, &format_count, formats.data());
         if (formats[0].format == VK_FORMAT_UNDEFINED) 
         {
-            surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
-            surfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+            DeviceInfo::m_surfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+            DeviceInfo::m_surfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
         }
         else 
         {
-            surfaceFormat = formats[0];
+            DeviceInfo::m_surfaceFormat = formats[0];
         }
     }
 }
 
-bool GfxVk::Utility::VulkanManager::IsSampleRateShadingAvailable()
+void GfxVk::Utility::VulkanManager::GetMaxUsableVKSampleCount()
 {
-    if (physicalDeviceFeatures.sampleRateShading)
-    {
-        return true;
-    }
-    
-    return false;
+    VkSampleCountFlags counts =  std::min(DeviceInfo::m_physicalDeviceProps.limits.framebufferColorSampleCounts, DeviceInfo::m_physicalDeviceProps.limits.framebufferDepthSampleCounts);
+    if (counts & VK_SAMPLE_COUNT_64_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_64_BIT; }
+    if (counts & VK_SAMPLE_COUNT_32_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_32_BIT; }
+    if (counts & VK_SAMPLE_COUNT_16_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_16_BIT; }
+    if (counts & VK_SAMPLE_COUNT_8_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_8_BIT; }
+    if (counts & VK_SAMPLE_COUNT_4_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_4_BIT; }
+    if (counts & VK_SAMPLE_COUNT_2_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_2_BIT; }
+    DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_1_BIT;
 }
 
-VkSampleCountFlagBits GfxVk::Utility::VulkanManager::GetMaxUsableVKSampleCount()
-{
-    VkSampleCountFlags counts =  std::min(physicalDeviceProps.limits.framebufferColorSampleCounts, physicalDeviceProps.limits.framebufferDepthSampleCounts);
-    if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-    if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-    if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-    if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
-    if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
-    if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
-    return VK_SAMPLE_COUNT_1_BIT;
-}
-
-Core::Enums::Samples GfxVk::Utility::VulkanManager::GetMaxUsableSampleCount()
-{
-    VkSampleCountFlags counts = GetMaxUsableVKSampleCount();
-    
-    if (physicalDeviceProps.limits.framebufferColorSampleCounts < counts ||
-        physicalDeviceProps.limits.framebufferDepthSampleCounts < counts )
-    {
-        ASSERT_MSG_DEBUG(0, "sample counts not valid");
-        counts = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-    }
-
-    Core::Enums::Samples samples = Unwrap::UnWrapSampleCount(counts);
-    return samples;
-}
+//Core::Enums::Samples GfxVk::Utility::VulkanManager::GetMaxUsableSampleCount()
+//{
+//    VkSampleCountFlags counts = GetMaxUsableVKSampleCount();
+//    
+//    if (DeviceInfo::m_physicalDeviceProps.limits.framebufferColorSampleCounts < counts ||
+//        DeviceInfo::m_physicalDeviceProps.limits.framebufferDepthSampleCounts < counts )
+//    {
+//        ASSERT_MSG_DEBUG(0, "sample counts not valid");
+//        counts = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+//    }
+//
+//    Core::Enums::Samples samples = Unwrap::UnWrapSampleCount(counts);
+//    return samples;
+//}
 
 void GfxVk::Utility::VulkanManager::GetPhysicalDevice()
 {
     uint32_t count = 0;
-    vkEnumeratePhysicalDevices(vkInstanceObj, &count, nullptr);
+    vkEnumeratePhysicalDevices(DeviceInfo::m_instanceObj, &count, nullptr);
     std::vector<VkPhysicalDevice> deviceList(count);
-    vkEnumeratePhysicalDevices(vkInstanceObj, &count, deviceList.data());
+    vkEnumeratePhysicalDevices(DeviceInfo::m_instanceObj, &count, deviceList.data());
 
     VkPhysicalDevice discreteGpu = VK_NULL_HANDLE;
     VkPhysicalDevice integratedGpu = VK_NULL_HANDLE;
@@ -186,50 +169,49 @@ void GfxVk::Utility::VulkanManager::GetPhysicalDevice()
 
         if (deviceProp.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) // deviceProp.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ||
         {
-            //vkPhysicalDeviceObj = dev;
-            //CoreObjects::physicalDeviceObj = &vkPhysicalDeviceObj;
+            //DeviceInfo::m_physicalDeviceObj = dev;
+            //CoreObjects::physicalDeviceObj = &DeviceInfo::m_physicalDeviceObj;
             discreteGpu = dev;
             break;
         }
 
         if (deviceProp.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
         {
-            //vkPhysicalDeviceObj = dev;
-            //CoreObjects::physicalDeviceObj = &vkPhysicalDeviceObj;
+            //DeviceInfo::m_physicalDeviceObj = dev;
+            //CoreObjects::physicalDeviceObj = &DeviceInfo::m_physicalDeviceObj;
             integratedGpu = dev;
         }
     }
 
     if (discreteGpu != VK_NULL_HANDLE)
     {
-        vkPhysicalDeviceObj = discreteGpu;
-        CoreObjects::physicalDeviceObj = &vkPhysicalDeviceObj;
+        DeviceInfo::m_physicalDeviceObj = discreteGpu;
     }
     else if (integratedGpu!= VK_NULL_HANDLE)
     {
-        vkPhysicalDeviceObj = integratedGpu;
-        CoreObjects::physicalDeviceObj = &vkPhysicalDeviceObj;
+        DeviceInfo::m_physicalDeviceObj = integratedGpu;
     }
 
-    if (vkPhysicalDeviceObj == VK_NULL_HANDLE)
+    if (DeviceInfo::m_physicalDeviceObj == VK_NULL_HANDLE)
     {
         ASSERT_MSG_DEBUG(0, "gpu required");
         std::exit(-1);
     }
 
-    vkGetPhysicalDeviceMemoryProperties(vkPhysicalDeviceObj, &physicalDeviceMemProps);
-    vkGetPhysicalDeviceProperties(vkPhysicalDeviceObj, &physicalDeviceProps);
-    vkGetPhysicalDeviceFeatures(vkPhysicalDeviceObj, &physicalDeviceFeatures);
+    vkGetPhysicalDeviceMemoryProperties(DeviceInfo::m_physicalDeviceObj, &DeviceInfo::m_physicalDeviceMemProps);
+    vkGetPhysicalDeviceProperties(DeviceInfo::m_physicalDeviceObj, &DeviceInfo::m_physicalDeviceProps);
+    vkGetPhysicalDeviceFeatures(DeviceInfo::m_physicalDeviceObj, &DeviceInfo::m_physicalDeviceFeatures);
 }
 
+/*
 void GfxVk::Utility::VulkanManager::Init()
 {
-    /*
+    
     PLOGD << "VulkanManager init";
 
     CreateInstance();
     GetPhysicalDevice();
-    validationManagerObj->InitDebug(&vkInstanceObj, pAllocator);
+    m_validationManagerObj->InitDebug(&DeviceInfo::m_instanceObj, GfxVk::Utility::VulkanSettings::pAllocator);
     VkQueueFactory::GetInstance()->Init();
     CreateLogicalDevice();
 
@@ -246,19 +228,69 @@ void GfxVk::Utility::VulkanManager::Init()
     VkQueueFactory::GetInstance()->CreateComputeQueues(&CoreObjects::computeQueueId, 1);
     VkQueueFactory::GetInstance()->CreateTransferQueues(&CoreObjects::transferQueueId, 1);
 
-    VulkanMemoryManager::GetSingleton()->Init(physicalDeviceMemProps);
+    VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::m_physicalDeviceMemProps);
     VkCommandBufferFactory::GetInstance()->Init();
     VkSynchroniserFactory::GetInstance()->Init();
-    */
 }
+*/
 
+void GfxVk::Utility::VulkanManager::Init(std::vector<Core::Wrappers::QueueWrapper>& queueRequirement, uint32_t& renderQueueId, uint32_t& presentationQueueId, uint32_t& computeQueueId, uint32_t& transferQueueId)
+{
+    PLOGD << "VulkanManager init";
+
+    CreateInstance();
+    GetPhysicalDevice();
+    m_validationManagerObj->InitDebug(&DeviceInfo::m_instanceObj, GfxVk::Utility::VulkanSettings::pAllocator);
+    GfxVk::Utility::VkQueueFactory::GetInstance()->Init();
+    CreateLogicalDevice();
+
+    auto CreateQueues = [&]() 
+        {
+            for (uint32_t i = 0; i < queueRequirement.size(); i++)
+            {
+                if (queueRequirement[i].queueType == Core::Enums::PipelineType::GRAPHICS)
+                {
+                    if (queueRequirement[i].purpose == Core::Enums::QueueType::PRESENT)
+                    {
+                        GfxVk::Utility::VkQueueFactory::GetInstance()->CreateGraphicsQueues(&queueRequirement[i].queueId, 1);
+                        presentationQueueId = queueRequirement[i].queueId;
+                    }
+
+                    if (queueRequirement[i].purpose == Core::Enums::QueueType::RENDER)
+                    {
+                        GfxVk::Utility::VkQueueFactory::GetInstance()->CreateGraphicsQueues(&queueRequirement[i].queueId, 1);
+                        renderQueueId = queueRequirement[i].queueId;
+                    }
+                }
+
+                if (queueRequirement[i].queueType == Core::Enums::PipelineType::COMPUTE)
+                {
+                    GfxVk::Utility::VkQueueFactory::GetInstance()->CreateComputeQueues(&queueRequirement[i].queueId, 1);
+                    computeQueueId = queueRequirement[i].queueId;
+                }
+
+                if (queueRequirement[i].queueType == Core::Enums::PipelineType::TRANSFER)
+                {
+                    GfxVk::Utility::VkQueueFactory::GetInstance()->CreateTransferQueues(&queueRequirement[i].queueId, 1);
+                    transferQueueId = queueRequirement[i].queueId;
+                }
+
+                queueRequirement[i].queueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(queueRequirement[i].queueType, queueRequirement[i].queueId);
+                GfxVk::Utility::VkQueueFactory::GetInstance()->SetQueuePurpose(queueRequirement[i].purpose, queueRequirement[i].queueType, queueRequirement[i].queueId);
+            }
+        };
+
+    CreateQueues();
+
+}
+#if 0
 void GfxVk::Utility::VulkanManager::Init(Core::Wrappers::QueueWrapper * queueRequirement, const uint32_t & count)
 {
     PLOGD << "VulkanManager init";
 
     CreateInstance();
     GetPhysicalDevice();
-    validationManagerObj->InitDebug(&vkInstanceObj, pAllocator);
+    m_validationManagerObj->InitDebug(&DeviceInfo::m_instanceObj, GfxVk::Utility::VulkanSettings::pAllocator);
     GfxVk::Utility::VkQueueFactory::GetInstance()->Init();
     CreateLogicalDevice();
 
@@ -297,16 +329,16 @@ void GfxVk::Utility::VulkanManager::Init(Core::Wrappers::QueueWrapper * queueReq
         GfxVk::Utility::VkQueueFactory::GetInstance()->SetQueuePurpose(queueRequirement[i].purpose, *queueRequirement[i].queueType, queueRequirement[i].queueId);
     }
 
-    GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(physicalDeviceMemProps);
+    GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::m_physicalDeviceMemProps);
     /*VkCommandBufferFactory::GetInstance()->Init();
     VkSynchroniserFactory::GetInstance()->Init();
     VulkanGraphicsPipelineFactory::GetInstance()->Init();*/
 }
-
+#endif
 void GfxVk::Utility::VulkanManager::InitializeFactories()
 {
     //GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanManager::GetInstance()->GetSurface(), GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat());
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->Init();
+    /*GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->Init();
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
     GfxVk::Framebuffer::VkFrameBufferFactory::GetInstance()->Init();
 
@@ -317,13 +349,13 @@ void GfxVk::Utility::VulkanManager::InitializeFactories()
     GfxVk::Shading::VkDescriptorPoolFactory::GetInstance()->Init();
     GfxVk::Shading::VkBufferFactory::GetInstance()->Init();
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->Init();
-    GfxVk::Shading::VkSamplerFactory::GetInstance()->Init();
+    GfxVk::Shading::VkSamplerFactory::GetInstance()->Init();*/
 }
 
 void GfxVk::Utility::VulkanManager::DeInit()
 {
     PLOGD << "VulkanManager Deinit";
-
+    /*
     GfxVk::Shading::VkSamplerFactory::GetInstance()->DeInit();
     delete GfxVk::Shading::VkSamplerFactory::GetInstance();
 
@@ -362,15 +394,15 @@ void GfxVk::Utility::VulkanManager::DeInit()
 
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->DeInit();
     delete GfxVk::Utility::VulkanMemoryManager::GetSingleton();
-
-    vkDestroySurfaceKHR(vkInstanceObj, surface, pAllocator);
-    vkDestroyDevice(vkLogicalDeviceObj, pAllocator);
-    validationManagerObj->DeinitDebug();
+    */
+    vkDestroySurfaceKHR(DeviceInfo::m_instanceObj, DeviceInfo::m_surface, GfxVk::Utility::VulkanSettings::pAllocator);
+    vkDestroyDevice(DeviceInfo::m_logicalDeviceObj, GfxVk::Utility::VulkanSettings::pAllocator);
+    m_validationManagerObj->DeinitDebug();
 
     GfxVk::Utility::VkQueueFactory::GetInstance()->DeInit();
     delete GfxVk::Utility::VkQueueFactory::GetInstance();
 
-    vkDestroyInstance(vkInstanceObj, pAllocator);
+    vkDestroyInstance(DeviceInfo::m_instanceObj, GfxVk::Utility::VulkanSettings::pAllocator);
 }
 
 void GfxVk::Utility::VulkanManager::Update()
@@ -378,16 +410,7 @@ void GfxVk::Utility::VulkanManager::Update()
 
 }
 
-GfxVk::Utility::VulkanManager * GfxVk::Utility::VulkanManager::GetInstance()
-{
-    if (instance == nullptr)
-    {
-        instance = new GfxVk::Utility::VulkanManager();
-    }
-    return instance;
-}
-
 GfxVk::Utility::VulkanManager::~VulkanManager()
 {
-    delete validationManagerObj;
+    delete m_validationManagerObj;
 }

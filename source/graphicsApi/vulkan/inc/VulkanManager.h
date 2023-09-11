@@ -1,7 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <GLFW\glfw3.h>
+#include <GLFW/glfw3.h>
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
+#include <Settings.h>
 
 namespace Core 
 {
@@ -20,15 +21,14 @@ namespace GfxVk
         class VulkanManager
         {
         private:
-            VulkanManager();
-            VulkanManager(VulkanManager const&) {}
-            VulkanManager const& operator= (VulkanManager const&) {}
+            VulkanManager() = delete;
+            VulkanManager(VulkanManager const&) = delete;
+            VulkanManager const& operator= (VulkanManager const&) = delete;
 
-            static VulkanManager* instance;
+            ValidationManager* m_validationManagerObj;
+            const Core::WindowSettings& m_windowSettings;
 
-            ValidationManager* validationManagerObj;
-
-            VkInstance vkInstanceObj = VK_NULL_HANDLE;
+            /*VkInstance vkInstanceObj = VK_NULL_HANDLE;
             VkDevice vkLogicalDeviceObj = VK_NULL_HANDLE;
             VkPhysicalDevice vkPhysicalDeviceObj = VK_NULL_HANDLE;
             VkAllocationCallbacks* pAllocator = VK_NULL_HANDLE;
@@ -43,38 +43,42 @@ namespace GfxVk
             VkPhysicalDeviceProperties                      physicalDeviceProps{};
             VkPhysicalDeviceMemoryProperties                physicalDeviceMemProps{};
             VkPhysicalDeviceFeatures                        physicalDeviceFeatures{}, enabledPhysicalDeviceFeatures{};
+            */
             //uint32_t                                        vulkanGraphicsQueueFamilyIndex;
 
             void CreateInstance();
             void CreateLogicalDevice();
-
             void GetPhysicalDevice();
+            void GetMaxUsableVKSampleCount();
 
         public:
-            static VulkanManager* GetInstance();
             ~VulkanManager();
+            VulkanManager(const Core::WindowSettings& windowSettings);
 
-            void Init();
-            void Init(Core::Wrappers::QueueWrapper* queueRequirement, const uint32_t& count);
+            //void Init();
+            //void Init(Core::Wrappers::QueueWrapper* queueRequirement, const uint32_t& count);
+            void Init(std::vector<Core::Wrappers::QueueWrapper>& queueRequirements,
+                      uint32_t& renderQueueId, uint32_t& presentationQueueId, uint32_t& computeQueueId, uint32_t& transferQueueId);
+
             void InitializeFactories();
             void DeInit();
             void Update();
             void CreateSurface(GLFWwindow* glfwWindow);
-            VkSurfaceKHR* GetSurface() { return &surface; }
-            VkSurfaceFormatKHR* GetSurfaceFormat() { return &surfaceFormat; }
+            //VkSurfaceKHR* GetSurface() { return &surface; }
+            //VkSurfaceFormatKHR* GetSurfaceFormat() { return &surfaceFormat; }
 
-            //const uint32_t&                                 GetQueueFamilyIndex() const { return vulkanGraphicsQueueFamilyIndex; }
-            const VkAllocationCallbacks* GetAllocator() const { return pAllocator; }
-            const VkPhysicalDeviceMemoryProperties& GetPhyicalDeviceMemProps() const { return physicalDeviceMemProps; }
-            const VkQueue& GetGraphicsQueue() const { return graphicsQueueObj; }
-            const VkPhysicalDeviceFeatures& GetPhysicalDeviceFeatures() const { return physicalDeviceFeatures; }
+            ////const uint32_t&                                 GetQueueFamilyIndex() const { return vulkanGraphicsQueueFamilyIndex; }
+            //const VkAllocationCallbacks* GetAllocator() const { return pAllocator; }
+            //const VkPhysicalDeviceMemoryProperties& GetPhyicalDeviceMemProps() const { return physicalDeviceMemProps; }
+            //const VkQueue& GetGraphicsQueue() const { return graphicsQueueObj; }
+            //const VkPhysicalDeviceFeatures& GetPhysicalDeviceFeatures() const { return physicalDeviceFeatures; }
 
-            VkPhysicalDeviceFeatures& GetEnabledPhysicalDeviceFeatures() { return enabledPhysicalDeviceFeatures; }
-            const VkPhysicalDeviceProperties& GetPhysicalDeviceProps() { return physicalDeviceProps; }
+            //VkPhysicalDeviceFeatures& GetEnabledPhysicalDeviceFeatures() { return enabledPhysicalDeviceFeatures; }
+            //const VkPhysicalDeviceProperties& GetPhysicalDeviceProps() { return physicalDeviceProps; }
 
-            bool IsSampleRateShadingAvailable();
-            VkSampleCountFlagBits GetMaxUsableVKSampleCount();
-            Core::Enums::Samples GetMaxUsableSampleCount();
+            //bool IsSampleRateShadingAvailable();
+            //Core::Enums::Samples GetMaxUsableSampleCount();
+
         };
     }
 }

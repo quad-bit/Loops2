@@ -643,7 +643,7 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyPipelines()
 {
     for each(auto obj in idToPipelineMap)
     {
-        vkDestroyPipeline(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *obj.second, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyPipeline(DeviceInfo::GetLogicalDevice(), *obj.second, DeviceInfo::GetAllocationCallback());
     }
     idToPipelineMap.clear();
 
@@ -1001,11 +1001,11 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(Core::
     VkPipelineCache cache = VK_NULL_HANDLE;
 
     GfxVk::Utility::ErrorCheck(vkCreateGraphicsPipelines(
-        *GfxVk::Utility::CoreObjects::logicalDeviceObj,
+        DeviceInfo::GetLogicalDevice(),
         cache,
         (uint32_t)infoList.size(),
         infoList.data(),
-        GfxVk::Utility::CoreObjects::pAllocator,
+        DeviceInfo::GetAllocationCallback(),
         list));
     
     for (uint32_t i = 0; i < pipelineCount; i++)

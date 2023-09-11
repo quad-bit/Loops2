@@ -25,7 +25,7 @@ namespace GfxVk
             uint32_t indexInFamily;
             VkQueue* queue = NULL;
             Core::Enums::PipelineType queueType;
-            Core::Enums::QueueType* purpose;
+            Core::Enums::QueueType purpose;
             bool isQueueEnabled = false;
         };
 
@@ -69,7 +69,7 @@ namespace GfxVk
             VkQueue* GetQueue(VkQueueFlagBits qType, const uint32_t& id);
             VkQueue* GetQueue(const Core::Wrappers::QueueWrapper* req);
 
-            void SetQueuePurpose(Core::Enums::QueueType* purpose, Core::Enums::PipelineType qType, const uint32_t& id);
+            void SetQueuePurpose(const Core::Enums::QueueType& purpose, const Core::Enums::PipelineType& qType, const uint32_t& id);
 
             uint32_t GetQueueFamilyIndex(Core::Enums::PipelineType qType, uint32_t queueId);
             //uint32_t GetQueueFamilyIndex(PipelineType qType, uint32_t queueId);

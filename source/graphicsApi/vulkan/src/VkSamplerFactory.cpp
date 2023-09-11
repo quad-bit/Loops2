@@ -19,7 +19,7 @@ void GfxVk::Shading::VkSamplerFactory::DeInit()
 {
     for each(auto obj in idToSamplerMap)
     {
-        vkDestroySampler(*GfxVk::Utility::CoreObjects::logicalDeviceObj, obj.second, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroySampler(DeviceInfo::GetLogicalDevice(), obj.second, DeviceInfo::GetAllocationCallback());
     }
 
     idToSamplerMap.clear();
@@ -53,7 +53,7 @@ uint32_t GfxVk::Shading::VkSamplerFactory::CreateSampler(const VkSamplerCreateIn
 {
     uint32_t id = GenerateId();
     VkSampler sampler;
-    GfxVk::Utility::ErrorCheck(vkCreateSampler(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info, GfxVk::Utility::CoreObjects::pAllocator, &sampler));
+    GfxVk::Utility::ErrorCheck(vkCreateSampler(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &sampler));
 
     idToSamplerMap.insert(std::pair<uint32_t, VkSampler>({id, sampler}));
 

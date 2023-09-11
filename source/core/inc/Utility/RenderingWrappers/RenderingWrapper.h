@@ -828,8 +828,8 @@ namespace Core
             {
                 uint32_t queueId;
                 uint32_t queueFamilyId;
-                Core::Enums::PipelineType * queueType;
-                Core::Enums::QueueType * purpose;
+                Core::Enums::PipelineType queueType;
+                Core::Enums::QueueType purpose;
             };
 
             struct BufferInfo

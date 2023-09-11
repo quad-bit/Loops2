@@ -59,8 +59,8 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateFence(bool isFenceSignaled)
         info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
-    GfxVk::Utility::ErrorCheck(vkCreateFence(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info, 
-        GfxVk::Utility::CoreObjects::pAllocator, wrapper.fence));
+    GfxVk::Utility::ErrorCheck(vkCreateFence(DeviceInfo::GetLogicalDevice(), &info, 
+        DeviceInfo::GetAllocationCallback(), wrapper.fence));
 
     fenceList.push_back(wrapper);
 
@@ -69,7 +69,7 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateFence(bool isFenceSignaled)
 
 void GfxVk::Sync::VkSynchroniserFactory::DestroyFence(uint32_t id)
 {
-    vkDestroyFence(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *GetFence(id), GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroyFence(DeviceInfo::GetLogicalDevice(), *GetFence(id), DeviceInfo::GetAllocationCallback());
 }
 
 VkFence * GfxVk::Sync::VkSynchroniserFactory::GetFence(uint32_t id)
@@ -92,8 +92,8 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::Create_Semaphore(bool isSemaphoreSi
         info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    GfxVk::Utility::ErrorCheck(vkCreateSemaphore(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info,
-        GfxVk::Utility::CoreObjects::pAllocator, wrapper.semaphore));
+    GfxVk::Utility::ErrorCheck(vkCreateSemaphore(DeviceInfo::GetLogicalDevice(), &info,
+        DeviceInfo::GetAllocationCallback(), wrapper.semaphore));
 
     semaphoreList.push_back(wrapper);
 
@@ -103,7 +103,7 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::Create_Semaphore(bool isSemaphoreSi
 void GfxVk::Sync::VkSynchroniserFactory::DestroySemaphore(uint32_t id)
 {
     VkSemaphore * semaphore = GetSemaphore(id);
-    vkDestroySemaphore(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *semaphore, GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroySemaphore(DeviceInfo::GetLogicalDevice(), *semaphore, DeviceInfo::GetAllocationCallback());
     //delete semaphore;
 }
 

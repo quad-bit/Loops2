@@ -50,7 +50,7 @@ namespace GfxVk
             VkCommandBuffer* activeCommandBuffer;
 
         public:
-            void Init();
+            void Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId);
             void DeInit();
             void Update();
             static VkCommandBufferFactory* GetInstance();

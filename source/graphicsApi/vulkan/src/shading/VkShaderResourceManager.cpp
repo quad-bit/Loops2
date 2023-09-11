@@ -18,7 +18,7 @@ GfxVk::Shading::VkShaderResourceManager* GfxVk::Shading::VkShaderResourceManager
 
 uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
 {
-    size_t uboAlignment = GfxVk::Utility::VulkanManager::GetInstance()->GetPhysicalDeviceProps().limits.minUniformBufferOffsetAlignment;//vkh::GContext.gpu.deviceProps.limits.minUniformBufferOffsetAlignment;
+    size_t uboAlignment = GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceProps().limits.minUniformBufferOffsetAlignment;//vkh::GContext.gpu.deviceProps.limits.minUniformBufferOffsetAlignment;
     return static_cast<uint32_t>((unalignedSize / uboAlignment) * uboAlignment + ((unalignedSize % uboAlignment) > 0 ? uboAlignment : 0));
 }
 
@@ -230,7 +230,7 @@ VkDescriptorSetLayout * GfxVk::Shading::VkShaderResourceManager::CreateSetLayout
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     info.pNext = nullptr;
 
-    GfxVk::Utility::ErrorCheck(vkCreateDescriptorSetLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info, GfxVk::Utility::CoreObjects::pAllocator, layout));
+    GfxVk::Utility::ErrorCheck(vkCreateDescriptorSetLayout(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), layout));
 
     return layout;
 }
@@ -477,9 +477,9 @@ void GfxVk::Shading::VkShaderResourceManager::Init()
     info.pBindings = nullptr;
 
     GfxVk::Utility::ErrorCheck(vkCreateDescriptorSetLayout(
-        *GfxVk::Utility::CoreObjects::logicalDeviceObj,
+        DeviceInfo::GetLogicalDevice(),
         &info,
-        GfxVk::Utility::CoreObjects::pAllocator,
+        DeviceInfo::GetAllocationCallback(),
         &fillerSetLayout
     ));
 
@@ -489,7 +489,7 @@ void GfxVk::Shading::VkShaderResourceManager::Init()
     allocInfo.descriptorSetCount = 1;
     allocInfo.pSetLayouts = &fillerSetLayout;
 
-    GfxVk::Utility::ErrorCheck(vkAllocateDescriptorSets(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &allocInfo, &fillerSet));
+    GfxVk::Utility::ErrorCheck(vkAllocateDescriptorSets(DeviceInfo::GetLogicalDevice(), &allocInfo, &fillerSet));
 
 }
 
@@ -692,13 +692,13 @@ void GfxVk::Shading::VkShaderResourceManager::DeInit()
     for (uint32_t i = 0; i < (uint32_t)pipelineLayoutWrapperList.size(); i++)
     {
         
-        vkDestroyPipelineLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *pipelineLayoutWrapperList[i].pipelineLayout, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyPipelineLayout(DeviceInfo::GetLogicalDevice(), *pipelineLayoutWrapperList[i].pipelineLayout, DeviceInfo::GetAllocationCallback());
         delete pipelineLayoutWrapperList[i].pipelineLayout;
     }
 
     for (auto const& obj : idToSetLayoutMap)
     {
-        vkDestroyDescriptorSetLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *obj.second, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyDescriptorSetLayout(DeviceInfo::GetLogicalDevice(), *obj.second, DeviceInfo::GetAllocationCallback());
         delete obj.second;
     }
 
@@ -706,11 +706,11 @@ void GfxVk::Shading::VkShaderResourceManager::DeInit()
 
     for (auto const& obj : fillerSetLayouts)
     {
-        vkDestroyDescriptorSetLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, obj, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyDescriptorSetLayout(DeviceInfo::GetLogicalDevice(), obj, DeviceInfo::GetAllocationCallback());
     }
 
     fillerSetLayouts.clear();
-    vkDestroyDescriptorSetLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, fillerSetLayout, GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroyDescriptorSetLayout(DeviceInfo::GetLogicalDevice(), fillerSetLayout, DeviceInfo::GetAllocationCallback());
 
 }
 
@@ -782,7 +782,7 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::CreatePipelineLayout(Core::Wra
     pipelineCreateInfo.setLayoutCount = (uint32_t)pipelineLayoutWrapperObj.setLayoutList.size();
 
     VkPipelineLayout * pipelineLayout = new VkPipelineLayout;
-    GfxVk::Utility::ErrorCheck(vkCreatePipelineLayout(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &pipelineCreateInfo, GfxVk::Utility::CoreObjects::pAllocator, pipelineLayout));
+    GfxVk::Utility::ErrorCheck(vkCreatePipelineLayout(DeviceInfo::GetLogicalDevice(), &pipelineCreateInfo, DeviceInfo::GetAllocationCallback(), pipelineLayout));
 
     pipelineLayoutWrapperObj.pipelineLayout = pipelineLayout;
     pipelineLayoutWrapperList.push_back(pipelineLayoutWrapperObj);
@@ -859,9 +859,9 @@ void GfxVk::Shading::VkShaderResourceManager::GetSetLayouts(Core::Wrappers::SetW
 
                 //VkDescriptorSetLayout setLayout;
                 //ErrorCheck(vkCreateDescriptorSetLayout(
-                //    *GfxVk::Utility::CoreObjects::logicalDeviceObj,
+                //    DeviceInfo::GetLogicalDevice(),
                 //    &info,
-                //    CoreObjects::pAllocator,
+                //    DeviceInfo::GetAllocationCallback(),
                 //    &setLayout
                 //));
                 layoutList.push_back(fillerSetLayout);
@@ -897,9 +897,9 @@ void GfxVk::Shading::VkShaderResourceManager::GetSetLayouts(Core::Wrappers::SetW
 
                 VkDescriptorSetLayout setLayout;
                 ErrorCheck(vkCreateDescriptorSetLayout(
-                    *GfxVk::Utility::CoreObjects::logicalDeviceObj,
+                    DeviceInfo::GetLogicalDevice(),
                     &info,
-                    CoreObjects::pAllocator,
+                    DeviceInfo::GetAllocationCallback(),
                     &setLayout
                 ));
                 layoutList.push_back(setLayout);
@@ -1006,7 +1006,7 @@ uint32_t * GfxVk::Shading::VkShaderResourceManager::AllocateDescriptorSets(Core:
     allocInfo.descriptorSetCount = numDescriptors;
     allocInfo.pSetLayouts = setLayouts.data();
 
-    GfxVk::Utility::ErrorCheck( vkAllocateDescriptorSets(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &allocInfo, sets.data()));
+    GfxVk::Utility::ErrorCheck( vkAllocateDescriptorSets(DeviceInfo::GetLogicalDevice(), &allocInfo, sets.data()));
     
     for (uint32_t i = 0; i < numDescriptors; i++)
         idToSetMap.insert(std::pair<uint32_t, VkDescriptorSet>(ids[i], sets[i]));
@@ -1089,7 +1089,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(ShaderBi
         writeList.push_back(write);
     }
 
-    vkUpdateDescriptorSets(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
+    vkUpdateDescriptorSets(DeviceInfo::GetLogicalDevice(), (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
 }
 */
 
@@ -1184,7 +1184,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
         }
 
         // update descriptor set
-        vkUpdateDescriptorSets(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
+        vkUpdateDescriptorSets(DeviceInfo::GetLogicalDevice(), (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
 
     }
 }

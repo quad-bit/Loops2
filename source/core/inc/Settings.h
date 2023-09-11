@@ -8,9 +8,9 @@ namespace Core
     class Settings
     {
     private:
-        uint32_t m_windowWidth, m_windowHeight;
-        uint32_t m_renderWidth, m_renderHeight;
-        std::string m_windowName;
+        //uint32_t m_windowWidth, m_windowHeight;
+        //uint32_t m_renderWidth, m_renderHeight;
+        //std::string m_windowName;
         uint32_t m_swapBufferCount;
         float m_depthClearValue, m_stencilClearValue;
         float m_clearColorValue[4];
@@ -34,7 +34,16 @@ namespace Core
         void SetDepthClearValue(float depthClearValue);
         void SetStencilClearValue(float stencilClearValue);
         void SetClearColorValue(float clearColorValue[4]);
-        std::tuple<uint32_t, uint32_t> GetWindowResolution() const;
-        std::tuple<uint32_t, uint32_t> GetRenderResolution() const;
+        //std::tuple<uint32_t, uint32_t> GetWindowResolution() const;
+        //std::tuple<uint32_t, uint32_t> GetRenderResolution() const;
+    };
+
+    struct WindowSettings
+    {
+        uint32_t m_windowWidth;
+        uint32_t m_windowHeight;
+        uint32_t m_renderWidth;
+        uint32_t m_renderHeight;
+        std::string m_windowName;
     };
 }

@@ -40,7 +40,7 @@ VkDescriptorSet * VkShaderResourceAllocator::AllocateDescriptor(SetWrapper * set
     info.pSetLayouts = layout;
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 
-    ErrorCheck(vkAllocateDescriptorSets(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info, set));
+    ErrorCheck(vkAllocateDescriptorSets(DeviceInfo::GetLogicalDevice(), &info, set));
     VkDescriptorPoolFactory::GetInstance()->StoreDescriptorSet(set);
     
     return set;

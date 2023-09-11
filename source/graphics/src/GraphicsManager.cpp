@@ -18,47 +18,20 @@ void Renderer::GraphicsManager::Init()
     m_windowMngrObj->Init();
     Core::ECS::Events::EventBus::GetInstance()->Subscribe(this, &GraphicsManager::KeyBoardEventHandler);
 
-    //m_renderingMngrObj->Init();
+    m_renderingMngrObj->Init();
 
     /*
     Renderer::Windowing::InputManager::GetInstance()->Init();
     Renderer::Windowing::MouseInputManager::GetInstance()->Init();
-
-#if (RENDERING_API == VULKAN)
-    Core::RendererSettings::queueRequirementCount = 4;
-    Core::RendererSettings::queueReq = new Core::Wrappers::QueueWrapper[Core::RendererSettings::queueRequirementCount];
-    
-    Core::RendererSettings::queueReq[0].purpose = new Core::Enums::QueueType{ Core::Enums::QueueType::RENDER };
-    Core::RendererSettings::queueReq[0].queueType = new Core::Enums::PipelineType{ Core::Enums::PipelineType::GRAPHICS };
-
-    Core::RendererSettings::queueReq[1].purpose = new Core::Enums::QueueType{ Core::Enums::QueueType::PRESENT };
-    Core::RendererSettings::queueReq[1].queueType = new Core::Enums::PipelineType{ Core::Enums::PipelineType::GRAPHICS };
-
-    Core::RendererSettings::queueReq[2].purpose = new Core::Enums::QueueType{ Core::Enums::QueueType::COMPUTE };
-    Core::RendererSettings::queueReq[2].queueType = new Core::Enums::PipelineType{ Core::Enums::PipelineType::COMPUTE };
-
-    Core::RendererSettings::queueReq[3].purpose = new Core::Enums::QueueType{ Core::Enums::QueueType::TRANSFER };
-    Core::RendererSettings::queueReq[3].queueType = new Core::Enums::PipelineType{ Core::Enums::PipelineType::TRANSFER };
-    
-    apiInterface = new Renderer::VulkanInterface();
-    m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>();
-
-#elif (RENDERING_API == DX)
-    apiInterface = new DxInterface();
-#endif
     */
-    //m_renderingMngrObj->Init(apiInterface);
 }
 
-Renderer::GraphicsManager::GraphicsManager()
+Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSettings):
+    m_windowSettings{windowSettings}
 {
-}
-
-Renderer::GraphicsManager::GraphicsManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName)
-{
-    m_settings = std::make_unique<Core::Settings>(winName, winWidth, winHeight, renderWidth, renderHeight);
-    m_windowMngrObj = std::make_unique<Windowing::WindowManager>(winWidth, winHeight, renderWidth, renderHeight, winName);
-    m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>();
+    //m_settings = std::make_unique<Core::Settings>(winName, winWidth, winHeight, renderWidth, renderHeight);
+    m_windowMngrObj = std::make_unique<Windowing::WindowManager>(m_windowSettings);
+    m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>(m_windowSettings);
 }
 
 void Renderer::GraphicsManager::DeInit()
@@ -67,17 +40,6 @@ void Renderer::GraphicsManager::DeInit()
 
     m_renderingMngrObj->DeInit();
     m_renderingMngrObj.reset();
-    /*
-    delete apiInterface;
-
-    for (uint32_t i = 0; i < 4; i++)
-    {
-        delete Core::RendererSettings::queueReq[i].purpose;
-        delete Core::RendererSettings::queueReq[i].queueType;
-    }
-
-    delete[] Core::RendererSettings::queueReq;
-    */
 
     m_windowMngrObj->DeInit();
     m_windowMngrObj.reset();

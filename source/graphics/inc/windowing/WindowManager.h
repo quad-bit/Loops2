@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <Settings.h>
+#include <Settings.h>
 #include <stdint.h>
 #include <string>
 #include <PlatformSettings.h>
@@ -25,15 +25,11 @@ namespace Renderer
             WindowManager(WindowManager const&) = delete;
             WindowManager const& operator= (WindowManager const&) = delete;
 
-            uint32_t m_windowWidth;
-            uint32_t m_windowHeight;
-            uint32_t m_renderWidth;
-            uint32_t m_renderHeight;
-            std::string m_windowName;
+            const Core::WindowSettings& m_windowSettings;
 
         public:
             ~WindowManager(){}
-            WindowManager(uint32_t winWidth, uint32_t winHeight, uint32_t renderWidth, uint32_t renderHeight, std::string winName);
+            WindowManager(const Core::WindowSettings& windowSettings);
             void                                Init();
             void                                DeInit();
             void                                Close();

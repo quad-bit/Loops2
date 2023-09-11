@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <Settings.h>
 
 namespace Renderer
 {
@@ -21,6 +22,8 @@ namespace Engine
 
         SceneManager* sceneManagerObj;
         Renderer::GraphicsManager* m_graphicsMngrObj;
+
+        Core::WindowSettings m_windowSettings;
 
     public:
         void Init(const std::string& windowName = std::string{ "Test" },

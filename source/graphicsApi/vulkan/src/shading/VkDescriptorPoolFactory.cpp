@@ -24,7 +24,7 @@ void GfxVk::Shading::VkDescriptorPoolFactory::DeInit()
         else if (obj.poolSizeCount == 1)
             delete obj.poolSize;
 
-        vkDestroyDescriptorPool(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *obj.pool, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyDescriptorPool(DeviceInfo::GetLogicalDevice(), *obj.pool, DeviceInfo::GetAllocationCallback());
         delete obj.pool;
     }
 
@@ -90,7 +90,7 @@ const uint32_t GfxVk::Shading::VkDescriptorPoolFactory::CreateDescritorPool()
     poolWrapper.poolSize = poolSize;
     poolWrapper.pool = new VkDescriptorPool;
 
-    GfxVk::Utility::ErrorCheck(vkCreateDescriptorPool(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &createInfo, GfxVk::Utility::CoreObjects::pAllocator, poolWrapper.pool));
+    GfxVk::Utility::ErrorCheck(vkCreateDescriptorPool(DeviceInfo::GetLogicalDevice(), &createInfo, DeviceInfo::GetAllocationCallback(), poolWrapper.pool));
     
     poolWrapperList.push_back(poolWrapper);
 

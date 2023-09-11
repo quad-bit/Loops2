@@ -39,17 +39,17 @@ uint32_t GfxVk::CommandPool::VkCommandBufferFactory::GetBufferId()
     return bufferIdCounter++;
 }
 
-void GfxVk::CommandPool::VkCommandBufferFactory::Init()
+void GfxVk::CommandPool::VkCommandBufferFactory::Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId)
 {
     PLOGD << "VkCommandBufferFactory init";
 
-    renderQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT, GfxVk::Utility::CoreObjects::renderQueueId);
-    computeQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT, GfxVk::Utility::CoreObjects::computeQueueId);
-    transferQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT, GfxVk::Utility::CoreObjects::transferQueueId);
+    renderQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT, renderQueueId);
+    computeQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT, computeQueueId);
+    transferQueue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT, transferQueueId);
 
-    graphicsQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT, GfxVk::Utility::CoreObjects::renderQueueId);
-    computeQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT, GfxVk::Utility::CoreObjects::computeQueueId);
-    transferQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT, GfxVk::Utility::CoreObjects::transferQueueId);
+    graphicsQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT, renderQueueId);
+    computeQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT, computeQueueId);
+    transferQueueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT, transferQueueId);
 }
 
 void GfxVk::CommandPool::VkCommandBufferFactory::DeInit()
@@ -121,8 +121,8 @@ void GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandPool(VkCommandPool
     info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     info.flags = flags;
 
-    GfxVk::Utility::ErrorCheck(vkCreateCommandPool(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &info, 
-        GfxVk::Utility::CoreObjects::pAllocator, wrapper.pool));
+    GfxVk::Utility::ErrorCheck(vkCreateCommandPool(DeviceInfo::GetLogicalDevice(), &info, 
+        DeviceInfo::GetAllocationCallback(), wrapper.pool));
 
     id = wrapper.poolId;
     poolList.push_back(wrapper);
@@ -145,7 +145,7 @@ void GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandBuffer(uint32_t po
     info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     info.commandPool = *pool;
 
-    GfxVk::Utility::ErrorCheck(vkAllocateCommandBuffers(*GfxVk::Utility::CoreObjects::logicalDeviceObj, 
+    GfxVk::Utility::ErrorCheck(vkAllocateCommandBuffers(DeviceInfo::GetLogicalDevice(), 
         &info, wrapper->commandBuffer));
 
     bufferList.push_back(*wrapper);
@@ -171,7 +171,7 @@ GfxVk::CommandPool::VkDrawCommandBuffer * GfxVk::CommandPool::VkCommandBufferFac
     info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     info.commandPool = *pool;
 
-    GfxVk::Utility::ErrorCheck(vkAllocateCommandBuffers(*GfxVk::Utility::CoreObjects::logicalDeviceObj,
+    GfxVk::Utility::ErrorCheck(vkAllocateCommandBuffers(DeviceInfo::GetLogicalDevice(),
         &info, drawCommandBuffer->commandBuffer));
 
     drawCommandBufferList.push_back(drawCommandBuffer);
@@ -186,7 +186,7 @@ void GfxVk::CommandPool::VkCommandBufferFactory::DestroyCommandPool(const uint32
 
     ASSERT_MSG_DEBUG(it != poolList.end(), "Pool id not found");
 
-    vkDestroyCommandPool(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *it->pool, GfxVk::Utility::CoreObjects::pAllocator);
+    vkDestroyCommandPool(DeviceInfo::GetLogicalDevice(), *it->pool, DeviceInfo::GetAllocationCallback());
 }
 
 void GfxVk::CommandPool::VkCommandBufferFactory::ResetCommandPool(const uint32_t &  id)
@@ -245,7 +245,7 @@ void GfxVk::CommandPool::VkCommandBufferFactory::DestroyCommandBuffer(const uint
 
     ASSERT_MSG_DEBUG(it != drawCommandBufferList.end(), "Pool id not found");
 
-    vkFreeCommandBuffers(*GfxVk::Utility::CoreObjects::logicalDeviceObj, *(*it)->pool, 1, (*it)->commandBuffer);
+    vkFreeCommandBuffers(DeviceInfo::GetLogicalDevice(), *(*it)->pool, 1, (*it)->commandBuffer);
 }
 
 void GfxVk::CommandPool::VkCommandBufferFactory::ActivateCommandBuffer(const uint32_t & id)

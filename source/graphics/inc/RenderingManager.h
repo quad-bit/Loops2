@@ -3,35 +3,87 @@
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
 #include <CorePrecompiled.h>
 
+namespace GfxVk
+{
+    namespace Utility
+    {
+        class VulkanManager;
+    }
+}
+
+namespace Core
+{
+    class Settings;
+    struct WindowSettings;
+}
 
 namespace Renderer
 {
-    class VulkanInterface;
+    class RenderingManager;
+    class RendererSettings
+    {
+    private:
+        static uint32_t m_renderQueueId;
+        static uint32_t m_presentationQueueId;
+        static uint32_t m_computeQueueId;
+        static uint32_t m_transferQueueId;
 
+        static std::vector<Core::Wrappers::QueueWrapper> m_queueReq;
+
+        static bool m_msaaEnabled;
+        static bool m_sampleRateShadingEnabled;
+        static bool m_multiSamplingAvailable;
+        static Core::Enums::Samples m_maxSampleCountAvailable;
+
+        static std::vector<uint32_t> depthPrepassImageId;
+        static uint32_t m_shadowMapWidth, m_shadowMapHeight;
+
+    public:
+        friend class RenderingManager;
+
+        static uint32_t GetRenderQueueId();
+        static uint32_t GetPresentationQueueId();
+        static uint32_t GetComputeQueueId();
+        static uint32_t GetTransferQueueId();
+
+        static Core::Enums::Samples GetMaxSampleCountAvailable();
+
+        static bool IsMsaaEnabled();
+        static bool IsSampleRateShadingAvailable();
+        static bool IsMultiSamplingAvailable();
+    };
+
+
+    /*
+    * RenderingManager handles the VulkanManager (basic vulkan related implementation)
+    */
     class RenderingManager
     {
     private:
-        uint32_t graphicCommandPoolId, computeCommandPoolId, guiCommandPoolId;
+        uint32_t m_graphicCommandPoolId, m_computeCommandPoolId, m_guiCommandPoolId;
 
         //uint32_t maxFramesInFlight;
 
-        uint32_t* renderSemaphores, * presentationSemaphores;
-        uint32_t* getSwapChainImageFences;
+        uint32_t* m_renderSemaphores, * m_presentationSemaphores;
+        uint32_t* m_getSwapChainImageFences;
 
-        uint32_t currentFrameIndex{ 0 }, currentSwapchainIndex{ 0 };
-        uint32_t currentRenderSemaphoreId, currentPresentationSemaphoreId, currentFenceId;
+        uint32_t m_currentFrameIndex{ 0 }, m_currentSwapchainIndex{ 0 };
+        uint32_t m_currentRenderSemaphoreId, m_currentPresentationSemaphoreId, m_currentFenceId;
 
         void BeginRenderLoop();
         void EndRenderLoop();
         void RenderLoop();
 
-        VulkanInterface* apiInterface;
-
         void CheckForMSAA();
-        Core::Enums::Samples desiredSampleCountForMSAA = Core::Enums::Samples::SAMPLE_COUNT_8_BIT;
+        Core::Enums::Samples m_desiredSampleCountForMSAA = Core::Enums::Samples::SAMPLE_COUNT_8_BIT;
+
+        std::unique_ptr<GfxVk::Utility::VulkanManager> m_vulkanMngrObj;
+
+        Core::Settings* m_settings;
+        const Core::WindowSettings& m_windowSettings;
 
     public:
-        void Init(VulkanInterface* apiInterface);
+        void Init();
         void SetupRenderer();
         void DislogeRenderer();
         void DeInit();
@@ -39,6 +91,7 @@ namespace Renderer
         void Render();
         void PostRenderLoopEnd();
         ~RenderingManager();
-        RenderingManager();
+        RenderingManager(const Core::WindowSettings& windowSettings/*, Core::Settings* settings*/);
     };
 }
+

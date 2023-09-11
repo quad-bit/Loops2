@@ -66,8 +66,8 @@ void GfxVk::Framebuffer::VkFrameBufferFactory::CreateFrameBuffer(uint32_t numFra
         frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         frameBufferCreateInfo.width = width;
 
-        GfxVk::Utility::ErrorCheck(vkCreateFramebuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, &frameBufferCreateInfo, 
-            GfxVk::Utility::CoreObjects::pAllocator, &fboWrapper->fbo));
+        GfxVk::Utility::ErrorCheck(vkCreateFramebuffer(DeviceInfo::GetLogicalDevice(), &frameBufferCreateInfo,
+            DeviceInfo::GetAllocationCallback(), &fboWrapper->fbo));
 
         fboList.push_back(fboWrapper);
     }
@@ -87,7 +87,7 @@ void GfxVk::Framebuffer::VkFrameBufferFactory::DestroyFrameBuffer(uint32_t * ids
 
         ASSERT_MSG_DEBUG(it != fboList.end(), "Image id not found");
 
-        vkDestroyFramebuffer(*GfxVk::Utility::CoreObjects::logicalDeviceObj, (*it)->fbo, GfxVk::Utility::CoreObjects::pAllocator);
+        vkDestroyFramebuffer(DeviceInfo::GetLogicalDevice(), (*it)->fbo, DeviceInfo::GetAllocationCallback());
     }
 }
 
