@@ -6,21 +6,18 @@ layout (location = 0) in vec4 color;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec4 fragPos;
 layout (location = 3) in vec3 viewPos;
+layout (location = 4) in vec4 lightPos;
+layout (location = 5) in vec3 ambient;
+layout (location = 6) in vec3 specular;
+layout (location = 7) in vec3 diffuse;
+layout (location = 8) in float beamHeight;
+layout (location = 9) in float beamRadius;
+layout (location = 10) in vec3 lightForward;
+
 
 layout (location = 0) out vec4 outColor;
 
-layout (std140, set = 2, binding = 0) uniform Lights
-{
-    vec4 lightPos;
-    vec4 lightForward;
-    vec4 ambient;
-    vec4 diffuse;
-    vec4 specular;
-    mat4 lightSpaceMat;
-    float beamHeight;
-    float beamRadius; 
-} light;
-
+/*
 layout(set = 2, binding = 1) uniform sampler2D combined_shadowSampler;
 
 
@@ -39,7 +36,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     
     // calculate bias (based on depth map resolution and slope)
     vec3 normal = normalize(normal);
-    vec3 lightDir = normalize(light.lightPos - fragPos).xyz;
+    vec3 lightDir = normalize(lightPos - fragPos).xyz;
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.003);
 
     // PCF
@@ -60,14 +57,15 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         
     return shadow;
 }
+*/
 
 void main()
 {
    // ambient
-   vec3 ambient = light.ambient.xyz;
-   vec3 diffuse = light.diffuse.xyz; 
-   vec3 specular = light.specular.xyz; 
-   vec3 lightPos = light.lightPos.xyz; 
+   //vec3 ambient = light.ambient.xyz;
+   //vec3 diffuse = light.diffuse.xyz; 
+   //vec3 specular = light.specular.xyz; 
+   //vec3 lightPos = light.lightPos.xyz; 
 
    mat4 biasMatrix = mat4(
     0.5, 0.0, 0.0, 0.0,
@@ -76,8 +74,8 @@ void main()
     0.5, 0.5, 0.0, 1.0
     );
   
-   vec4 fragPosLightSpace = biasMatrix * light.lightSpaceMat * vec4(fragPos.xyz, 1.0);
-   float shadow = ShadowCalculation(fragPosLightSpace); 
+   //vec4 fragPosLightSpace = biasMatrix * light.lightSpaceMat * vec4(fragPos.xyz, 1.0);
+   //float shadow = ShadowCalculation(fragPosLightSpace); 
 
    vec3 norm = normalize(normal);
    vec3 lightDir = normalize(lightPos.xyz - fragPos.xyz);
@@ -93,7 +91,7 @@ void main()
    vec3 specularVal = spec * specular.xyz;
 
    // check if the fragment lies in the cone
-   float distanceOnAxis = max(dot(-lightDir, normalize(light.lightForward.xyz)), 0.0);
+   float distanceOnAxis = max(dot(-lightDir, normalize(lightForward.xyz)), 0.0);
    
    bool spotLight = true;
 
@@ -104,10 +102,10 @@ void main()
    }
    else
    {
-       if(distanceOnAxis > 0 && distanceOnAxis < light.beamHeight)
+       if(distanceOnAxis > 0 && distanceOnAxis < beamHeight)
        {
-           float distanceFromAxis = length(light.lightForward.xyz * distanceOnAxis - ( -lightDir));
-           float radiusAtFragment = (distanceOnAxis * light.beamRadius)/light.beamHeight;
+           float distanceFromAxis = length(lightForward.xyz * distanceOnAxis - ( -lightDir));
+           float radiusAtFragment = (distanceOnAxis * beamRadius)/beamHeight;
 
            if(distanceFromAxis < radiusAtFragment)
            {
@@ -129,7 +127,8 @@ void main()
        }
    }
    
-   vec3 result = (ambient + (1.0 - shadow) * (diffuseVal + specularVal)) * color.xyz;
+   //vec3 result = (ambient + (1.0 - shadow) * (diffuseVal + specularVal)) * color.xyz;
+   vec3 result = (ambient + diffuseVal + specularVal) * color.xyz;
     
    outColor = vec4(result, 1.0); 
 }

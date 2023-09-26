@@ -1,17 +1,21 @@
 {
-    "Shaders":[
+    "Technique" : [
         {
-            "name": "Color.frag",
-            "type": "FRAGMENT",
-            "shaderPath": "",
-            "reflPath": ""
-        },
-        {
-            "name": "PC.vert",
-            "type": "VERTEX",
-            "shaderPath": "",
-            "reflPath": ""
-
+            "name": "depth",
+            "shaders":[
+                {
+                    "name": "Color.frag",
+                    "type": "FRAGMENT",
+                    "shaderPath": "",
+                    "reflPath": ""
+                },
+                {
+                    "name": "PC.vert",
+                    "type": "VERTEX",
+                    "shaderPath": "",
+                    "reflPath": ""
+                }
+            ]
         }
     ]
 }

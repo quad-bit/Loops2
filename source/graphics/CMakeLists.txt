@@ -14,6 +14,25 @@ src/windowing/Window_glfw.cpp
 src/windowing/WindowManager.cpp
 )
 
+set(RENDER_GRAPH_FILES
+inc/renderGraph/Effect.h
+inc/renderGraph/Pipeline.h
+inc/renderGraph/RenderPass.h
+inc/renderGraph/Technique.h
+inc/renderGraph/TechniqueNode.h
+
+# src/windowing/InputManager.cpp
+# src/windowing/InputManagerGLFW.cpp
+# src/windowing/MouseInputManager.cpp
+# src/windowing/Window_glfw.cpp
+# src/windowing/WindowManager.cpp
+)
+
+set(SHADER_RESOURCE_FILES
+inc/shaderResource/UniformFactory.h
+src/shaderResource/UniformFactory.cpp
+)
+
 set(GRAPHIC_FILES
 # inc/DxInterface.h
 inc/GraphicsManager.h
@@ -36,6 +55,8 @@ set(TARGET_NAME "renderer")
 add_library(${TARGET_NAME} 
     ${WINDOWING_FILES} 
     ${GRAPHIC_FILES} 
+    # ${RENDER_GRAPH_FILES}
+    ${SHADER_RESOURCE_FILES}
 )
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 

@@ -25,8 +25,8 @@ namespace GfxVk
 
             static PresentationEngine* instance;
 
-            VkSurfaceKHR* surfaceObj;
-            VkSurfaceFormatKHR* surfaceFormat;
+            VkSurfaceKHR surfaceObj;
+            VkSurfaceFormatKHR surfaceFormat;
             uint32_t m_swapchainImageCount;
             VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
             VkSwapchainKHR swapchainObj;
@@ -40,7 +40,7 @@ namespace GfxVk
 
             uint32_t activeSwapchainImageID;
         public:
-            void Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR* surfaceFormat, Core::Settings* settings);
+            void Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount);
             void CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo);
             void CreateSwapChain(Core::Wrappers::ImageInfo swapChainCreateInfo);
 

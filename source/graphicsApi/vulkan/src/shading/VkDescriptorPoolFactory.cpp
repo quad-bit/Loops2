@@ -2,6 +2,7 @@
 #include "utility/VulkanUtility.h"
 #include <algorithm>
 #include <Platform/Assertion.h>
+#include <CorePrecompiled.h>
 
 GfxVk::Shading::VkDescriptorPoolFactory* GfxVk::Shading::VkDescriptorPoolFactory::instance = nullptr;
 
@@ -12,11 +13,15 @@ uint32_t GfxVk::Shading::VkDescriptorPoolFactory::GetId()
 
 void GfxVk::Shading::VkDescriptorPoolFactory::Init()
 {
+    PLOGD << "VkDescriptorPoolFactory init";
+
     CreateDescritorPool();
 }
 
 void GfxVk::Shading::VkDescriptorPoolFactory::DeInit()
 {
+    PLOGD << "VkDescriptorPoolFactory DeInit";
+
     for each(auto obj in poolWrapperList)
     {
         if (obj.poolSizeCount > 1)

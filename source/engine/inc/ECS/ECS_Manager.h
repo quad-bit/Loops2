@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RenderData.h>
 
 namespace Core
 {
@@ -57,6 +58,17 @@ namespace Engine
         void DeInit();
         void Update(float dt);
         void Render(float dt);
+        void PrepareRenderData(Core::Utility::RenderData& renderData);
+        /// <summary>
+        /// Create the descriptor sets, uniform buffers
+        /// Transform : Create Uniform buffer for TransformData if meshrenderer attached
+        /// MeshRenderer : Create Vertex, index buffer
+        /// Camera : Create uniform buffer for CameraData
+        /// Light : Create uniform buffer for LightData
+        /// Clubbing strategy : Group using MaterialType -> LOD
+        /// </summary>
+        void CreateSceneResources();
+
         static ECS_Manager* GetInstance();
         ~ECS_Manager();
     };

@@ -4,6 +4,7 @@
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
 #include "ECS/ECS_Helper.h"
 #include <string>
+#include <variant>
 
 namespace Core
 {
@@ -79,11 +80,30 @@ namespace Core
             uint32_t binding;
             std::string resourceName;
             uint32_t numElements;
+
+            // Might belong to multiple descriptor sets
             std::vector<uint32_t> descriptorSetIds;
 
             SamplerBindingInfo samplerBindingInfo;
             ImageBindingInfo imageBindingInfo;
             BufferBindingInfo bufferBindingInfo;
+        };
+
+        struct DescriptorSetBindingDescription
+        {
+            std::string m_bindingName;
+            uint32_t m_bindingNumber;
+            uint32_t m_numElements;
+            Core::Enums::DescriptorType m_resourceType;
+            std::variant<SamplerBindingInfo, ImageBindingInfo, BufferBindingInfo> m_bindingInfo;
+        };
+
+        struct DescriptorSetDescription
+        {
+            uint32_t m_setNumber;
+            uint32_t m_numBindings;
+            std::vector<DescriptorSetBindingDescription> m_setBindings;
+            std::vector<uint32_t> m_descriptorSetIds;
         };
     }
 }

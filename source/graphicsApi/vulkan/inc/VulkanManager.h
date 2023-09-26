@@ -28,12 +28,14 @@ namespace GfxVk
             ValidationManager* m_validationManagerObj;
             const Core::WindowSettings& m_windowSettings;
 
+            VkSurfaceKHR m_surface = VK_NULL_HANDLE;
+            VkInstance vkInstanceObj = VK_NULL_HANDLE;
+
             /*VkInstance vkInstanceObj = VK_NULL_HANDLE;
             VkDevice vkLogicalDeviceObj = VK_NULL_HANDLE;
             VkPhysicalDevice vkPhysicalDeviceObj = VK_NULL_HANDLE;
             VkAllocationCallbacks* pAllocator = VK_NULL_HANDLE;
             VkQueue graphicsQueueObj = VK_NULL_HANDLE;
-            VkSurfaceKHR surface = VK_NULL_HANDLE;
             uint32_t surfaceWidth;
             uint32_t surfaceHeight;
 

@@ -11,14 +11,14 @@ typedef GfxVk::Utility::VulkanDeviceInfo DeviceInfo;
 
 GfxVk::Utility::PresentationEngine* GfxVk::Utility::PresentationEngine::instance = nullptr;
 
-void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfaceFormatKHR * surfaceFormat, Core::Settings* settings)
+void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount)
 {
     PLOGD << "PresentationEngine Init";
 
     this->surfaceObj = surfaceObj;
     this->surfaceFormat = surfaceFormat;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(DeviceInfo::GetPhysicalDevice(), *surfaceObj, &surfaceCapabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(DeviceInfo::GetPhysicalDevice(), surfaceObj, &surfaceCapabilities);
 
     if (surfaceCapabilities.maxImageCount > 0)
         if (m_swapchainImageCount > surfaceCapabilities.maxImageCount)
@@ -30,9 +30,9 @@ void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfac
     presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
     {
         uint32_t count = 0;
-        ErrorCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(DeviceInfo::GetPhysicalDevice(), *surfaceObj, &count, nullptr));
+        ErrorCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(DeviceInfo::GetPhysicalDevice(), surfaceObj, &count, nullptr));
         std::vector<VkPresentModeKHR> presentModeList(count);
-        ErrorCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(DeviceInfo::GetPhysicalDevice(), *surfaceObj, &count, presentModeList.data()));
+        ErrorCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(DeviceInfo::GetPhysicalDevice(), surfaceObj, &count, presentModeList.data()));
 
         for (VkPresentModeKHR obj : presentModeList)
         {
@@ -45,7 +45,7 @@ void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR* surfaceObj, VkSurfac
         }
     }
 
-    settings->SetSwapBufferCount(m_swapchainImageCount);
+    swapbufferCount = m_swapchainImageCount;
 }
 
 void GfxVk::Utility::PresentationEngine::CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo)
@@ -74,7 +74,7 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageIn
     swapChainCreateInfo.queueFamilyIndexCount = 0; // as its not shared between multiple queues
     swapChainCreateInfo.pQueueFamilyIndices = nullptr;
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapChainCreateInfo.surface = *surfaceObj;
+    swapChainCreateInfo.surface = surfaceObj;
 
     CreateSwapChain(swapChainCreateInfo);
 }
@@ -85,9 +85,9 @@ std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(C
     swapChainCreateInfo.clipped = VK_TRUE; // dont render parts of swapchain image that are out of the frustrum
     swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapChainCreateInfo.imageArrayLayers = 1; // 2 meant for sterescopic rendering
-    swapChainCreateInfo.imageColorSpace = surfaceFormat->colorSpace;
+    swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
     swapChainCreateInfo.imageExtent = surfaceCapabilities.currentExtent;
-    swapChainCreateInfo.imageFormat = surfaceFormat->format;
+    swapChainCreateInfo.imageFormat = surfaceFormat.format;
     swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapChainCreateInfo.minImageCount = m_swapchainImageCount;
@@ -97,7 +97,7 @@ std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(C
     swapChainCreateInfo.queueFamilyIndexCount = 0; // as its not shared between multiple queues
     swapChainCreateInfo.pQueueFamilyIndices = nullptr;
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swapChainCreateInfo.surface = *surfaceObj;
+    swapChainCreateInfo.surface = surfaceObj;
 
     ErrorCheck(vkCreateSwapchainKHR(DeviceInfo::GetLogicalDevice(), &swapChainCreateInfo, DeviceInfo::GetAllocationCallback(), &swapchainObj));
 
@@ -119,7 +119,7 @@ std::vector<VkImageView>* GfxVk::Utility::PresentationEngine::CreateSwapchainIma
     {
         VkImageViewCreateInfo createInfo{};
         createInfo.components = { VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY };
-        createInfo.format = surfaceFormat->format;
+        createInfo.format = surfaceFormat.format;
         createInfo.image = swapChainImageList[i];
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

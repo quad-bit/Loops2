@@ -28,7 +28,6 @@ namespace Core
 class MeshRendererSystem : public Core::ECS::System
 {
 private:
-
     uint32_t idCounter = 0;
     uint32_t GenerateId();
 
@@ -36,18 +35,11 @@ private:
     Core::Utility::GlobalResourceSharingConfig resourceSharingConfig;
 
     Core::Wrappers::SetWrapper * transformSetWrapper;
-    std::vector<Core::Utility::ShaderBindingDescription *> resDescriptionList;
-    std::map<Core::ECS::Components::Transform *, Core::Utility::ShaderBindingDescription *> transformToBindDescMap;
+    std::vector<Core::Utility::DescriptorSetDescription> resDescriptionList;
+    std::map<Core::ECS::Components::Transform *, Core::Utility::DescriptorSetDescription> transformToBindDescMap;
 
     uint32_t numDescriptorsPerBinding;
-/*
-    std::map<uint32_t, DrawGraphNode*> meshIdToGraphNode;
-
-    std::vector<GraphNode<DrawGraphNode> * >  meshNodeList;
-    std::vector<GraphNode<DrawGraphNode> * >  transformNodeList;
-    std::vector<GraphNode<DrawGraphNode> * >  drawingNodeList;
-*/
-    size_t memoryAlignedDataSize;
+    size_t memoryAlignedUniformSize;;
 
 public:
     virtual void Init() override;
@@ -57,5 +49,5 @@ public:
     MeshRendererSystem();
     virtual ~MeshRendererSystem();
 
-    //void HandleMeshRendererAddition(MeshRendererAdditionEvent * inputEvent);
+    void HandleMeshRendererAddition(Core::ECS::Events::MeshRendererAdditionEvent * inputEvent);
 };

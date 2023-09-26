@@ -8,6 +8,7 @@ set(CORE_FILES
     inc/PlatformSettings.h
     inc/RendererSettings.h
     inc/Settings.h
+    inc/RenderData.h
 
     src/CoreManager.cpp
     src/CorePrecompiled.cpp

@@ -7,7 +7,7 @@
 #include <Windowing/InputManager.h>
 #include <Windowing/MouseInputManager.h>
 #include <Utility/Timer.h>
-#include "SceneManager.h"
+#include "ECS/SceneManager.h"
 
 Engine::EngineManager* Engine::EngineManager::instance = nullptr;
 
@@ -99,6 +99,8 @@ void Engine::EngineManager::Update()
         // lag = msPerUpdate;
 
         Renderer::Windowing::MouseInputManager::GetInstance()->Update();
+
+        ECS_Manager::GetInstance()->PrepareRenderData(m_renderData);
         m_graphicsMngrObj->Update();
     }
 

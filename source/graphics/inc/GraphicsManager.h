@@ -5,6 +5,7 @@
 
 #include <PlatformSettings.h>
 #include <Settings.h>
+#include <RendererSettings.h>
 
 #if defined(GLFW_ENABLED)
 #define GLFW_INCLUDE_VULKAN
@@ -41,7 +42,6 @@ namespace Renderer
         GraphicsManager(GraphicsManager const&) = delete;
         GraphicsManager const& operator= (GraphicsManager const&) = delete;
 
-        std::unique_ptr<Core::Settings> m_settings;
         const Core::WindowSettings& m_windowSettings;
 
         std::unique_ptr <Renderer::RenderingManager> m_renderingMngrObj;

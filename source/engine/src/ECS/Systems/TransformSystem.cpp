@@ -1,7 +1,7 @@
 #include "ECS/Systems/TransformSystem.h"
 #include <ECS/Components/Transform.h>
 #include <ECS/World.h>
-//#include "SceneGraphManager.h"
+#include "SceneGraphManager.h"
 
 // deprecated
 void TransformSystem::UpdateTransform(Core::ECS::Components::Transform * transform)
@@ -49,7 +49,7 @@ void TransformSystem::Update(float dt)
 {
     // Do the scene tree traversal
     // Update the tranform wrt to the parent
-    //SceneGraphManager::GetInstance()->Update();
+    Engine::SceneGraphManager::GetInstance()->Update();
 }
 
 TransformSystem::TransformSystem()

@@ -108,7 +108,7 @@ target_include_directories(${TARGET_NAME}
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     VULKAN_ASSETS_PATH="${VulkanDataPath}"
-    EFFECTS_PATH="${EffectsPath}"
+    EFFECTS_PATH="${EFFECTS_PATH}"
 )
 
 IF( APPLE )

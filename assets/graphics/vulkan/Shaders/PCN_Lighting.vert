@@ -10,7 +10,19 @@ layout (std140, set = 0, binding = 0) uniform View
     vec3 cameraPos;
 } view;
 
-layout(std140, set = 4, binding = 0) uniform Transform
+layout (std140, set = 1, binding = 0) uniform Lights
+{
+    vec4 lightPos;
+    vec4 lightForward;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+    //mat4 lightSpaceMat;
+    float beamHeight;
+    float beamRadius; 
+} light;
+
+layout(std140, set = 3, binding = 0) uniform Transform
 {
     mat4 model;
 }transform;
@@ -23,6 +35,14 @@ layout (location = 0) out vec4 outColor;
 layout (location = 1) out vec3 outNormal;
 layout (location = 2) out vec4 fragPos;
 layout (location = 3) out vec3 viewPos;
+layout (location = 4) out vec4 lightPos;
+layout (location = 5) out vec3 ambient;
+layout (location = 6) out vec3 specular;
+layout (location = 7) out vec3 diffuse;
+layout (location = 8) out float beamHeight;
+layout (location = 9) out float beamRadius;
+layout (location = 10) out vec3 lightForward;
+
 
 void main()
 {
@@ -40,4 +60,11 @@ void main()
     gl_Position = clip * view.projection * view.view * fragPos;
     outNormal = normalMat * inNormal;
     viewPos = view.cameraPos;
+    ambient = light.ambient.xyz;
+    diffuse = light.diffuse.xyz; 
+    specular = light.specular.xyz; 
+    lightPos = light.lightPos;
+    beamRadius = light.beamRadius; 
+    beamHeight = light.beamHeight; 
+    lightForward = light.lightForward.xyz;
 }

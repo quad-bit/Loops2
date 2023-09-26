@@ -441,15 +441,12 @@ namespace
 
 Core::Enums::Format Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat()
 {
-    ASSERT_MSG_DEBUG(0, "CHECK THIS");
-
     //VkSurfaceFormatKHR * vkFormat = GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat();
     return WrapFormat(GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat().format);
 }
 
 Core::Enums::ColorSpace Renderer::Utility::VulkanInterface::GetWindowColorSpace()
 {
-    ASSERT_MSG_DEBUG(0, "CHECK THIS");
 
     //VkSurfaceFormatKHR * vkFormat = GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat();
     return WrapColorSpace(GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat().colorSpace);
@@ -889,9 +886,14 @@ std::vector<Core::Wrappers::SetWrapper*>* Renderer::Utility::VulkanInterface::Ge
     return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetSetWrapperList();
 }
 
-void Renderer::Utility::VulkanInterface::LinkSetBindingToResources(Core::Utility::ShaderBindingDescription * desc, const uint32_t & numBindings)
+std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* Renderer::Utility::VulkanInterface::GetPerSetSetwrapperList()
 {
-    GfxVk::Shading::VkShaderResourceManager::GetInstance()->LinkSetBindingToResources(desc, numBindings);
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPerSetSetwrapperMap();
+}
+
+void Renderer::Utility::VulkanInterface::LinkSetBindingToResources(Core::Utility::DescriptorSetDescription desc, const uint32_t & numDescriptorSets)
+{
+    GfxVk::Shading::VkShaderResourceManager::GetInstance()->LinkSetBindingToResources(desc, numDescriptorSets);
 }
 
 bool Renderer::Utility::VulkanInterface::IsSampleRateShadingAvailable()

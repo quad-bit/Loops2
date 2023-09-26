@@ -2,6 +2,7 @@
 #include "ECS/System.h"
 #include "ECS/EntityManager.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Components/Camera.h"
 
 Core::ECS::EntityHandle* Core::ECS::World::CreateEntity()
 {
@@ -30,6 +31,11 @@ Core::ECS::EntityHandle * const Core::ECS::World::FindEntity(const std::string &
     return Core::ECS::EntityManager::GetSingleton()->FindEntity(name);
 }
 
+const std::vector<Core::ECS::Entity*>& Core::ECS::World::GetEntityList()
+{
+    return Core::ECS::EntityManager::GetSingleton()->GetEntityList();
+}
+
 void Core::ECS::World::UpdateEntityMask(Core::ECS::Entity * entity, Core::ECS::ComponentMask oldMask)
 {
     Core::ECS::ComponentMask newMask = entityMasks[entity];
@@ -47,10 +53,13 @@ void Core::ECS::World::UpdateEntityMask(Core::ECS::Entity * entity, Core::ECS::C
     }
 }
 
-void Core::ECS::World::AddSystem(Core::ECS::System * system)
+void Core::ECS::World::AddSystem(Core::ECS::System * system, COMPONENT_TYPE componentType)
 {
     systemList.push_back(system);
     system->RegisterWorld(this);
+
+    if (componentType == COMPONENT_TYPE::CAMERA)
+        camSystem = system;
 }
 
 void Core::ECS::World::Update(float dt)
@@ -126,4 +135,9 @@ void Core::ECS::World::DestroyEntity(Core::ECS::Entity* entityObj)
 void Core::ECS::World::DestroyEntity(Core::ECS::EntityHandle * entityHandleObj)
 {
     DestroyEntity(entityHandleObj->GetEntity());
+}
+
+void Core::ECS::World::SetMainCamera(uint32_t camComponentId)
+{
+
 }

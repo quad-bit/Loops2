@@ -1,2 +1,2 @@
-ShaderPipeline "../../../Assets/Graphics/Vulkan/Shaders/" "../../../Assets/Graphics/Vulkan/Spvs" "../../../Assets/Graphics/Vulkan/Reflections"
+ShaderPipeline "../../assets/graphics/vulkan/Shaders/" "../../assets/graphics/vulkan/Spvs" "../../assets/graphics/vulkan/Reflections"
 pause 

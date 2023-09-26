@@ -14,7 +14,8 @@
 
 #include "VulkanInterface.h"
 #include "VulkanManager.h"
-
+#include "utility/VulkanUtility.h"
+#include <PresentationEngine.h>
 
 uint32_t Renderer::RendererSettings::m_renderQueueId;
 uint32_t Renderer::RendererSettings::m_presentationQueueId;
@@ -32,6 +33,11 @@ Core::Enums::Samples Renderer::RendererSettings::m_maxSampleCountAvailable;
 std::vector<uint32_t> Renderer::RendererSettings::depthPrepassImageId;
 uint32_t Renderer::RendererSettings::m_shadowMapWidth, Renderer::RendererSettings::m_shadowMapHeight;
 
+Core::Enums::Format Renderer::RendererSettings::m_bestDepthFormat;
+
+uint32_t Renderer::RendererSettings::m_swapBufferCount;
+uint32_t Renderer::RendererSettings::m_maxFramesInFlight, Renderer::RendererSettings::m_currentFrameInFlight;
+uint32_t Renderer::RendererSettings::m_maxFrameRate;
 
 void Renderer::RenderingManager::BeginRenderLoop()
 {
@@ -135,7 +141,7 @@ void Renderer::RenderingManager::CheckForMSAA()
     }
 }
 
-void Renderer::RenderingManager::Init()
+void Renderer::RenderingManager::Init(GLFWwindow* window)
 {
     PLOGD << "Rendering interface Init";
 
@@ -162,6 +168,39 @@ void Renderer::RenderingManager::Init()
         Renderer::RendererSettings::m_presentationQueueId,
         Renderer::RendererSettings::m_computeQueueId,
         Renderer::RendererSettings::m_transferQueueId);
+    VkInstance obj = DeviceInfo::GetVkInstance();
+    m_vulkanMngrObj->CreateSurface(window);
+
+    GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanDeviceInfo::GetSurface(), GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(), Renderer::RendererSettings::m_swapBufferCount);
+    Renderer::RendererSettings::m_maxFramesInFlight = Renderer::RendererSettings::m_swapBufferCount - 1;
+
+    {
+        std::array<Core::Enums::Format, 5> depthFormats;
+        depthFormats[0] = Core::Enums::Format::D32_SFLOAT_S8_UINT;
+        depthFormats[1] = Core::Enums::Format::D24_UNORM_S8_UINT;
+        depthFormats[2] = Core::Enums::Format::D16_UNORM_S8_UINT;
+        depthFormats[3] = Core::Enums::Format::D32_SFLOAT;
+        depthFormats[4] = Core::Enums::Format::D16_UNORM;
+
+        int index = Renderer::Utility::VulkanInterface::FindBestDepthFormat(&depthFormats[0], 5);
+
+        ASSERT_MSG_DEBUG(index != -1, "depth format not available");
+        Renderer::RendererSettings::m_bestDepthFormat = depthFormats[index];
+    }
+
+    // swapchain / presentation setup
+    {
+        Core::Wrappers::ImageInfo info = {};
+        info.colorSpace = Renderer::Utility::VulkanInterface::GetWindowColorSpace();
+        info.format = Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat();
+        info.width = m_windowSettings.m_windowWidth;
+        info.height = m_windowSettings.m_windowHeight;
+        info.imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
+        info.usage.push_back(Core::Enums::AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
+
+        //Renderer::Utility::VulkanInterface::SetupPresentationEngine(info);
+        GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
+    }
 
     //forwardRenderer = new ForwardRendering<T>();
     //forwardRenderer->Init(apiInterface);
@@ -285,6 +324,10 @@ void Renderer::RenderingManager::DeInit()
 
     forwardRenderer->DeInit();
     delete forwardRenderer;*/
+
+    GfxVk::Utility::PresentationEngine::GetInstance()->DeInit();
+
+    m_vulkanMngrObj->DeInit();
 }
 
 void Renderer::RenderingManager::PreRender()
@@ -354,3 +397,369 @@ bool Renderer::RendererSettings::IsMultiSamplingAvailable()
 {
     return m_multiSamplingAvailable;
 }
+
+const uint32_t& Renderer::RendererSettings::GetMaxFramesInFlightCount()
+{
+    return m_maxFramesInFlight;
+}
+
+const uint32_t& Renderer::RendererSettings::GetCurrentFrameIndex()
+{
+    return m_currentFrameInFlight;
+}
+
+const uint32_t& Renderer::RendererSettings::GetSwapBufferCount()
+{
+    return m_swapBufferCount;
+}
+
+const Core::Enums::Format& Renderer::RendererSettings::GetBestDepthFormat()
+{
+    return m_bestDepthFormat;
+}
+
+#if 0
+inline void ForwardRendering<T>::SetupRenderer()
+{
+    //Samples sampleCount = CheckForMSAA();
+    windowSurfaceFormat = apiInterface->GetWindowSurfaceFormat();
+    windowColorSpace = apiInterface->GetWindowColorSpace();
+
+    {
+        Format* depthFormats = new Format[5];
+        depthFormats[0] = Format::D32_SFLOAT_S8_UINT;
+        depthFormats[1] = Format::D24_UNORM_S8_UINT;
+        depthFormats[2] = Format::D16_UNORM_S8_UINT;
+        depthFormats[3] = Format::D32_SFLOAT;
+        depthFormats[4] = Format::D16_UNORM;
+
+        int index = apiInterface->FindBestDepthFormat(depthFormats, 5);
+
+        ASSERT_MSG_DEBUG(index != -1, "depth format not available");
+        Renderer::RendererSettings::m_bestDepthFormat = depthFormats[index];
+        delete[] depthFormats;
+    }
+
+    // swapchain / presentation setup
+    {
+        ImageInfo info = {};
+        info.colorSpace = windowColorSpace;
+        info.format = windowSurfaceFormat;
+        info.width = Settings::windowWidth;
+        info.height = Settings::windowHeight;
+        info.imageType = ImageType::IMAGE_TYPE_2D;
+        info.usage.push_back(AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
+
+        apiInterface->SetupPresentationEngine(info);
+    }
+
+    uint32_t depthPrepassBufferingCount = Settings::swapBufferCount;
+
+    //if (RendererSettings::MSAA_Enabled && multiSamplingAvailable)
+    //{
+    //}
+    //else
+    {
+        // depth pre pass samplCount = 1
+        {
+            ImageInfo info;
+            info.imageType = ImageType::IMAGE_TYPE_2D;
+            info.format = bestDepthFormat;
+            info.layers = 1;
+            info.mips = 1;
+            info.sampleCount = Samples::SAMPLE_COUNT_1_BIT;
+            info.usage.push_back(AttachmentUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+            info.usage.push_back(AttachmentUsage::USAGE_SAMPLED_BIT);
+            info.width = RendererSettings::shadowMapWidth;
+            info.height = RendererSettings::shadowMapHeight;
+            info.depth = 1;
+            info.initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+
+            depthPrepassDefaultImageIdList.resize(depthPrepassBufferingCount);
+            apiInterface->CreateAttachment(&info, depthPrepassBufferingCount, depthPrepassDefaultImageIdList.data());
+
+            {
+                // Get the image memory req
+                MemoryRequirementInfo req = apiInterface->GetImageMemoryRequirement(depthPrepassDefaultImageIdList[0]);
+
+                // Allocate the memory
+                size_t allocationSize = req.size * depthPrepassBufferingCount;
+                MemoryType userReq[1]{ MemoryType::DEVICE_LOCAL_BIT };
+                depthResolveImageMemoryId = apiInterface->AllocateMemory(&req, &userReq[0], allocationSize);
+
+                // Bind the memory to the image
+                for (uint32_t i = 0; i < depthPrepassDefaultImageIdList.size(); i++)
+                    apiInterface->BindImageMemory(depthPrepassDefaultImageIdList[i], depthResolveImageMemoryId, req.size * i);
+            }
+
+            // Create image View
+            ImageViewInfo viewInfo = {};
+            viewInfo.baseArrayLayer = 0;
+            viewInfo.baseMipLevel = 0;
+            viewInfo.components[0] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[1] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[2] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[3] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.format = bestDepthFormat;
+            // TODO : need to fix this OR thing
+            viewInfo.imageAspect = ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT;// | (stencilAvailable ? IMAGE_ASPECT_STENCIL_BIT : 0);
+            viewInfo.layerCount = 1;
+            viewInfo.levelCount = 1;
+            viewInfo.viewType = ImageViewType::IMAGE_VIEW_TYPE_2D;
+
+            {
+                std::vector<ImageViewInfo> viewInfoList(depthPrepassBufferingCount, viewInfo);// , viewInfo, viewInfo };
+                for (uint32_t i = 0; i < depthPrepassDefaultImageIdList.size(); i++)
+                {
+                    viewInfoList[i].imageId = depthPrepassDefaultImageIdList[i];
+                }
+                uint32_t count = (uint32_t)viewInfoList.size();
+                apiInterface->CreateImageView(viewInfoList.data(), count);
+            }
+
+            RendererSettings::depthPrepassImageId = depthPrepassDefaultImageIdList;
+        }
+
+        // default render target setup
+        {
+            ImageInfo info;
+            info.colorSpace = windowColorSpace;
+            info.imageType = ImageType::IMAGE_TYPE_2D;
+            info.format = windowSurfaceFormat;
+            info.layers = 1;
+            info.mips = 1;
+            info.sampleCount = Samples::SAMPLE_COUNT_1_BIT;
+            info.usage.push_back(AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
+            info.height = Settings::windowHeight;
+            info.width = Settings::windowWidth;
+            info.depth = 1;
+            info.initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+
+            ImageViewInfo viewInfo = {};
+            viewInfo.baseArrayLayer = 0;
+            viewInfo.baseMipLevel = 0;
+            viewInfo.components[0] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[1] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[2] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[3] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.format = windowSurfaceFormat;
+            viewInfo.imageAspect = ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.layerCount = 1;
+            viewInfo.levelCount = 1;
+            viewInfo.viewType = ImageViewType::IMAGE_VIEW_TYPE_2D;
+
+            defaultRenderTargetList.resize(Settings::swapBufferCount);
+            //apiInterface->CreateRenderTarget(info, Settings::swapBufferCount, true, &defaultRenderTargetList);
+            apiInterface->CreateDefaultRenderTarget(info, viewInfo, Settings::swapBufferCount, defaultRenderTargetList.data());
+        }
+
+        // depth
+        {
+            ImageInfo info;
+            info.imageType = ImageType::IMAGE_TYPE_2D;
+            info.format = bestDepthFormat;
+            info.layers = 1;
+            info.mips = 1;
+            info.sampleCount = Samples::SAMPLE_COUNT_1_BIT;
+            info.usage.push_back(AttachmentUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+            info.width = Settings::windowWidth;
+            info.height = Settings::windowHeight;
+            info.depth = 1;
+            info.initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+            bool stencilRequired = false;
+            bool stencilAvailable = false;
+
+            if (stencilRequired)
+                if (info.format == Format::D32_SFLOAT_S8_UINT ||
+                    info.format == Format::D24_UNORM_S8_UINT ||
+                    info.format == Format::D16_UNORM_S8_UINT)
+                    stencilAvailable = true;
+
+
+            defaultDepthTargetList.resize(Settings::swapBufferCount);
+            apiInterface->CreateAttachment(&info, Settings::swapBufferCount, defaultDepthTargetList.data());
+
+            // Get the image memory req
+            MemoryRequirementInfo req = apiInterface->GetImageMemoryRequirement(defaultDepthTargetList[0]);
+
+            // Allocate the memory
+            size_t allocationSize = req.size * Settings::swapBufferCount;
+            MemoryType userReq[1]{ MemoryType::DEVICE_LOCAL_BIT };
+            depthImageMemoryId = apiInterface->AllocateMemory(&req, &userReq[0], allocationSize);
+
+            // Bind the memory to the image
+            for (uint32_t i = 0; i < defaultDepthTargetList.size(); i++)
+                apiInterface->BindImageMemory(defaultDepthTargetList[i], depthImageMemoryId, req.size * i);
+
+            // Create image View
+            ImageViewInfo viewInfo = {};
+            viewInfo.baseArrayLayer = 0;
+            viewInfo.baseMipLevel = 0;
+            viewInfo.components[0] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[1] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[2] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.components[3] = ComponentSwizzle::COMPONENT_SWIZZLE_IDENTITY;
+            viewInfo.format = bestDepthFormat;
+            // TODO : need to fix this OR thing
+            viewInfo.imageAspect = ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT;// | (stencilAvailable ? IMAGE_ASPECT_STENCIL_BIT : 0);
+            viewInfo.layerCount = 1;
+            viewInfo.levelCount = 1;
+            viewInfo.viewType = ImageViewType::IMAGE_VIEW_TYPE_2D;
+
+            std::vector<ImageViewInfo> viewInfoList{ viewInfo, viewInfo, viewInfo };
+
+            for (uint32_t i = 0; i < defaultDepthTargetList.size(); i++)
+            {
+                viewInfoList[i].imageId = defaultDepthTargetList[i];
+            }
+            uint32_t count = (uint32_t)viewInfoList.size();
+            apiInterface->CreateImageView(viewInfoList.data(), count);
+        }
+
+        if (RendererSettings::MSAA_Enabled && RendererSettings::multiSamplingAvailable)
+        {
+            SetupAttachmentsForMSAA(*RendererSettings::sampleCount);
+
+            uint32_t imagesPerFbo = 4, numFbos = Settings::swapBufferCount;
+            uint32_t* imageIds = new uint32_t[numFbos * imagesPerFbo];
+
+            for (uint32_t i = 0, j = 0; i < numFbos * imagesPerFbo; i++, j++)
+            {
+                imageIds[i++] = msaaRenderTargetList[j]; // Multi sampled color
+                imageIds[i++] = defaultRenderTargetList[j]; // default color
+                imageIds[i++] = msaaDepthTargetList[j]; // MSAA depth
+                imageIds[i] = defaultDepthTargetList[j]; // default depth
+            }
+
+            colorPassFbo.resize(numFbos);
+            apiInterface->CreateFrameBuffer(numFbos, imageIds, imagesPerFbo, colorPassId,
+                Settings::windowWidth, Settings::windowHeight, &colorPassFbo[0]);
+
+            delete[] imageIds;
+        }
+        else
+        {
+            RenderPassAttachmentInfo attchmentDescList[2];
+
+            attchmentDescList[0].finalLayout = ImageLayout::LAYOUT_PRESENT_SRC_KHR;
+            attchmentDescList[0].format = Format::B8G8R8A8_UNORM;
+            attchmentDescList[0].initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+            attchmentDescList[0].loadOp = LoadOperation::LOAD_OP_CLEAR;
+            attchmentDescList[0].sampleCount = *RendererSettings::sampleCount;
+            attchmentDescList[0].stencilLoadOp = LoadOperation::LOAD_OP_DONT_CARE;
+            attchmentDescList[0].stencilLStoreOp = StoreOperation::STORE_OP_DONT_CARE;
+            attchmentDescList[0].storeOp = StoreOperation::STORE_OP_STORE;
+
+            attchmentDescList[1].finalLayout = ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            attchmentDescList[1].format = bestDepthFormat;
+            attchmentDescList[1].initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+            attchmentDescList[1].loadOp = LoadOperation::LOAD_OP_CLEAR;
+            attchmentDescList[1].sampleCount = *RendererSettings::sampleCount;
+            attchmentDescList[1].stencilLoadOp = LoadOperation::LOAD_OP_DONT_CARE;
+            attchmentDescList[1].stencilLStoreOp = StoreOperation::STORE_OP_DONT_CARE;
+            attchmentDescList[1].storeOp = StoreOperation::STORE_OP_DONT_CARE;
+
+            AttachmentRef colorAttachmentRef;
+            colorAttachmentRef.index = 0;
+            colorAttachmentRef.layoutInSubPass = ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            AttachmentRef depthAttachmentRef;
+            depthAttachmentRef.index = 1;
+            depthAttachmentRef.layoutInSubPass = ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            SubpassInfo subpassInfo;
+            subpassInfo.colorAttachmentCount = 1;
+            subpassInfo.inputAttachmentCount = 0;
+            subpassInfo.pColorAttachments = &colorAttachmentRef;
+            subpassInfo.pDepthStencilAttachment = &depthAttachmentRef;
+            subpassInfo.pInputAttachments = nullptr;
+            subpassInfo.pResolveAttachments = nullptr;
+
+            apiInterface->CreateRenderPass(
+                attchmentDescList, 2,
+                &subpassInfo, 1,
+                nullptr, 0,
+                colorPassId
+            );
+
+            uint32_t imagesPerFbo = 2, numFbos = Settings::swapBufferCount;
+            uint32_t* imageIds = new uint32_t[numFbos * imagesPerFbo];
+
+            for (uint32_t i = 0, j = 0; i < numFbos * imagesPerFbo; i++, j++)
+            {
+                imageIds[i++] = defaultRenderTargetList[j];
+                imageIds[i] = defaultDepthTargetList[j];
+            }
+
+            colorPassFbo.resize(numFbos);
+            apiInterface->CreateFrameBuffer(numFbos, imageIds, imagesPerFbo, colorPassId,
+                Settings::windowWidth, Settings::windowHeight, &colorPassFbo[0]);
+
+            delete[] imageIds;
+        }
+
+        // depth pre pass
+        {
+            RenderPassAttachmentInfo depthPrepassAttchmentDescList[1];
+            depthPrepassAttchmentDescList[0].finalLayout = ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            depthPrepassAttchmentDescList[0].format = bestDepthFormat;
+            depthPrepassAttchmentDescList[0].initialLayout = ImageLayout::LAYOUT_UNDEFINED;
+            depthPrepassAttchmentDescList[0].loadOp = LoadOperation::LOAD_OP_CLEAR;
+            depthPrepassAttchmentDescList[0].sampleCount = Samples::SAMPLE_COUNT_1_BIT;
+            depthPrepassAttchmentDescList[0].stencilLoadOp = LoadOperation::LOAD_OP_DONT_CARE;
+            depthPrepassAttchmentDescList[0].stencilLStoreOp = StoreOperation::STORE_OP_DONT_CARE;
+            depthPrepassAttchmentDescList[0].storeOp = StoreOperation::STORE_OP_STORE;
+
+            AttachmentRef depthPrepassAttachmentRef;
+            depthPrepassAttachmentRef.index = 0;
+            depthPrepassAttachmentRef.layoutInSubPass = ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+            SubpassInfo subpassInfo;
+            subpassInfo.colorAttachmentCount = 0;
+            subpassInfo.inputAttachmentCount = 0;
+            subpassInfo.pColorAttachments = nullptr;
+            subpassInfo.pDepthStencilAttachment = &depthPrepassAttachmentRef;
+            subpassInfo.pInputAttachments = nullptr;
+            subpassInfo.pResolveAttachments = nullptr;
+
+            SubpassDependency dependency[2];
+            dependency[0].srcSubpass = -1;
+            dependency[0].dstSubpass = 0;
+            dependency[0].srcStageMask.push_back(PipelineStage::FRAGMENT_SHADER_BIT);
+            dependency[0].dstStageMask.push_back(PipelineStage::EARLY_FRAGMENT_TESTS_BIT);
+            dependency[0].srcAccessMask.push_back(AccessFlagBits::ACCESS_SHADER_READ_BIT);
+            dependency[0].dstAccessMask.push_back(AccessFlagBits::ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+            dependency[0].dependencyFlags.push_back(DependencyFlagBits::DEPENDENCY_BY_REGION_BIT);
+
+            dependency[1].srcSubpass = 0;
+            dependency[1].dstSubpass = -1;
+            dependency[1].srcStageMask.push_back(PipelineStage::LATE_FRAGMENT_TESTS_BIT);
+            dependency[1].dstStageMask.push_back(PipelineStage::FRAGMENT_SHADER_BIT);
+            dependency[1].srcAccessMask.push_back(AccessFlagBits::ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+            dependency[1].dstAccessMask.push_back(AccessFlagBits::ACCESS_SHADER_READ_BIT);
+            dependency[1].dependencyFlags.push_back(DependencyFlagBits::DEPENDENCY_BY_REGION_BIT);
+
+            apiInterface->CreateRenderPass(
+                &depthPrepassAttchmentDescList[0], 1,
+                &subpassInfo, 1,
+                dependency, 2,
+                depthPrePassId
+            );
+
+            uint32_t imagesPerFbo = 1, numFbos = Settings::swapBufferCount;
+            uint32_t* imageIds = new uint32_t[numFbos * imagesPerFbo];
+
+            for (uint32_t i = 0, j = 0; i < numFbos * imagesPerFbo; i++, j++)
+            {
+                imageIds[i] = depthPrepassDefaultImageIdList[j];
+            }
+
+            depthPassFbo.resize(numFbos);
+            apiInterface->CreateFrameBuffer(numFbos, imageIds, imagesPerFbo, depthPrePassId,
+                RendererSettings::shadowMapWidth, RendererSettings::shadowMapHeight, &depthPassFbo[0]);
+
+            delete[] imageIds;
+        }
+    }
+}
+#endif

@@ -14,7 +14,7 @@ void Renderer::Windowing::WindowManager::Init()
 
 void Renderer::Windowing::WindowManager::DeInit()
 {
-    PLOGD << "Graphics manager DeInit";
+    PLOGD << "Window manager DeInit";
     DeInitOSWindow();
 }
 

@@ -3,11 +3,17 @@
 #include <map>
 #include <string>
 #include "ComponentMask.h"
+#include <functional>
 
 namespace Core
 {
     namespace ECS
     {
+        namespace Components
+        {
+            class Camera;
+        }
+
         template<typename ComponentType>
         class ComponentManager;
 
@@ -28,6 +34,7 @@ namespace Core
 
             std::vector<Core::ECS::BaseComponentManager*> managerList;
             std::vector<System*> systemList;
+            System* camSystem;
 
             std::map<Entity*, ComponentMask> entityMasks;
 
@@ -43,6 +50,7 @@ namespace Core
             EntityHandle* CreateEntity(const std::string& name);
 
             EntityHandle* const FindEntity(const std::string& name);
+            const std::vector<Entity*>& GetEntityList();
 
             template<typename ComponentType>
             void AddComponent(ComponentType* componentType, Entity* entityObj);
@@ -52,11 +60,20 @@ namespace Core
 
             void UpdateEntityMask(Entity* entity, ComponentMask oldMask);
 
+            void AddSystem(System* system, COMPONENT_TYPE componentType);
+
             template<typename ComponentType>
             Core::ECS::ComponentManager<ComponentType>* CreateManager();
 
-            void AddSystem(System* system);
+            /// Run a task for all the components of ComponentType
+            template<typename ComponentType>
+            void RunTask(std::function<void(ComponentType* componentType)> lambda)
+            {
+                Core::ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
+                manager->iterateAll(lambda);
+            }
 
+            
             template<typename ComponentType, typename... Args>
             void Unpack(Entity* e, Core::ECS::ComponentHandle<ComponentType>& handle, Core::ECS::ComponentHandle<Args>&... args)
             {
@@ -97,14 +114,13 @@ namespace Core
                 *handle = (manager->GetComponentHandle(e));
             }
 
-
-
             void Update(float dt);
 
             void Render(float dt);
 
             void DeInit();
 
+            void SetMainCamera(uint32_t camComponentId);
         };
     }
 }

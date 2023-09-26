@@ -13,7 +13,7 @@ namespace GfxVk
 
 namespace Core
 {
-    class Settings;
+    class RendererSettings;
     struct WindowSettings;
 }
 
@@ -37,6 +37,11 @@ namespace Renderer
 
         static std::vector<uint32_t> depthPrepassImageId;
         static uint32_t m_shadowMapWidth, m_shadowMapHeight;
+        
+        static uint32_t m_swapBufferCount;
+        static uint32_t m_maxFramesInFlight, m_currentFrameInFlight;
+        static uint32_t m_maxFrameRate;
+        static Core::Enums::Format m_bestDepthFormat;
 
     public:
         friend class RenderingManager;
@@ -51,6 +56,10 @@ namespace Renderer
         static bool IsMsaaEnabled();
         static bool IsSampleRateShadingAvailable();
         static bool IsMultiSamplingAvailable();
+        static const uint32_t& GetMaxFramesInFlightCount();
+        static const uint32_t& GetCurrentFrameIndex();
+        static const uint32_t& GetSwapBufferCount();
+        static const Core::Enums::Format& GetBestDepthFormat();
     };
 
 
@@ -83,7 +92,7 @@ namespace Renderer
         const Core::WindowSettings& m_windowSettings;
 
     public:
-        void Init();
+        void Init(GLFWwindow* window);
         void SetupRenderer();
         void DislogeRenderer();
         void DeInit();

@@ -71,7 +71,7 @@ void Renderer::Windowing::WindowManager::InitOSWindow()
     }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindow = glfwCreateWindow(m_windowSettings.m_windowWidth, m_windowSettings.m_windowHeight, m_windowSettings.m_windowName.c_str(), nullptr, nullptr);
-    //glfwGetFramebufferSize(glfwWindow, (int*)&m_windo, (int*)&Settings::windowHeight);
+    glfwGetFramebufferSize(glfwWindow, (int*)&m_windowSettings.m_windowWidth, (int*)&m_windowSettings.m_windowHeight);
     set_icon(glfwWindow, cur_icon_color);
 }
 

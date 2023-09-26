@@ -1,16 +1,42 @@
 {
-    "Shaders":[
+    "Technique" : [
         {
-            "name": "ColorLighting.frag",
-            "type": "FRAGMENT",
-            "shaderPath": "",
-            "reflPath": ""
+            "name": "low",
+            "lod_min": 10,
+            "lod_max": 20,
+            "shaders":[
+                {
+                    "name": "ColorLighting.frag",
+                    "type": "FRAGMENT",
+                    "shaderPath": "",
+                    "reflPath": ""
+                },
+                {
+                    "name": "PCN_Lighting.vert",
+                    "type": "VERTEX",
+                    "shaderPath": "",
+                    "reflPath": ""
+                }
+            ]
         },
         {
-            "name": "PCN_Lighting.vert",
-            "type": "VERTEX",
-            "shaderPath": "",
-            "reflPath": ""
+            "name": "high",
+            "lod_min": 0,
+            "lod_max": 10,
+            "shaders":[
+                {
+                    "name": "ColorLighting.frag",
+                    "type": "FRAGMENT",
+                    "shaderPath": "",
+                    "reflPath": ""
+                },
+                {
+                    "name": "PCN_Lighting.vert",
+                    "type": "VERTEX",
+                    "shaderPath": "",
+                    "reflPath": ""
+                }
+            ]
         }
     ]
 }

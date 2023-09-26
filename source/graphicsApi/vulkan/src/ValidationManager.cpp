@@ -13,6 +13,7 @@ void GfxVk::Utility::ValidationManager::AddRequiredPlatformInstanceExtensions(st
     {
         instance_extensions->push_back(instance_extensions_buffer[i]);
     }
+
 #elif VK_USE_PLATFORM_WIN32_KHR
     instance_extensions->push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif VK_USE_PLATFORM_XCB_KHR
@@ -112,8 +113,7 @@ void GfxVk::Utility::ValidationManager::InitDebug(VkInstance * vulkanInstance, V
 
     VkDebugReportCallbackCreateInfoEXTObj.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
     VkDebugReportCallbackCreateInfoEXTObj.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT |
-        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT |
-        VK_DEBUG_REPORT_DEBUG_BIT_EXT | 0;
+        VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT | 0;
     VkDebugReportCallbackCreateInfoEXTObj.pfnCallback = debugCallback;
 
     vkCreateDebugReportCallbackEXTObj(*vulkanInstanceRef, &VkDebugReportCallbackCreateInfoEXTObj, pAllocatorRef, &debugReport);

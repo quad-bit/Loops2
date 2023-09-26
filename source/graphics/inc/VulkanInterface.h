@@ -10,6 +10,7 @@ namespace Core
     namespace Utility
     {
         struct ShaderBindingDescription;
+        struct DescriptorSetDescription;
         struct ShaderStateWrapper;
         struct InputAssemblyWrapper;
         struct VertexInputWrapper;
@@ -64,37 +65,6 @@ namespace GfxVk
         class VkDrawCommandBuffer;
     }
 }
-
-//namespace Renderer
-//{
-//    class VulkanInterface
-//    {
-//    private:
-//
-//        //VkAttachmentDescription* UnwrapAttachmentDesc(const Core::Wrappers::RenderPassAttachmentInfo* renderpassAttachmentList, const uint32_t& attachmentCount);
-//        //VkSubpassDescription* UnwrapSubpassDesc(const Core::Wrappers::SubpassInfo* subpassList, const uint32_t& subpassCount);
-//        //VkSubpassDependency* UnwrapSubpassDependency(const Core::Wrappers::SubpassDependency* dependencyList, const uint32_t& dependencyCount);
-//
-//        ////VkImageCreateInfo UnwrapImageInfo(ImageInfo * info);
-//        ////VkImageViewCreateInfo UnwrapImageViewInfo(ImageInfo * info);
-//        //VkCommandBufferUsageFlagBits UnwrapCommandBufferUsage(const Core::Enums::CommandBufferUsage* info);
-//        //VkSubmitInfo* UnwrapSubmitInfo(const Core::Wrappers::SubmitInfo* info);
-//        //VkPipelineStageFlags* UnwrapStageFlags(const Core::Enums::PipelineStage* pipelineStage);
-//        ////deprecated
-//        //VkMemoryPropertyFlags UnwrapMemoryProperty(const Core::Enums::MemoryType* memType);
-//        //VkBufferUsageFlags UnwrapBufferUsageFlags(const Core::Enums::BufferType* type);
-//
-//        //Core::Enums::Format WrapFormat(VkFormat format);
-//        //Core::Enums::ColorSpace WrapColorSpace(VkColorSpaceKHR space);
-//
-//    public:
-//        VulkanInterface();
-//        ~VulkanInterface();
-//
-//        void Init();
-//        void DeInit();
-//    };
-//}
 
 namespace Renderer
 {
@@ -204,7 +174,8 @@ namespace Renderer
             std::vector<Core::Wrappers::SetWrapper*> GetSetsForShaders(const std::vector<std::string>& shaderNames);
             uint32_t CreatePipelineLayout(Core::Wrappers::SetWrapper** setWrapperList, const size_t& numSets);
             std::vector<Core::Wrappers::SetWrapper*>* GetSetWrapperList();
-            void LinkSetBindingToResources(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
+            std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperList();
+            void LinkSetBindingToResources(Core::Utility::DescriptorSetDescription desc, const uint32_t& numDescriptorSets);
 
             bool IsSampleRateShadingAvailable();
             Core::Enums::Samples GetMaxUsableSampleCount();

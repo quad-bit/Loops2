@@ -10,7 +10,7 @@ layout (std140, set = 0, binding = 0) uniform LightView
     vec3 cameraPos;
 } view;
 
-layout(std140, set = 4, binding = 0) uniform Transform
+layout(std140, set = 3, binding = 0) uniform Transform
 {
     mat4 model;
 }transform;

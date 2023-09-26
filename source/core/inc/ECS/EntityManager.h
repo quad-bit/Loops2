@@ -16,6 +16,7 @@ namespace Core
             EntityHandle* CreateEntityHandle(Entity* obj, World* worldObj);
             EntityHandle* const FindEntity(const std::string& name);
             void DestroyEntity(Entity* entity);
+            const std::vector <Entity*>& GetEntityList();
 
             static EntityManager* GetSingleton();
             void Init();

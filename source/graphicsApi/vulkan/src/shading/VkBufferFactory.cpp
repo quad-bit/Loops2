@@ -16,14 +16,12 @@ uint32_t GfxVk::Shading::VkBufferFactory::GetId()
 void GfxVk::Shading::VkBufferFactory::Init()
 {
     PLOGD << "VKBUfferFactory init";
-    //physicalDeviceProps = GfxVk::Utility::VulkanManager::GetInstance()->GetPhysicalDeviceProps();
-    ASSERT_MSG_DEBUG(0, "props need to be initialised");
+    physicalDeviceProps = GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceProps();
 }
 
 void GfxVk::Shading::VkBufferFactory::DeInit()
 {
     PLOGD << "VKBUfferFactory Deinit";
-
 }
 
 void GfxVk::Shading::VkBufferFactory::Update()

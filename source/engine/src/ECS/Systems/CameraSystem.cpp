@@ -8,6 +8,11 @@
 #include <ECS/Events/ComponentAdditionEvent.h>
 #include <Utility/ShaderResourceDescription.h>
 #include <Utility/ResourceAllocationHelper.h>
+#include <ECS/Events/MeshAdditionEvent.h>
+
+#include "shaderResource/UniformFactory.h"
+
+
 /*
 #include "MaterialFactory.h"
 #include "UniformFactory.h"
@@ -15,39 +20,36 @@
 #include "DrawCommandBuffer.h"
 #include "DrawGraphNode.h"
 */
-uint32_t CameraSystem::GeneratedCamId()
+
+uint32_t Engine::ECS::Systems::CameraSystem::GeneratedCamId()
 {
     return idCounter++;
 }
 
-void CameraSystem::Init()
+void Engine::ECS::Systems::CameraSystem::Init()
 {
-    //EventBus::GetInstance()->Subscribe<CameraSystem, CameraAdditionEvent>(this, &CameraSystem::HandleCameraAddition);
-    //EventBus::GetInstance()->Subscribe<CameraSystem, MeshToMatAdditionEvent>(this, &CameraSystem::HandleMeshAddition);
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe<Engine::ECS::Systems::CameraSystem, Core::ECS::Events::CameraAdditionEvent>(this, &Engine::ECS::Systems::CameraSystem::HandleCameraAddition);
+    //Core::ECS::Events::EventBus::GetInstance()->Subscribe<Engine::ECS::Systems::CameraSystem, Core::ECS::Events::MeshToMatAdditionEvent>(this, &Engine::ECS::Systems::CameraSystem::HandleMeshAddition);
 
-    //numDescriptorSetsPerUniformSet = Settings::maxFramesInFlight;
+    numDescriptorSetsPerUniform = Core::Settings::m_maxFramesInFlight;
 
-    //allocConfig.numDescriptorSets = numDescriptorSetsPerUniformSet;// || Settings::maxFramesInFlight;
-    //allocConfig.numMemories = 1; // 1 memory
-    //allocConfig.numResources = 1; //1 buff
+    allocConfig.numDescriptorSets = numDescriptorSetsPerUniform;
+    allocConfig.numMemories = 1; // 1 memory
+    allocConfig.numResources = 1; //1 buff
 
-    //resourceSharingConfig.maxUniformPerResource = 2;
-    //resourceSharingConfig.allocatedUniformCount = 0;
+    resourceSharingConfig.maxUniformPerResource = 2;
+    resourceSharingConfig.allocatedUniformCount = 0;
 
-    //size_t uniformSize = sizeof(CameraUniform);
-    //memoryAlignedUniformSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+    size_t uniformSize = sizeof(Core::ECS::Components::CameraUniform);
+    memoryAlignedUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
-void CameraSystem::DeInit()
+void Engine::ECS::Systems::CameraSystem::DeInit()
 {
-    //for (uint32_t i = 0; i < resDescriptionList.size(); i++)
-    //{
-    //    delete resDescriptionList[i];
-    //}
-    //resDescriptionList.clear();
+    resDescriptionList.clear();
 }
 
-void CameraSystem::Update(float dt)
+void Engine::ECS::Systems::CameraSystem::Update(float dt)
 {
     //for (auto & entity : registeredEntities)
     //{
@@ -64,7 +66,7 @@ void CameraSystem::Update(float dt)
     //    ShaderBindingDescription * desc = camToDescriptionMap[camHandle->GetComponent()];
     //    //upload data to buffers
     //    {
-    //        UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
+    //        UniFactAlias::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
     //            memoryAlignedUniformSize, memoryAlignedUniformSize, &obj, 
     //            desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
     //    }
@@ -73,90 +75,90 @@ void CameraSystem::Update(float dt)
     //}
 }
 
-/*
-void CameraSystem::HandleCameraAddition(CameraAdditionEvent * inputEvent)
+
+void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events::CameraAdditionEvent * inputEvent)
 {
     // recieved the camera addition to the scene 
     cameraList.push_back(inputEvent->cam);
     inputEvent->cam->componentId = GeneratedCamId();
 
-    ShaderBindingDescription * desc = new ShaderBindingDescription;
-    desc->set = (uint32_t)ResourceSets::CAMERA;
-    desc->binding = 0;
-    desc->numElements = 3;
-    desc->resourceName = "View";
-    desc->resourceType = DescriptorType::UNIFORM_BUFFER;
+    Core::Utility::BufferBindingInfo bufInfo{};
+    bufInfo.info.allocationConfig = allocConfig;
+    bufInfo.info.dataSizePerDescriptor = sizeof(Core::ECS::Components::CameraUniform);
+    bufInfo.info.dataSizePerDescriptorAligned = memoryAlignedUniformSize;
+    bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
+    bufInfo.info.sharingConfig = resourceSharingConfig;
+    bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
 
-    desc->bufferBindingInfo.bufferIdList.resize(allocConfig.numResources);
-    desc->bufferBindingInfo.bufferMemoryId.resize(allocConfig.numMemories);
+    Core::Utility::DescriptorSetBindingDescription bindingDescription;
+    bindingDescription.m_bindingName = "View";
+    bindingDescription.m_bindingNumber = 0;
+    bindingDescription.m_numElements = 3;
+    bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+    bindingDescription.m_bindingInfo = bufInfo;
 
-    desc->bufferBindingInfo.info.dataSizePerDescriptorAligned = memoryAlignedUniformSize;
-    desc->bufferBindingInfo.info.dataSizePerDescriptor = sizeof(CameraUniform);
-    //desc->uniformId = inputEvent->cam->componentId; // as one cam = one uniform
-    desc->bufferBindingInfo.info.offsetsForEachDescriptor = AllocationUtility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
-    desc->bufferBindingInfo.info.allocationConfig = allocConfig;
+    Core::Utility::DescriptorSetDescription setDescription;
+    setDescription.m_numBindings = 1;
+    setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::CAMERA;
+    setDescription.m_setBindings.push_back(bindingDescription);
 
     // Check if it can be fit into an existing buffer
-    if (AllocationUtility::IsNewAllocationRequired(resourceSharingConfig))
+    if (Core::Utility::IsNewAllocationRequired(resourceSharingConfig))
     {
-        size_t totalSize = AllocationUtility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
         // True : Allocate new buffer
-        cameraSetWrapper = UniformFactory::GetInstance()->AllocateSetResource(desc, &totalSize,  1, AllocationMethod::LAZY);
+        cameraSetWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
     }
     else
     {
         // False : Assign the buffer id to this shaderResourceDescription
         // below logic works because we are using just one buffer for sharing/storage purpose
-        desc->bufferBindingInfo.bufferIdList[0] = resDescriptionList[resDescriptionList.size() - 1]->bufferBindingInfo.bufferIdList[0];
-        desc->bufferBindingInfo.bufferMemoryId[0] = resDescriptionList[resDescriptionList.size() - 1]->bufferBindingInfo.bufferMemoryId[0];
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0];
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0];
     }
 
-    resDescriptionList.push_back(desc);
     resourceSharingConfig.allocatedUniformCount += 1;
 
-    CameraUniform obj = {};
+    Core::ECS::Components::CameraUniform obj = {};
     obj.projectionMat = inputEvent->cam->GetProjectionMat();
     obj.viewMat = inputEvent->cam->GetViewMatrix();
     obj.cameraPos = *inputEvent->cam->GetPosition();
 
-    uint32_t bufferId;
 
     //upload data to buffers
     for(uint32_t i = 0; i < allocConfig.numDescriptorSets; i++)
     {
-        if (allocConfig.numDescriptorSets != desc->bufferBindingInfo.bufferIdList.size())
-        {
-            bufferId = desc->bufferBindingInfo.bufferIdList[0];
-        }
+        uint32_t bufferId = 0;
+        if (allocConfig.numDescriptorSets != std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList.size())
+            bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0];
         else
-            bufferId = desc->bufferBindingInfo.bufferIdList[i];
+            bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[i];
 
-        UniformFactory::GetInstance()->UploadDataToBuffers(bufferId,
-            sizeof(CameraUniform), memoryAlignedUniformSize, &obj, 
-            desc->bufferBindingInfo.info.offsetsForEachDescriptor[i], false);
+        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId,
+            sizeof(Core::ECS::Components::CameraUniform), memoryAlignedUniformSize, &obj, 
+            std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[i], false);
     }
 
-    UniformFactory::GetInstance()->AllocateDescriptorSet(cameraSetWrapper, desc, 1, allocConfig.numDescriptorSets);
+    UniFactAlias::GetInstance()->AllocateDescriptorSets(cameraSetWrapper, setDescription, allocConfig.numDescriptorSets);
 
-    camToDescriptionMap.insert(std::pair<Camera *, ShaderBindingDescription *>(
-    { inputEvent->cam , desc}));
+    resDescriptionList.push_back(setDescription);
 
-    // draw graph node creation
-    // top level node as its Set 0
-    DrawGraphNode * cameraNode = new CameraDrawNode();
-    cameraNode->meshList = MaterialFactory::GetInstance()->GetMeshList(cameraSetWrapper, 1);
-    cameraNode->setLevel = cameraSetWrapper->setValue;
-    cameraNode->tag = RenderPassTag::ColorPass;
-    cameraNode->setWrapperList.push_back(cameraSetWrapper);
-    ((CameraDrawNode*)cameraNode)->descriptorIds = desc->descriptorSetIds;
+    camToDescriptionMap.insert(std::pair<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetDescription>(
+    { inputEvent->cam , setDescription}));
 
-    GraphNode<DrawGraphNode> * graphNode = new GraphNode<DrawGraphNode>(cameraNode);
-    cameraGraphNodeList.push_back(graphNode);
-
-    DrawGraphManager::GetInstance()->AddNode(graphNode);
 }
 
-GraphNode<DrawGraphNode>* CameraSystem::HandleCameraAddition(Camera * camera, const RenderPassTag & tag)
+Core::Utility::GlobalResourceAllocationConfig Engine::ECS::Systems::CameraSystem::GetAllocConfig() const
+{
+    return allocConfig;
+}
+
+Core::Utility::GlobalResourceSharingConfig Engine::ECS::Systems::CameraSystem::GetResourceSharingConfig() const
+{
+    return resourceSharingConfig;
+}
+
+/*
+GraphNode<DrawGraphNode>* Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Camera * camera, const RenderPassTag & tag)
 {
     // recieved the camera addition to the scene 
     cameraList.push_back(camera);
@@ -180,7 +182,7 @@ GraphNode<DrawGraphNode>* CameraSystem::HandleCameraAddition(Camera * camera, co
     {
         size_t totalSize = AllocationUtility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
         // True : Allocate new buffer
-        cameraSetWrapper = UniformFactory::GetInstance()->AllocateSetResource(desc, &totalSize, 1, AllocationMethod::LAZY);
+        cameraSetWrapper = UniFactAlias::GetInstance()->AllocateSetResource(desc, &totalSize, 1, AllocationMethod::LAZY);
     }
     else
     {
@@ -200,12 +202,12 @@ GraphNode<DrawGraphNode>* CameraSystem::HandleCameraAddition(Camera * camera, co
     //upload data to buffers
     for (uint32_t i = 0; i < allocConfig.numDescriptorSets; i++)
     {
-        UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
+        UniFactAlias::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
             sizeof(CameraUniform), memoryAlignedUniformSize, &obj,
             desc->bufferBindingInfo.info.offsetsForEachDescriptor[i], false);
     }
 
-    UniformFactory::GetInstance()->AllocateDescriptorSet(cameraSetWrapper, desc, 1, allocConfig.numDescriptorSets);
+    UniFactAlias::GetInstance()->AllocateDescriptorSet(cameraSetWrapper, desc, 1, allocConfig.numDescriptorSets);
 
     camToDescriptionMap.insert(std::pair<Camera *, ShaderBindingDescription *>(
     { camera , desc }));
@@ -226,7 +228,7 @@ GraphNode<DrawGraphNode>* CameraSystem::HandleCameraAddition(Camera * camera, co
     return graphNode;
 }
 
-void CameraSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent)
+void Engine::ECS::Systems::CameraSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent)
 {
     uint32_t setCount = (uint32_t)meshAdditionEvent->setWrapperList.size();
     for (uint32_t k = 0; k < cameraGraphNodeList.size(); k++)
@@ -248,17 +250,23 @@ void CameraSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent
     }
 }
 */
-CameraSystem::CameraSystem()
+
+Engine::ECS::Systems::CameraSystem::CameraSystem()
 {
     signature.AddComponent<Core::ECS::Components::Camera>();
     signature.AddComponent<Core::ECS::Components::Transform>();
 }
 
-CameraSystem::~CameraSystem()
+Engine::ECS::Systems::CameraSystem::~CameraSystem()
 {
 }
 
-void CameraSystem::ProcessKeyboard(Core::ECS::Components::Camera * cam, glm::vec3 * camTransformPos, Core::ECS::Components::Camera_Movement * direction, float deltaTime)
+void Engine::ECS::Systems::CameraSystem::SetMainCamera(uint32_t componentId)
+{
+    mainCameraId = componentId;
+}
+
+void Engine::ECS::Systems::CameraSystem::ProcessKeyboard(Core::ECS::Components::Camera * cam, glm::vec3 * camTransformPos, Core::ECS::Components::Camera_Movement * direction, float deltaTime)
 {
     float velocity = cam->GetMovementSpeed()* deltaTime;
 
@@ -283,7 +291,7 @@ void CameraSystem::ProcessKeyboard(Core::ECS::Components::Camera * cam, glm::vec
     }
 }
 
-void CameraSystem::ProcessMouseMovement(Core::ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch)
+void Engine::ECS::Systems::CameraSystem::ProcessMouseMovement(Core::ECS::Components::Camera * cam, float xOffset, float yOffset, bool constrainPitch)
 {
     xOffset *= cam->GetMouseSensitivity();
     yOffset *= cam->GetMouseSensitivity();
@@ -310,7 +318,7 @@ void CameraSystem::ProcessMouseMovement(Core::ECS::Components::Camera * cam, flo
     UpdateCameraVectors(cam);
 }
 
-void CameraSystem::UpdateCameraVectors(Core::ECS::Components::Camera * cam)
+void Engine::ECS::Systems::CameraSystem::UpdateCameraVectors(Core::ECS::Components::Camera * cam)
 {
     // Calculate the new Front vector
     glm::vec3 front;

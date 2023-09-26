@@ -7,12 +7,13 @@
 #include "CorePrecompiled.h"
 //using namespace std;
 
-class EntityMap;
-class Entity;
 namespace Core
 {
     namespace ECS
     {
+        class EntityMap;
+        class Entity;
+
         template <typename ComponentType>
         class ComponentHandle;
 
@@ -90,7 +91,7 @@ inline Core::ECS::ComponentManager<ComponentType>::~ComponentManager()
 }
 
 template<typename ComponentType>
-inline Core::ECS::ComponentIndex Core::ECS::ComponentManager<ComponentType>::AddComponent(ComponentType * componentType, Entity * entity)
+inline Core::ECS::ComponentIndex Core::ECS::ComponentManager<ComponentType>::AddComponent(ComponentType * componentType, Core::ECS::Entity * entity)
 {
     Core::ECS::ComponentIndex ind = componentDataObj.size;
     componentDataObj.data->at(ind) = componentType;
@@ -114,7 +115,7 @@ inline Core::ECS::ComponentIndex Core::ECS::ComponentManager<Core::ECS::Componen
 }
 
 template<typename ComponentType>
-inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Entity * e)
+inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Core::ECS::Entity * e)
 {
     Core::ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(e);
     Core::ECS::ComponentIndex lastIndex = componentDataObj.size - 1;
@@ -130,14 +131,14 @@ inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Entity *
 }
 
 template<typename ComponentType>
-inline ComponentType* Core::ECS::ComponentManager<ComponentType>::GetComponent(Entity * entity)
+inline ComponentType* Core::ECS::ComponentManager<ComponentType>::GetComponent(Core::ECS::Entity * entity)
 {
     Core::ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
     return componentDataObj.data->at(ind);
 }
 
 template<typename ComponentType>
-inline Core::ECS::ComponentHandle<ComponentType>* Core::ECS::ComponentManager<ComponentType>::GetComponentHandle(Entity * entity)
+inline Core::ECS::ComponentHandle<ComponentType>* Core::ECS::ComponentManager<ComponentType>::GetComponentHandle(Core::ECS::Entity * entity)
 {
     Core::ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(entity);
     Core::ECS::ComponentHandle<ComponentType>* handle = new Core::ECS::ComponentHandle<ComponentType>(this, entity, ind);

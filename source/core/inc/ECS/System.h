@@ -46,6 +46,11 @@ namespace Core
             // This entity has stopped fitting our current requirements
             virtual void UnRegisterEntity(Entity* entity);
             ComponentMask GetSignature() { return signature; }
+
+            const std::vector<Entity*>& GetRegisteredEntities() const
+            {
+                return registeredEntities;
+            }
         };
     }
 }

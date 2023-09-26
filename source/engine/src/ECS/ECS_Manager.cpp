@@ -34,20 +34,20 @@ void Engine::ECS_Manager::Init()
     lightManager = worldObj->CreateManager<Core::ECS::Components::Light>();
 
     scriptableSystemObj = new ScriptableSystem();
-    worldObj->AddSystem(scriptableSystemObj);
+    worldObj->AddSystem(scriptableSystemObj, Core::ECS::COMPONENT_TYPE::SCRIPTABLE);
 
     transformSystemObj = new TransformSystem();
-    worldObj->AddSystem(transformSystemObj);
+    worldObj->AddSystem(transformSystemObj, Core::ECS::COMPONENT_TYPE::TRANSFORM);
 
-    cameraSystemObj = new CameraSystem();
-    worldObj->AddSystem(cameraSystemObj);
+    cameraSystemObj = new Engine::ECS::Systems::CameraSystem();
+    worldObj->AddSystem(cameraSystemObj, Core::ECS::COMPONENT_TYPE::CAMERA);
 
     meshRendererSystem = new MeshRendererSystem();
-    worldObj->AddSystem(meshRendererSystem);
+    worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
 
     lightSystem = new LightSystem();
-    worldObj->AddSystem(lightSystem);
-    ((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
+    worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
+    //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
 
     worldObj->Init();
 }
@@ -78,6 +78,19 @@ void Engine::ECS_Manager::Update(float dt)
 void Engine::ECS_Manager::Render(float dt)
 {
     worldObj->Render(dt);
+}
+
+void Engine::ECS_Manager::PrepareRenderData(Core::Utility::RenderData& renderData)
+{
+
+}
+
+void Engine::ECS_Manager::CreateSceneResources()
+{
+    // Create uniform data
+    // CameraSystem
+
+
 }
 
 Engine::ECS_Manager * Engine::ECS_Manager::GetInstance()

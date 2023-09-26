@@ -608,6 +608,20 @@ namespace Core
             DYNAMIC_STATE_MAX_ENUM = 0x7FFFFFFF
         };
 
+        enum ResourceSets
+        {
+            CAMERA = 0,
+            LIGHT = 1,
+            SURFACE = 3, //Left 2 for future use
+            TRANSFORM = 4
+        };
+
+        enum class RenderLayers
+        {
+            // OPAQUE, TRANSPARENT are defines in some core windows header file
+            OPAQUE_LR,
+            TRANSPARENT_LR
+        };
     }
 
     namespace Wrappers
@@ -646,7 +660,6 @@ namespace Core
             float lengthX;
             float lengthY;
         };
-
 
         #if (RENDERING_API == VULKAN)
 
@@ -968,16 +981,16 @@ namespace Core
             {
                 Core::Enums::PipelineStates state = Core::Enums::PipelineStates::DynamicState;
 
-                uint32_t                           dynamicStateCount;
-                const Core::Enums::DynamicState*                pDynamicStates;
+                uint32_t                            dynamicStateCount;
+                const Core::Enums::DynamicState*    pDynamicStates;
             };
 
    
             struct DescriptorSetLayoutBinding 
             {
-                uint32_t              binding;
-                Core::Enums::DescriptorType        descriptorType;
-                uint32_t              descriptorCount;
+                uint32_t                            binding;
+                Core::Enums::DescriptorType         descriptorType;
+                uint32_t                            descriptorCount;
                 std::vector<Core::Enums::ShaderType> stageFlags;
                 //const VkSampler*      pImmutableSamplers;
             };
@@ -1004,8 +1017,10 @@ namespace Core
                 uint32_t setValue; // this is not unique as another layout can be created for the same set number
                 std::vector<BindingWrapper> bindingWrapperList;
                 std::vector<std::string> shaderNames;
+                std::string effectName;
                 std::vector<Core::Enums::ShaderType> shaderFlags;
                 uint32_t descriptorSetLayoutId;
+
                 //uint32_t descriptorSetId;
             };
 

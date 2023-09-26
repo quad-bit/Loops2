@@ -3,7 +3,8 @@ GROUP_SOURCE_FILES(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SourceList
     inc/EngineManager.h
-    inc/SceneManager.h
+    inc/ECS/SceneManager.h
+    inc/ECS/SceneGraphManager.h
     inc/ECS/ECS_Manager.h
     inc/ECS/Systems/CameraSystem.h
     inc/ECS/Systems/LightSystem.h
@@ -11,7 +12,8 @@ set(SourceList
     inc/ECS/Systems/ScriptableSystem.h
     inc/ECS/Systems/TransformSystem.h
     src/EngineManager.cpp
-    src/SceneManager.cpp
+    src/ECS/SceneManager.cpp
+    src/ECS/SceneGraphManager.cpp
     src/ECS/ECS_Manager.cpp
     src/ECS/Systems/CameraSystem.cpp
     src/ECS/Systems/LightSystem.cpp

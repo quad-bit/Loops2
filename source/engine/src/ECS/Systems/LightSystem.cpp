@@ -12,7 +12,7 @@
 
 //#include "MaterialFactory.h"
 //#include "DrawGraphManager.h"
-//#include "UniformFactory.h"
+#include "shaderResource/UniformFactory.h"
 //#include "GraphicsPipelineManager.h"
 
 
@@ -135,34 +135,30 @@ void LightSystem::CreateShadowMap(Core::Utility::ShaderBindingDescription * desc
 
 void LightSystem::Init()
 {
-#if 0
-    EventBus::GetInstance()->Subscribe<LightSystem, LightAdditionEvent>(this, &LightSystem::HandleLightAddition);
-    EventBus::GetInstance()->Subscribe<LightSystem, MeshToMatAdditionEvent>(this, &LightSystem::HandleMeshAddition);
-    EventBus::GetInstance()->Subscribe<LightSystem, MeshRendererAdditionEvent>(this, &LightSystem::HandleRendererAddition);
 
-    lightUniformAllocConfig.numDescriptorSets = Settings::swapBufferCount;
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe<LightSystem, Core::ECS::Events::LightAdditionEvent>(this, &LightSystem::HandleLightAddition);
+    //Core::ECS::Events::EventBus::GetInstance()->Subscribe<LightSystem, Core::ECS::Events::MeshToMatAdditionEvent>(this, &LightSystem::HandleMeshAddition);
+    //Core::ECS::Events::EventBus::GetInstance()->Subscribe<LightSystem, Core::ECS::Events::MeshRendererAdditionEvent>(this, &LightSystem::HandleRendererAddition);
+
+    lightUniformAllocConfig.numDescriptorSets = Core::Settings::m_maxFramesInFlight;
     lightUniformAllocConfig.numMemories = 1;
     lightUniformAllocConfig.numResources = 1;
 
-    shadowMapUniformAllocConfig.numDescriptorSets = Settings::swapBufferCount;
+    /*shadowMapUniformAllocConfig.numDescriptorSets = Settings::swapBufferCount;
     shadowMapUniformAllocConfig.numMemories = 1;
-    shadowMapUniformAllocConfig.numResources = 1;
+    shadowMapUniformAllocConfig.numResources = 1;*/
 
     lightBufferSharingConfig.maxUniformPerResource = 1;
     lightBufferSharingConfig.allocatedUniformCount = 0;
 
-    size_t uniformSize = sizeof(LightUniform);
-    memoryAlignedUniformSize = UniformFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
-#endif
+    size_t uniformSize = sizeof(Core::ECS::Components::LightUniform);
+    memoryAlignedUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+
 }
 
 void LightSystem::DeInit()
 {
-    for (uint32_t i = 0; i < resDescriptionList.size(); i++)
-    {
-        delete [] resDescriptionList[i];
-    }
-    resDescriptionList.clear();
+
 }
 
 void LightSystem::Update(float dt)
@@ -202,59 +198,85 @@ void LightSystem::Update(float dt)
 #endif
 }
 
-#if 0
-void LightSystem::HandleLightAddition(LightAdditionEvent * lightAdditionEvent)
+void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * lightAdditionEvent)
 {
     Core::ECS::Components::Light* light = lightAdditionEvent->light;
 
     lightlist.push_back(light);
     light->componentId = GeneratedLightId();
     
-    const uint32_t numBindingsInSet = 2; // Light + shadowMap
+    Core::Utility::BufferBindingInfo bufInfo{};
+    bufInfo.info.allocationConfig = lightUniformAllocConfig;
+    bufInfo.info.dataSizePerDescriptor = sizeof(Core::ECS::Components::LightUniform);
+    bufInfo.info.dataSizePerDescriptorAligned = memoryAlignedUniformSize;
+    bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, lightUniformAllocConfig, lightBufferSharingConfig);
+    bufInfo.info.sharingConfig = lightBufferSharingConfig;
+    bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, lightUniformAllocConfig, lightBufferSharingConfig);
 
-    ShaderBindingDescription * desc = new ShaderBindingDescription[numBindingsInSet];
+    Core::Utility::DescriptorSetBindingDescription bindingDescription;
+    bindingDescription.m_bindingName = "Lights";
+    bindingDescription.m_bindingNumber = 0;
+    bindingDescription.m_numElements = 7;
+    bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+    bindingDescription.m_bindingInfo = bufInfo;
 
-    CreateLightUniformDescription(&desc[0], light);
-    CreateShadowMap(&desc[1]);
-    Core::ECS::Components::Camera * cam = CreateLightCamera(light->GetTransform());
+    Core::Utility::DescriptorSetDescription setDescription;
+    setDescription.m_numBindings = 1;
+    setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::LIGHT;
+    setDescription.m_setBindings.push_back(bindingDescription);
 
-    lightToCamList.insert(std::pair<Core::ECS::Components::Light*, Core::ECS::Components::Camera*>({light, cam}));
-
-    lightSetWrapper = UniformFactory::GetInstance()->GetSetWrapper(desc, numBindingsInSet);
-    CreateLightUniformBuffer(&desc[0], light, cam);
-    
-    // not creating shadow map image as its the depth attachment from depth pass, already created
-    // hence depth image view needs to plugged into the descriptor write
-
-    UniformFactory::GetInstance()->AllocateDescriptorSet(lightSetWrapper, desc, 
-        numBindingsInSet, lightUniformAllocConfig.numDescriptorSets);
-
-    // Create sampler 
-    // Get the image id
-    // Get the View id
-    
+    // Check if it can be fit into an existing buffer
+    if (Core::Utility::IsNewAllocationRequired(lightBufferSharingConfig))
     {
-        lightToDescriptionMap.insert(std::pair<Core::ECS::Components::Light *, ShaderBindingDescription *>(
-        { light, desc }));
+        // True : Allocate new buffer
+        lightSetWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
+    }
+    else
+    {
+        // False : Assign the buffer id to this shaderResourceDescription
+        // below logic works because we are using just one buffer for sharing/storage purpose
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0];
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0];
+    }
 
-        // draw graph node creation
-        // top level node as its Set 0
-        DrawGraphNode * lightNode = new LightDrawNode();
-        lightNode->meshList = MaterialFactory::GetInstance()->GetMeshList(lightSetWrapper, 1);
-        lightNode->setLevel = lightSetWrapper->setValue;
-        lightNode->setWrapperList.push_back(lightSetWrapper);
-        lightNode->tag = RenderPassTag::ColorPass;
+    lightBufferSharingConfig.allocatedUniformCount += 1;
 
-        ((LightDrawNode*)lightNode)->descriptorIds = desc->descriptorSetIds;
+    Core::ECS::Components::LightUniform obj = {};
+    obj.ambient = Vec3ToVec4_0(light->GetAmbient());
+    obj.diffuse = Vec3ToVec4_0(light->GetDiffuse());
+    obj.specular = Vec3ToVec4_0(light->GetSpecular());
+    obj.lightPos = Vec3ToVec4_0(light->GetTransform()->GetGlobalPosition());
+    obj.lightDir = Vec3ToVec4_0(light->GetTransform()->GetForward());
+    obj.beamHeight = light->GetBeamHeight();
+    obj.beamRadius = light->GetBeamRadius();
 
-        GraphNode<DrawGraphNode> * graphNode = new GraphNode<DrawGraphNode>(lightNode);
-        lightGraphNodeList.push_back(graphNode);
+    //obj.lightSpaceMat = glm::mat4{}; //cam->GetProjectionMat() * cam->GetViewMatrix();
 
-        DrawGraphManager::GetInstance()->AddNode(graphNode);
+    //upload data to buffers
+    for (uint32_t i = 0; i < lightUniformAllocConfig.numDescriptorSets; i++)
+    {
+        uint32_t bufferId = 0;
+        if (lightUniformAllocConfig.numDescriptorSets != std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList.size())
+            bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0];
+        else
+            bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[i];
+
+        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId,
+            sizeof(Core::ECS::Components::LightUniform), memoryAlignedUniformSize, &obj,
+            std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[i], false);
+    }
+
+    UniFactAlias::GetInstance()->AllocateDescriptorSets(lightSetWrapper, setDescription, lightUniformAllocConfig.numDescriptorSets);
+
+    resDescriptionList.push_back(setDescription);
+
+    {
+        lightToDescriptionMap.insert(std::pair<Core::ECS::Components::Light *, Core::Utility::DescriptorSetDescription>(
+        { light, setDescription }));
     }
 }
 
-
+#if 0
 void LightSystem::HandleMeshAddition(MeshToMatAdditionEvent * meshAdditionEvent)
 {
     uint32_t setCount = (uint32_t)meshAdditionEvent->setWrapperList.size();

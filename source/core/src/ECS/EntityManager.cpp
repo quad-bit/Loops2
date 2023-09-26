@@ -101,3 +101,8 @@ void Core::ECS::EntityManager::DestroyEntity(Core::ECS::Entity * entity)
 
 	entityHandleList.erase(entityHandleList.begin() + pos);
 }
+
+const std::vector<Core::ECS::Entity*>& Core::ECS::EntityManager::GetEntityList()
+{
+    return entityList;
+}

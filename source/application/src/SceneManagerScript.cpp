@@ -26,9 +26,11 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
 
     Core::ECS::Components::Camera * camera = new Core::ECS::Components::Camera(camHandle0->GetTransform(), 1024.0f/1024.0f);
     camHandle0->AddComponent<Core::ECS::Components::Camera>(camera);
-    
-    cameraController = new CameraController();
-    camHandle0->AddComponent<Core::ECS::Components::Scriptable>(cameraController);
+
+    worldObj->SetMainCamera(camera->componentId);
+
+    //cameraController = new CameraController();
+    //camHandle0->AddComponent<Core::ECS::Components::Scriptable>(cameraController);
 
     playerObject = worldObj->CreateEntity("playerObject");
     ASSERT_MSG_DEBUG(playerObject != nullptr, "Object not found");
@@ -39,7 +41,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     lightHandle = worldObj->CreateEntity("light");
     Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<Core::ECS::Components::Transform>();
     lightTrfHandle->SetLocalPosition(glm::vec3(19, 29, 0));
-    // ligth is using forward
+    // light is using forward
     lightTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(-60.0f), glm::radians(90.0), glm::radians(0.0f)));
 
     lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
@@ -270,10 +272,10 @@ SceneManagerScript::~SceneManagerScript()
     }
 #endif
 
-    lightHandle->RemoveComponent<Core::ECS::Components::Light>(lightComponent);
-    worldObj->DestroyEntity(lightHandle);
+    //lightHandle->RemoveComponent<Core::ECS::Components::Light>(lightComponent);
+    //worldObj->DestroyEntity(lightHandle);
 
-    delete cameraController;
+    //delete cameraController;
     worldObj->DestroyEntity(camHandle0);
 
     /*playerObject->RemoveComponent<Core::ECS::Components::Scriptable>(playerHandlerScript);

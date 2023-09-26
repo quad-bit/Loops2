@@ -1,16 +1,21 @@
 {
-    "Shaders":[
+    "Technique" : [
         {
-            "name": "ShadowMapping.frag",
-            "type": "FRAGMENT",
-            "shaderPath": "",
-            "reflPath": ""
-        },
-        {
-            "name": "ShadowMapping.vert",
-            "type": "VERTEX",
-            "shaderPath": "",
-            "reflPath": ""
+            "name": "shadow",
+            "shaders":[
+                {
+                    "name": "ShadowMapping.frag",
+                    "type": "FRAGMENT",
+                    "shaderPath": "",
+                    "reflPath": ""
+                },
+                {
+                    "name": "ShadowMapping.vert",
+                    "type": "VERTEX",
+                    "shaderPath": "",
+                    "reflPath": ""
+                }
+            ]
         }
     ]
 }

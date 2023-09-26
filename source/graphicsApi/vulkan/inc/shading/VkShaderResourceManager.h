@@ -18,6 +18,21 @@ namespace GfxVk
             std::vector<Core::Wrappers::SetWrapper*> setWrappers;
         };
 
+        struct Technique
+        {
+            std::string techniqueName;
+            uint32_t lodMin, lodMax;
+            std::vector<std::string> m_shaderNames;
+            std::vector<Core::Wrappers::SetWrapper*> m_setWrappers;
+            uint32_t m_pipelineLayoutWrapperId;
+        };
+
+        struct EffectResources
+        {
+            std::string m_effectName;
+            std::vector<Technique> techniqueList;
+        };
+
         struct PipelineLayoutWrapper
         {
             uint32_t id;
@@ -38,34 +53,40 @@ namespace GfxVk
             static VkShaderResourceManager* instance;
             //VkShaderResourceAllocator * resourceAllocator;
 
-            uint32_t bindingIdCounter = 0;
-            uint32_t setWrapperIdCounter = 0;
-            uint32_t setLayoutWrapperIdCounter = 0;
-            uint32_t pipelineLayoutIdCounter = 0;
-            uint32_t vkdescriptorSetIdCounter = 0;
+            uint32_t m_bindingIdCounter = 0;
+            uint32_t m_setWrapperIdCounter = 0;
+            uint32_t m_setLayoutWrapperIdCounter = 0;
+            uint32_t m_pipelineLayoutIdCounter = 0;
+            uint32_t m_vkdescriptorSetIdCounter = 0;
+
             uint32_t GetBindingID();
             uint32_t GetSetLayoutID();
             uint32_t GetPipelineLayoutID();
             uint32_t GetVkDescriptorSetLayoutWrapperID();
             uint32_t GetVkDescriptorSetID();
 
-            void DecrementSetLayoutId() { setWrapperIdCounter--; }
+            void DecrementSetLayoutId() { m_setWrapperIdCounter--; }
 
-            std::vector<Core::Wrappers::SetWrapper*> setWrapperList;
-            std::map< uint32_t, VkDescriptorSetLayout*> idToSetLayoutMap;
-            std::map< uint32_t, VkDescriptorSet> idToSetMap;
-            std::map< uint32_t, uint32_t> descIdToSetValueMap;
-            std::vector<ShaderResources> perShaderResourceList;
-            std::vector<PipelineLayoutWrapper> pipelineLayoutWrapperList;
-            std::vector<VkDescriptorSetLayout> fillerSetLayouts;
+            std::vector<Core::Wrappers::SetWrapper*> m_setWrapperList;
+            //setwrapper id to descriptorSetLayout
+            std::map< uint32_t, VkDescriptorSetLayout*> m_idToSetLayoutMap;
+            std::map< uint32_t, VkDescriptorSet> m_idToSetMap;
+            std::map< uint32_t, uint32_t> m_descIdToSetValueMap;
+            std::vector<ShaderResources> m_perShaderResourceList;
+            std::vector<PipelineLayoutWrapper> m_pipelineLayoutWrapperList;
+            std::vector<VkDescriptorSetLayout> m_fillerSetLayouts;
+            std::vector<EffectResources> m_effectResources;
+            std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>> m_perSetMap;
 
-            VkDescriptorSetLayout fillerSetLayout = VK_NULL_HANDLE;
-            VkDescriptorSet fillerSet = VK_NULL_HANDLE;
+            std::vector<EffectResources> m_perEffectResources;
 
-            std::map< uint32_t, std::vector<int>> pipelineLayoutIdToSetValuesMap;
+            VkDescriptorSetLayout m_fillerSetLayout = VK_NULL_HANDLE;
+            VkDescriptorSet m_fillerSet = VK_NULL_HANDLE;
+
+            std::map< uint32_t, std::vector<int>> m_pipelineLayoutIdToSetValuesMap;
 
             void CreateUniqueSetLayoutWrapper(std::vector<Core::Wrappers::BindingWrapper>& bindingList, std::string shaderName, uint32_t set);
-            void CreateUniqueSetLayoutWrapper(const std::vector<Core::Wrappers::BindingWrapper>& bindingList, const std::vector<std::string>& shaderName, uint32_t set);
+            Core::Wrappers::SetWrapper* CreateUniqueSetLayoutWrapper(const std::vector<Core::Wrappers::BindingWrapper>& bindingList, const std::string& effectName, const std::vector<std::string>& shaderName, uint32_t set);
             void AccumulateSetLayoutPerShader(std::string shaderName, Core::Wrappers::SetWrapper* setWrapper);
 
             VkDescriptorSetLayout* CreateSetLayouts(Core::Wrappers::SetWrapper* setWrapper);
@@ -98,7 +119,11 @@ namespace GfxVk
             uint32_t* AllocateDescriptorSets(Core::Wrappers::SetWrapper* set, const uint32_t& numDescriptors);
             //void LinkSetBindingToResources(ShaderBindingDescription * desc);
             void LinkSetBindingToResources(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
+            void LinkSetBindingToResources(const Core::Utility::DescriptorSetDescription desc, const uint32_t& numDescriptorSets);
             const std::vector<int>* GetSetValuesInPipelineLayout(const uint32_t& pipelineLayoutId);
+            
+            std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperMap();
+
         };
     }
 }

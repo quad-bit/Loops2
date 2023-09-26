@@ -36,7 +36,7 @@ class LightSystem : public Core::ECS::System
 private:
     std::vector<Core::ECS::Components::Light *> lightlist;
     std::map<Core::ECS::Components::Light *, Core::ECS::Components::Camera *> lightToCamList;
-    std::vector<Core::Utility::ShaderBindingDescription *> resDescriptionList;
+    std::vector<Core::Utility::DescriptorSetDescription> resDescriptionList;
     Core::Utility::GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
     Core::Utility::GlobalResourceSharingConfig lightBufferSharingConfig;
 
@@ -47,7 +47,7 @@ private:
 
     //std::vector<GraphNode<DrawGraphNode> *> lightGraphNodeList;
     //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
-    std::map<Core::ECS::Components::Light *, Core::Utility::ShaderBindingDescription *> lightToDescriptionMap;
+    std::map<Core::ECS::Components::Light *, Core::Utility::DescriptorSetDescription> lightToDescriptionMap;
 
     size_t memoryAlignedUniformSize;
     
@@ -64,7 +64,7 @@ public:
     virtual void DeInit() override;
     virtual void Update(float dt) override;
 
-    //void HandleLightAddition(LightAdditionEvent * lightAdditionEvent);
+    void HandleLightAddition(Core::ECS::Events::LightAdditionEvent * lightAdditionEvent);
     //void HandleMeshAddition(MeshToMatAdditionEvent *  meshAdditionEvent);
     //void HandleRendererAddition(MeshRendererAdditionEvent *  rendererAdditionEvent);
     //void HandleDepthPrepassCreation(DepthPassAttachmentCreationEvent * evt);

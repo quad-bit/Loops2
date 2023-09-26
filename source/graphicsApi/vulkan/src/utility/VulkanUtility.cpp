@@ -56,6 +56,11 @@ VkFormat GfxVk::Utility::VulkanDeviceInfo::GetDepthFormat()
     return m_bestDepthFormat;
 }
 
+VkSurfaceKHR GfxVk::Utility::VulkanDeviceInfo::GetSurface()
+{
+    return m_surface;
+}
+
 VkSurfaceFormatKHR GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat()
 {
     return m_surfaceFormat;

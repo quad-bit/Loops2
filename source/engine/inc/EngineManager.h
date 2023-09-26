@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <Settings.h>
+#include <RenderData.h>
 
 namespace Renderer
 {
@@ -24,6 +25,7 @@ namespace Engine
         Renderer::GraphicsManager* m_graphicsMngrObj;
 
         Core::WindowSettings m_windowSettings;
+        Core::Utility::RenderData m_renderData;
 
     public:
         void Init(const std::string& windowName = std::string{ "Test" },
