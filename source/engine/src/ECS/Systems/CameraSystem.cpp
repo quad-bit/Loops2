@@ -10,7 +10,7 @@
 #include <Utility/ResourceAllocationHelper.h>
 #include <ECS/Events/MeshAdditionEvent.h>
 
-#include "shaderResource/UniformFactory.h"
+#include "resourceManagement/UniformFactory.h"
 
 
 /*
@@ -51,28 +51,34 @@ void Engine::ECS::Systems::CameraSystem::DeInit()
 
 void Engine::ECS::Systems::CameraSystem::Update(float dt)
 {
-    //for (auto & entity : registeredEntities)
-    //{
-    //    ComponentHandle<Camera> * camHandle;
-    //    worldObj->Unpack(entity, &camHandle);
+    m_cameraDataList.clear();
+    for (auto & entity : registeredEntities)
+    {
+        Core::ECS::ComponentHandle<Core::ECS::Components::Camera> * camHandle;
+        worldObj->Unpack(entity, &camHandle);
 
-    //    UpdateCameraVectors(camHandle->GetComponent());
+        UpdateCameraVectors(camHandle->GetComponent());
 
-    //    CameraUniform obj = {};
-    //    obj.projectionMat = camHandle->GetComponent()->GetProjectionMat();
-    //    obj.viewMat = camHandle->GetComponent()->GetViewMatrix();
-    //    obj.cameraPos = *camHandle->GetComponent()->GetPosition();
+        Core::ECS::Components::CameraUniform obj = {};
+        obj.projectionMat = camHandle->GetComponent()->GetProjectionMat();
+        obj.viewMat = camHandle->GetComponent()->GetViewMatrix();
+        obj.cameraPos = *camHandle->GetComponent()->GetPosition();
 
-    //    ShaderBindingDescription * desc = camToDescriptionMap[camHandle->GetComponent()];
-    //    //upload data to buffers
-    //    {
-    //        UniFactAlias::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0],
-    //            memoryAlignedUniformSize, memoryAlignedUniformSize, &obj, 
-    //            desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentFrameInFlight], false);
-    //    }
-
-    //    // TODO : write the uniform data of Camera to gpu memory via void*
-    //}
+        Core::Utility::DescriptorSetInfo desc = camToDescriptionMap[camHandle->GetComponent()];
+        //upload data to buffers
+        {
+            UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
+                sizeof(Core::ECS::Components::CameraUniform), memoryAlignedUniformSize, &obj,
+                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
+        }
+        // TODO : write the uniform data of Camera to gpu memory via void*
+        Core::Utility::CameraData data = {};
+        data.m_cameraPosition = obj.cameraPos;
+        data.m_descriptorSetId = desc.m_descriptorSetIds[Core::Settings::m_currentFrameInFlight];
+        data.m_renderLayers = entity->GetEntityLayers();
+        data.m_tag = entity->entityTag;
+        m_cameraDataList.push_back(data);
+    }
 }
 
 
@@ -90,14 +96,14 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
     bufInfo.info.sharingConfig = resourceSharingConfig;
     bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
 
-    Core::Utility::DescriptorSetBindingDescription bindingDescription;
+    Core::Utility::DescriptorSetBindingInfo bindingDescription;
     bindingDescription.m_bindingName = "View";
     bindingDescription.m_bindingNumber = 0;
     bindingDescription.m_numElements = 3;
     bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
     bindingDescription.m_bindingInfo = bufInfo;
 
-    Core::Utility::DescriptorSetDescription setDescription;
+    Core::Utility::DescriptorSetInfo setDescription;
     setDescription.m_numBindings = 1;
     setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::CAMERA;
     setDescription.m_setBindings.push_back(bindingDescription);
@@ -142,7 +148,7 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
 
     resDescriptionList.push_back(setDescription);
 
-    camToDescriptionMap.insert(std::pair<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetDescription>(
+    camToDescriptionMap.insert(std::pair<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetInfo>(
     { inputEvent->cam , setDescription}));
 
 }
@@ -251,7 +257,7 @@ void Engine::ECS::Systems::CameraSystem::HandleMeshAddition(MeshToMatAdditionEve
 }
 */
 
-Engine::ECS::Systems::CameraSystem::CameraSystem()
+Engine::ECS::Systems::CameraSystem::CameraSystem(std::vector<Core::Utility::CameraData>& cameraData) : m_cameraDataList(cameraData)
 {
     signature.AddComponent<Core::ECS::Components::Camera>();
     signature.AddComponent<Core::ECS::Components::Transform>();

@@ -2,7 +2,6 @@
 
 #pragma once
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
-#include "ECS/Components/Shader.h"
 #include <map>
 #include "ECS/Events/EventBus.h"
 #include "Container/BitArray.h"
@@ -118,7 +117,7 @@ namespace Core
 
         struct ShaderStateWrapper : public StateWrapperBase
         {
-            Shader* shader;// one shader equivalent to one shader module
+            Core::Wrappers::ShaderWrapper* shader;// one shader equivalent to one shader module
             uint32_t shaderCount;
             Core::Enums::RenderPassTag tag;
             static uint32_t idCounter;
@@ -150,7 +149,7 @@ namespace Core
 
         struct ShaderResourceStateWrapper : public StateWrapperBase
         {
-            Shader* shader;
+            Core::Wrappers::ShaderWrapper* shader;
             uint32_t shaderCount;
             std::vector<Core::Wrappers::SetWrapper*> resourcesSetList;
             uint32_t pipelineLayoutId;

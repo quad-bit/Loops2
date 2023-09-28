@@ -1,19 +1,19 @@
 #pragma once
-#include "Utility/RenderingWrappers/RenderingWrapper.h"
-#include <string>
-
-class Shader
-{
-public:
-    std::string shaderName;
-    const char * shaderText;
-    Core::Enums::ShaderType shaderType;
-
-    uint32_t shaderId;
-
-
-
-};
+//#include "RenderingWrapper.h"
+//#include <string>
+//
+//class Shader
+//{
+//public:
+//    std::string shaderName;
+//    const char * shaderText;
+//    ShaderType shaderType;
+//
+//    uint32_t shaderId;
+//
+//
+//
+//};
 
 //unity ref
 

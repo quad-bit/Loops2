@@ -8,7 +8,7 @@
 
 namespace Renderer
 {
-    namespace ShaderResource
+    namespace ResourceManagement
     {
         class UniformFactory
         {
@@ -48,11 +48,11 @@ namespace Renderer
 
             ///////// OLD ================
 
-            Core::Wrappers::SetWrapper* AllocateSetResources(const Core::Utility::DescriptorSetDescription& setDescription);
-            void AllocateDescriptorSets(Core::Wrappers::SetWrapper* wrapper, Core::Utility::DescriptorSetDescription& setDescription, const uint32_t& numDescriptorSets);
+            Core::Wrappers::SetWrapper* AllocateSetResources(const Core::Utility::DescriptorSetInfo& setDescription);
+            void AllocateDescriptorSets(Core::Wrappers::SetWrapper* wrapper, Core::Utility::DescriptorSetInfo& setDescription, const uint32_t& numDescriptorSets);
 
             //Core::Wrappers::SetWrapper* GetSetWrapper(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
-            Core::Wrappers::SetWrapper* GetSetWrapper(const Core::Utility::DescriptorSetDescription& setDescription);
+            Core::Wrappers::SetWrapper* GetSetWrapper(const Core::Utility::DescriptorSetInfo& setDescription);
             std::vector<uint32_t> AcquireMeshList(Core::Wrappers::SetWrapper* wrapper);
 
             void UploadDataToBuffers(const uint32_t& bufId, const size_t& dataSize, const size_t& memAlignedSize, void* data, const size_t& memoryOffset, bool keepMemoryMounted);
@@ -66,4 +66,4 @@ namespace Renderer
     }
 }
 
-typedef Renderer::ShaderResource::UniformFactory UniFactAlias;
+typedef Renderer::ResourceManagement::UniformFactory UniFactAlias;

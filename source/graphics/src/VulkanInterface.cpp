@@ -891,7 +891,7 @@ std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* Renderer::Utility:
     return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPerSetSetwrapperMap();
 }
 
-void Renderer::Utility::VulkanInterface::LinkSetBindingToResources(Core::Utility::DescriptorSetDescription desc, const uint32_t & numDescriptorSets)
+void Renderer::Utility::VulkanInterface::LinkSetBindingToResources(Core::Utility::DescriptorSetInfo desc, const uint32_t & numDescriptorSets)
 {
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->LinkSetBindingToResources(desc, numDescriptorSets);
 }

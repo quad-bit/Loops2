@@ -12,7 +12,7 @@
 
 //#include "MaterialFactory.h"
 //#include "DrawGraphManager.h"
-#include "shaderResource/UniformFactory.h"
+#include "resourceManagement/UniformFactory.h"
 //#include "GraphicsPipelineManager.h"
 
 
@@ -163,14 +163,14 @@ void LightSystem::DeInit()
 
 void LightSystem::Update(float dt)
 {
-#if 0
+    m_lightDataList.clear();
     for (auto & entity : registeredEntities)
     {
         Core::ECS::ComponentHandle<Core::ECS::Components::Light> * lightHandle;
         worldObj->Unpack(entity, &lightHandle);
 
         Core::ECS::Components::Light * light = lightHandle->GetComponent();
-        LightUniform obj = {};
+        Core::ECS::Components::LightUniform obj = {};
         obj.ambient = Vec3ToVec4_0(light->GetAmbient());
         obj.diffuse = Vec3ToVec4_0(light->GetDiffuse());
         obj.specular = Vec3ToVec4_0(light->GetSpecular());
@@ -180,22 +180,26 @@ void LightSystem::Update(float dt)
         obj.beamRadius = light->GetBeamRadius();
 
         Core::ECS::Components::Camera * cam = lightToCamList[light];
-        obj.lightSpaceMat = cam->GetProjectionMat() * cam->GetViewMatrix();// *light->GetTransform()->GetLocalModelMatrix();
+        //obj.lightSpaceMat = cam->GetProjectionMat() * cam->GetViewMatrix();// *light->GetTransform()->GetLocalModelMatrix();
 
-        ShaderBindingDescription * desc = lightToDescriptionMap[lightHandle->GetComponent()];
+        Core::Utility::DescriptorSetInfo desc = lightToDescriptionMap[lightHandle->GetComponent()];
 
         //upload data to buffers
         {
             // using swapchainIndex as there are 3 descriptorSets because there are three depth images
 
-            UniformFactory::GetInstance()->UploadDataToBuffers(desc->bufferBindingInfo.bufferIdList[0], sizeof(LightUniform),
-                memoryAlignedUniformSize, &obj, desc->bufferBindingInfo.info.offsetsForEachDescriptor[Settings::currentSwapChainIndex], false);
+            // CHECK THE ABOVE COMMENT, WHEN IMPLEMENTING SHADOWS
+            UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
+                sizeof(Core::ECS::Components::LightUniform), memoryAlignedUniformSize, &obj,
+                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
         
         }
 
-        // TODO : write the uniform data of Camera to gpu memory via void*
+        Core::Utility::LightData data = {};
+        // CHECK THE ABOVE COMMENT, WHEN IMPLEMENTING SHADOWS
+        data.m_descriptorSetId = desc.m_descriptorSetIds[Core::Settings::m_currentFrameInFlight];
+        m_lightDataList.push_back(data);
     }
-#endif
 }
 
 void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * lightAdditionEvent)
@@ -213,14 +217,14 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
     bufInfo.info.sharingConfig = lightBufferSharingConfig;
     bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, lightUniformAllocConfig, lightBufferSharingConfig);
 
-    Core::Utility::DescriptorSetBindingDescription bindingDescription;
+    Core::Utility::DescriptorSetBindingInfo bindingDescription;
     bindingDescription.m_bindingName = "Lights";
     bindingDescription.m_bindingNumber = 0;
     bindingDescription.m_numElements = 7;
     bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
     bindingDescription.m_bindingInfo = bufInfo;
 
-    Core::Utility::DescriptorSetDescription setDescription;
+    Core::Utility::DescriptorSetInfo setDescription;
     setDescription.m_numBindings = 1;
     setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::LIGHT;
     setDescription.m_setBindings.push_back(bindingDescription);
@@ -271,7 +275,7 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
     resDescriptionList.push_back(setDescription);
 
     {
-        lightToDescriptionMap.insert(std::pair<Core::ECS::Components::Light *, Core::Utility::DescriptorSetDescription>(
+        lightToDescriptionMap.insert(std::pair<Core::ECS::Components::Light *, Core::Utility::DescriptorSetInfo>(
         { light, setDescription }));
     }
 }
@@ -346,7 +350,7 @@ void LightSystem::AssignCameraSystem(System * camSystem)
     cameraSystem = camSystem;
 }
 
-LightSystem::LightSystem()
+LightSystem::LightSystem(std::vector<Core::Utility::LightData>& lightData) : m_lightDataList(lightData)
 {
     signature.AddComponent<Core::ECS::Components::Light>();
 }

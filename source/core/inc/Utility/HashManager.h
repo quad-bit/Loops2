@@ -4,7 +4,13 @@
 #include <map>
 #include <vector>
 
-class Shader;
+namespace Core
+{
+    namespace Wrappers
+    {
+        class ShaderWrapper;
+    }
+}
 
 //struct ShaderStateWrapper;
 //struct SetWrapper;
@@ -84,7 +90,7 @@ public:
 
     int FindVertexInputStateHash(Core::Wrappers::VertexInputState * inputInfo, uint32_t stateId);
     int FindInputAssemblyStateHash(Core::Wrappers::InputAssemblyState * inputInfo, uint32_t stateId);
-    int FindShaderStateHash(Shader * inputInfo, const uint32_t & shaderCount,uint32_t stateId, Core::Enums::PipelineStates * state);
+    int FindShaderStateHash(Core::Wrappers::ShaderWrapper* inputInfo, const uint32_t & shaderCount,uint32_t stateId, Core::Enums::PipelineStates * state);
     int FindTessellationStateHash(Core::Wrappers::TessellationState * inputInfo, uint32_t stateId);
     int FindViewportStateHash(Core::Wrappers::ViewportState * inputInfo, uint32_t stateId);
     int FindRasterizationHash(Core::Wrappers::RasterizationState * inputInfo, uint32_t stateId);

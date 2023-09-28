@@ -119,7 +119,7 @@ namespace GfxVk
             uint32_t* AllocateDescriptorSets(Core::Wrappers::SetWrapper* set, const uint32_t& numDescriptors);
             //void LinkSetBindingToResources(ShaderBindingDescription * desc);
             void LinkSetBindingToResources(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
-            void LinkSetBindingToResources(const Core::Utility::DescriptorSetDescription desc, const uint32_t& numDescriptorSets);
+            void LinkSetBindingToResources(const Core::Utility::DescriptorSetInfo desc, const uint32_t& numDescriptorSets);
             const std::vector<int>* GetSetValuesInPipelineLayout(const uint32_t& pipelineLayoutId);
             
             std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperMap();

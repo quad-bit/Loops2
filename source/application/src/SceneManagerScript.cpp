@@ -8,10 +8,12 @@
 #include <ECS/Components/Light.h>
 #include <bitset>
 //#include <AttributeHelper.h>
-//#include <MeshFactory.h>
+#include <resourceManagement/MeshFactory.h>
+#include <resourceManagement/MaterialFactory.h>
 //#include <MaterialFactory.h>
 #include <random>
 #include "Utility/Timer.h"
+#include <Utility/RenderingWrappers/AttributeHelper.h>
 
 #define debugMeshForLight 0
 
@@ -91,15 +93,14 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     floorTrfHandle->SetLocalScale(glm::vec3(200, 200, 1));
     floorTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(90.0), 0, 0));
 
-#if 0
     {
-        std::bitset<(unsigned int)ATTRIBUTES::NUM_ATTRIBUTES> req;
-        req.set((unsigned int)ATTRIBUTES::POSITION);
-        req.set((unsigned int)ATTRIBUTES::COLOR);
-        req.set((unsigned int)ATTRIBUTES::NORMAL);
+        std::bitset<(unsigned int)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> req;
+        req.set((unsigned int)Core::Utility::ATTRIBUTES::POSITION);
+        req.set((unsigned int)Core::Utility::ATTRIBUTES::COLOR);
+        req.set((unsigned int)Core::Utility::ATTRIBUTES::NORMAL);
 
-        PrimtiveType * prim = new PrimtiveType{ PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
-        MeshInfo meshInfo{};
+        Core::Enums::PrimtiveType * prim = new Core::Enums::PrimtiveType{ Core::Enums::PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
+        Core::Wrappers::MeshInfo meshInfo{};
         meshInfo.attribMaskReq = req;
         meshInfo.bufferPerAttribRequired = false;
         meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
@@ -107,25 +108,18 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
         meshInfo.primitive = prim;
         meshInfo.overrideColor = true;
         meshInfo.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-        MESH_TYPE meshType = MESH_TYPE::QUAD;
+        Core::ECS::Components::MESH_TYPE meshType = Core::ECS::Components::MESH_TYPE::QUAD;
 
-        Mesh * mesh = MeshFactory::GetInstance()->CreateMesh(&meshInfo, &meshType);
-        floorHandle->AddComponent<Mesh>(mesh);
+        Core::ECS::Components::Mesh * mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateMesh(&meshInfo, &meshType);
+        floorHandle->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
-        ShaderDescription shaders[2];
-        shaders[0].type = ShaderType::VERTEX;
-        shaders[0].shaderName = "PCN_Lighting.vert";
+        floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(Core::ECS::Components::EffectType::OPAQUE_E);
+        floorHandle->AddComponent<Core::ECS::Components::Material>(floorMat);
 
-        shaders[1].type = ShaderType::FRAGMENT;
-        shaders[1].shaderName = "ColorLighting.frag";
-
-        floorMat = MaterialFactory::GetInstance()->CreateMaterial(shaders, 2, mesh->componentId);
-        floorHandle->AddComponent<Material>(floorMat);
-
-        floorRenderer = new MeshRenderer(mesh, floorMat, floorTrfHandle.GetComponent());
-        floorHandle->AddComponent<MeshRenderer>(floorRenderer);
+        floorRenderer = new Core::ECS::Components::MeshRenderer(mesh, floorMat, floorTrfHandle.GetComponent());
+        floorHandle->AddComponent<Core::ECS::Components::MeshRenderer>(floorRenderer);
     }
-#endif
+
     auto seed = 4;// Timer::GetInstance()->GetSeconds();
     PLOGD << "Seed : " << seed;
     srand( seed );
@@ -254,11 +248,11 @@ SceneManagerScript::~SceneManagerScript()
 
 
     {
-        //Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = floorHandle->GetComponent<Core::ECS::Components::Mesh>();
-        ////MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
-        //mesh.DestroyComponent();
-        //Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = floorHandle->GetComponent<Core::ECS::Components::Material>();
-        //mat.DestroyComponent();
+        Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = floorHandle->GetComponent<Core::ECS::Components::Mesh>();
+        Renderer::ResourceManagement::MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
+        mesh.DestroyComponent();
+        Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = floorHandle->GetComponent<Core::ECS::Components::Material>();
+        mat.DestroyComponent();
     }
     worldObj->DestroyEntity(floorHandle);
 

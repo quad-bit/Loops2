@@ -21,7 +21,7 @@ find_package(plog REQUIRED)
 
 target_link_libraries(${TARGET_NAME} PRIVATE Loops::core)
 # target_link_libraries(${TARGET_NAME} PRIVATE plog)
-# target_link_libraries(${TARGET_NAME} PUBLIC Renderer)
+target_link_libraries(${TARGET_NAME} PUBLIC Loops::renderer)
 target_link_libraries(${TARGET_NAME} PRIVATE Loops::engine)
 
 target_include_directories(${TARGET_NAME}

@@ -34,6 +34,7 @@ namespace Engine
         ECS_Manager const& operator= (ECS_Manager const&) {}
 
         static ECS_Manager* instance;
+        Core::Utility::RenderData m_renderData;
 
     public:
         Core::ECS::ComponentManager<Core::ECS::Components::Transform>* transformManager;
@@ -58,17 +59,7 @@ namespace Engine
         void DeInit();
         void Update(float dt);
         void Render(float dt);
-        void PrepareRenderData(Core::Utility::RenderData& renderData);
-        /// <summary>
-        /// Create the descriptor sets, uniform buffers
-        /// Transform : Create Uniform buffer for TransformData if meshrenderer attached
-        /// MeshRenderer : Create Vertex, index buffer
-        /// Camera : Create uniform buffer for CameraData
-        /// Light : Create uniform buffer for LightData
-        /// Clubbing strategy : Group using MaterialType -> LOD
-        /// </summary>
-        void CreateSceneResources();
-
+        void PrepareRenderData();
         static ECS_Manager* GetInstance();
         ~ECS_Manager();
     };

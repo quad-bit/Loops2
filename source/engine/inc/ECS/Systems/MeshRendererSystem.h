@@ -2,6 +2,7 @@
 #pragma once
 #include "ECS/System.h"
 #include "Utility/ShaderResourceDescription.h"
+#include "RenderData.h"
 //#include "DrawGraphNode.h"
 
 template <typename T>
@@ -35,18 +36,20 @@ private:
     Core::Utility::GlobalResourceSharingConfig resourceSharingConfig;
 
     Core::Wrappers::SetWrapper * transformSetWrapper;
-    std::vector<Core::Utility::DescriptorSetDescription> resDescriptionList;
-    std::map<Core::ECS::Components::Transform *, Core::Utility::DescriptorSetDescription> transformToBindDescMap;
+    std::vector<Core::Utility::DescriptorSetInfo> resDescriptionList;
+    std::map<Core::ECS::Components::Transform *, Core::Utility::DescriptorSetInfo> transformToBindDescMap;
 
     uint32_t numDescriptorsPerBinding;
     size_t memoryAlignedUniformSize;;
+    std::vector<Core::Utility::TransformData>& m_transformDataList;
+    std::map<std::string, std::vector<Core::Utility::TransformData>>& m_perEffectTransformData;
 
 public:
     virtual void Init() override;
     virtual void DeInit() override;
     virtual void Update(float dt) override;
 
-    MeshRendererSystem();
+    MeshRendererSystem(std::vector<Core::Utility::TransformData>&, std::map<std::string, std::vector<Core::Utility::TransformData>>&);
     virtual ~MeshRendererSystem();
 
     void HandleMeshRendererAddition(Core::ECS::Events::MeshRendererAdditionEvent * inputEvent);

@@ -29,8 +29,13 @@ inc/renderGraph/TechniqueNode.h
 )
 
 set(SHADER_RESOURCE_FILES
-inc/shaderResource/UniformFactory.h
-src/shaderResource/UniformFactory.cpp
+inc/resourceManagement/UniformFactory.h
+inc/resourceManagement/MaterialFactory.h
+inc/resourceManagement/MeshFactory.h
+
+src/resourceManagement/UniformFactory.cpp
+src/resourceManagement/MaterialFactory.cpp
+src/resourceManagement/MeshFactory.cpp
 )
 
 set(GRAPHIC_FILES

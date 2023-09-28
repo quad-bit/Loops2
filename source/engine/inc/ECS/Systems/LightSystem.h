@@ -5,6 +5,7 @@
 //#include "DrawGraphNode.h"
 #include <ECS/Events/MeshAdditionEvent.h>
 #include <ECS/Events/ComponentAdditionEvent.h>
+#include <RenderData.h>
 
 #if (RENDERING_API == VULKAN)
 class VulkanInterface;
@@ -36,7 +37,7 @@ class LightSystem : public Core::ECS::System
 private:
     std::vector<Core::ECS::Components::Light *> lightlist;
     std::map<Core::ECS::Components::Light *, Core::ECS::Components::Camera *> lightToCamList;
-    std::vector<Core::Utility::DescriptorSetDescription> resDescriptionList;
+    std::vector<Core::Utility::DescriptorSetInfo> resDescriptionList;
     Core::Utility::GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
     Core::Utility::GlobalResourceSharingConfig lightBufferSharingConfig;
 
@@ -47,7 +48,7 @@ private:
 
     //std::vector<GraphNode<DrawGraphNode> *> lightGraphNodeList;
     //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
-    std::map<Core::ECS::Components::Light *, Core::Utility::DescriptorSetDescription> lightToDescriptionMap;
+    std::map<Core::ECS::Components::Light *, Core::Utility::DescriptorSetInfo> lightToDescriptionMap;
 
     size_t memoryAlignedUniformSize;
     
@@ -58,6 +59,8 @@ private:
     void CreateLightUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
     Core::ECS::Components::Camera * CreateLightCamera(Core::ECS::Components::Transform * transform);
     void CreateShadowMap(Core::Utility::ShaderBindingDescription * desc);
+
+    std::vector<Core::Utility::LightData>& m_lightDataList;
 
 public:
     virtual void Init() override;
@@ -70,6 +73,6 @@ public:
     //void HandleDepthPrepassCreation(DepthPassAttachmentCreationEvent * evt);
     void AssignCameraSystem(Core::ECS::System * camSystem);
 
-    LightSystem();
+    LightSystem(std::vector<Core::Utility::LightData>&);
     virtual ~LightSystem();
 };

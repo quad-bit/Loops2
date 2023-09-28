@@ -1,7 +1,7 @@
 #include "Utility/HashManager.h"
 #include "Utility/HashHelper.h"
 #include "Platform/Assertion.h"
-#include "ECS/Components/Shader.h"
+//#include "Utility/RenderingWrappers/RenderingWrapper.h"
 
 HashManager* HashManager::instance = nullptr;
 
@@ -94,7 +94,7 @@ int HashManager::FindInputAssemblyStateHash(Core::Wrappers::InputAssemblyState *
     return CheckForPipeLineObjectHash(hash, stateId, inputInfo->state);
 }
 
-int HashManager::FindShaderStateHash(Shader * shaders, const uint32_t & shaderCount, uint32_t stateId, Core::Enums::PipelineStates * state)
+int HashManager::FindShaderStateHash(Core::Wrappers::ShaderWrapper* shaders, const uint32_t & shaderCount, uint32_t stateId, Core::Enums::PipelineStates * state)
 {
     // TODO : needs correction
     std::size_t hash = 0UL;

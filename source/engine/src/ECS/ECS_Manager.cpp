@@ -39,13 +39,13 @@ void Engine::ECS_Manager::Init()
     transformSystemObj = new TransformSystem();
     worldObj->AddSystem(transformSystemObj, Core::ECS::COMPONENT_TYPE::TRANSFORM);
 
-    cameraSystemObj = new Engine::ECS::Systems::CameraSystem();
+    cameraSystemObj = new Engine::ECS::Systems::CameraSystem(m_renderData.m_cameraData);
     worldObj->AddSystem(cameraSystemObj, Core::ECS::COMPONENT_TYPE::CAMERA);
 
-    meshRendererSystem = new MeshRendererSystem();
+    meshRendererSystem = new MeshRendererSystem(m_renderData.m_transformData, m_renderData.m_perEffectTransformData);
     worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
 
-    lightSystem = new LightSystem();
+    lightSystem = new LightSystem(m_renderData.m_lightData);
     worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
     //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
 
@@ -80,16 +80,8 @@ void Engine::ECS_Manager::Render(float dt)
     worldObj->Render(dt);
 }
 
-void Engine::ECS_Manager::PrepareRenderData(Core::Utility::RenderData& renderData)
+void Engine::ECS_Manager::PrepareRenderData()
 {
-
-}
-
-void Engine::ECS_Manager::CreateSceneResources()
-{
-    // Create uniform data
-    // CameraSystem
-
 
 }
 

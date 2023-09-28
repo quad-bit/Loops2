@@ -10,7 +10,7 @@ namespace Core
     namespace Utility
     {
         struct ShaderBindingDescription;
-        struct DescriptorSetDescription;
+        struct DescriptorSetInfo;
         struct ShaderStateWrapper;
         struct InputAssemblyWrapper;
         struct VertexInputWrapper;
@@ -175,7 +175,7 @@ namespace Renderer
             uint32_t CreatePipelineLayout(Core::Wrappers::SetWrapper** setWrapperList, const size_t& numSets);
             std::vector<Core::Wrappers::SetWrapper*>* GetSetWrapperList();
             std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperList();
-            void LinkSetBindingToResources(Core::Utility::DescriptorSetDescription desc, const uint32_t& numDescriptorSets);
+            void LinkSetBindingToResources(Core::Utility::DescriptorSetInfo desc, const uint32_t& numDescriptorSets);
 
             bool IsSampleRateShadingAvailable();
             Core::Enums::Samples GetMaxUsableSampleCount();

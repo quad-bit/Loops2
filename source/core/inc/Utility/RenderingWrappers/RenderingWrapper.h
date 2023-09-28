@@ -1081,6 +1081,14 @@ namespace Core
                 uint32_t firstInstance;
             };
 
+            struct ShaderWrapper
+            {
+                std::string shaderName;
+                const char* shaderText;
+                Core::Enums::ShaderType shaderType;
+                uint32_t shaderId;
+            };
+
         #elif (RENDERING_API == DX12)
 
         #endif

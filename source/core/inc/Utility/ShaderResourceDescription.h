@@ -89,7 +89,7 @@ namespace Core
             BufferBindingInfo bufferBindingInfo;
         };
 
-        struct DescriptorSetBindingDescription
+        struct DescriptorSetBindingInfo
         {
             std::string m_bindingName;
             uint32_t m_bindingNumber;
@@ -98,11 +98,11 @@ namespace Core
             std::variant<SamplerBindingInfo, ImageBindingInfo, BufferBindingInfo> m_bindingInfo;
         };
 
-        struct DescriptorSetDescription
+        struct DescriptorSetInfo
         {
             uint32_t m_setNumber;
             uint32_t m_numBindings;
-            std::vector<DescriptorSetBindingDescription> m_setBindings;
+            std::vector<DescriptorSetBindingInfo> m_setBindings;
             std::vector<uint32_t> m_descriptorSetIds;
         };
     }

@@ -100,7 +100,6 @@ void Engine::EngineManager::Update()
 
         Renderer::Windowing::MouseInputManager::GetInstance()->Update();
 
-        ECS_Manager::GetInstance()->PrepareRenderData(m_renderData);
         m_graphicsMngrObj->Update();
     }
 

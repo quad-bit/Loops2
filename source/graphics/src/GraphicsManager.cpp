@@ -16,7 +16,9 @@
 #include <shading/VkBufferFactory.h>
 #include <utility/VulkanMemoryManager.h>
 
-#include <shaderResource/UniformFactory.h>
+#include <resourceManagement/UniformFactory.h>
+#include <resourceManagement/MeshFactory.h>
+#include <resourceManagement/MaterialFactory.h>
 
 void Renderer::GraphicsManager::Init()
 {
@@ -33,7 +35,9 @@ void Renderer::GraphicsManager::Init()
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::GetPhysicalDeviceMemProps());
 
     // next high level wrappers
-    Renderer::ShaderResource::UniformFactory::GetInstance()->Init();
+    Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
+    Renderer::ResourceManagement::MeshFactory::GetInstance()->Init();
+    Renderer::ResourceManagement::MaterialFactory::GetInstance()->Init();
 
     Core::Settings::m_swapBufferCount = RendererSettings::GetSwapBufferCount();
     Core::Settings::m_maxFramesInFlight = RendererSettings::GetMaxFramesInFlightCount();
@@ -52,8 +56,14 @@ void Renderer::GraphicsManager::DeInit()
 {
     PLOGD << "Graphics manager DeInit";
 
-    Renderer::ShaderResource::UniformFactory::GetInstance()->DeInit();
-    delete Renderer::ShaderResource::UniformFactory::GetInstance();
+    Renderer::ResourceManagement::MaterialFactory::GetInstance()->DeInit();
+    delete Renderer::ResourceManagement::MaterialFactory::GetInstance();
+
+    Renderer::ResourceManagement::MeshFactory::GetInstance()->DeInit();
+    delete Renderer::ResourceManagement::MeshFactory::GetInstance();
+
+    Renderer::ResourceManagement::UniformFactory::GetInstance()->DeInit();
+    delete Renderer::ResourceManagement::UniformFactory::GetInstance();
 
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->DeInit();
     delete GfxVk::Utility::VulkanMemoryManager::GetSingleton();

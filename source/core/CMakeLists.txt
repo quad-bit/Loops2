@@ -9,6 +9,7 @@ set(CORE_FILES
     inc/RendererSettings.h
     inc/Settings.h
     inc/RenderData.h
+    inc/Shader.h
 
     src/CoreManager.cpp
     src/CorePrecompiled.cpp
@@ -23,7 +24,6 @@ set(ECS_COMPONENT_FILES
     inc/ECS/Components/Mesh.h
     inc/ECS/Components/MeshRenderer.h
     inc/ECS/Components/Scriptable.h
-    inc/ECS/Components/Shader.h
     inc/ECS/Components/Texture.h
     inc/ECS/Components/Transform.h
 

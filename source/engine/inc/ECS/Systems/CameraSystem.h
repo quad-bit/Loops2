@@ -2,6 +2,7 @@
 #include <ECS/System.h>
 #include <glm/glm.hpp>
 #include "Utility/ShaderResourceDescription.h"
+#include "RenderData.h"
 //#include "DrawGraphNode.h"
 //#include "MeshAdditionEvent.h"
 #include <map>
@@ -54,7 +55,7 @@ namespace Engine
 
                 std::vector<Core::ECS::Components::Camera*> cameraList;
                 //std::vector<Core::Utility::ShaderBindingDescription*> resDescriptionList;
-                std::vector<Core::Utility::DescriptorSetDescription> resDescriptionList;
+                std::vector<Core::Utility::DescriptorSetInfo> resDescriptionList;
                 Core::Utility::GlobalResourceAllocationConfig allocConfig;
                 Core::Utility::GlobalResourceSharingConfig resourceSharingConfig;
 
@@ -68,11 +69,13 @@ namespace Engine
 
                 //std::vector<GraphNode<DrawGraphNode> *> cameraGraphNodeList;
                 //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
-                std::map<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetDescription> camToDescriptionMap;
+                std::map<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetInfo> camToDescriptionMap;
                 size_t memoryAlignedUniformSize;
 
                 uint32_t numDescriptorSetsPerUniform;
                 uint32_t mainCameraId = 0;
+
+                std::vector<Core::Utility::CameraData>& m_cameraDataList;
 
             public:
                 virtual void Init() override;
@@ -86,7 +89,7 @@ namespace Engine
                 Core::Utility::GlobalResourceAllocationConfig GetAllocConfig() const;
                 Core::Utility::GlobalResourceSharingConfig GetResourceSharingConfig() const;
 
-                CameraSystem();
+                CameraSystem(std::vector<Core::Utility::CameraData>& cameraData);
                 virtual ~CameraSystem();
 
                 void SetMainCamera(uint32_t componentId);

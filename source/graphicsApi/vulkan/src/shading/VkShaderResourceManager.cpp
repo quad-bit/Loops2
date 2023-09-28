@@ -1219,7 +1219,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
     }
 }
 
-void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Core::Utility::DescriptorSetDescription desc, const uint32_t& numDescriptorSets)
+void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Core::Utility::DescriptorSetInfo desc, const uint32_t& numDescriptorSets)
 {
     // number of writes/set will equal to number of bindings in a set
     uint32_t numWritesPerDescriptorSet = desc.m_numBindings;
