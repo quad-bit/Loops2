@@ -296,7 +296,7 @@ VkImageUsageFlagBits GfxVk::Unwrap::UnwrapUsage(Core::Enums::AttachmentUsage usa
     }
 }
 
-VkImageUsageFlags GfxVk::Unwrap::UnwrapUsage(std::vector<Core::Enums::AttachmentUsage>& usage)
+VkImageUsageFlags GfxVk::Unwrap::UnwrapUsage(const std::vector<Core::Enums::AttachmentUsage>& usage)
 {
     VkImageUsageFlags flag = 0;
     for (uint32_t i = 0; i < usage.size(); i++)
@@ -432,43 +432,43 @@ VkShaderStageFlags GfxVk::Unwrap::UnwrapShaderStage(Core::Enums::ShaderType* typ
     return shaderFlag;
 }
 
-VkImageViewCreateInfo GfxVk::Unwrap::UnWrapImageViewCreateInfo(Core::Wrappers::ImageViewInfo * info)
+VkImageViewCreateInfo GfxVk::Unwrap::UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo * info)
 {
     VkImageViewCreateInfo vkInfo = {};
-    vkInfo.components.a = UnWrapSwizzle(info->components[0]);
-    vkInfo.components.b = UnWrapSwizzle(info->components[1]);
-    vkInfo.components.g = UnWrapSwizzle(info->components[2]);
-    vkInfo.components.r = UnWrapSwizzle(info->components[3]);
-    vkInfo.format = UnWrapFormat(info->format) ;
+    vkInfo.components.a = UnWrapSwizzle(info->m_components[0]);
+    vkInfo.components.b = UnWrapSwizzle(info->m_components[1]);
+    vkInfo.components.g = UnWrapSwizzle(info->m_components[2]);
+    vkInfo.components.r = UnWrapSwizzle(info->m_components[3]);
+    vkInfo.format = UnWrapFormat(info->m_format) ;
     vkInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    vkInfo.viewType = UnwrapImageViewType(info->viewType);
-    vkInfo.subresourceRange.aspectMask = UnwrapAspectMask(info->imageAspect);
-    vkInfo.subresourceRange.baseArrayLayer = info->baseArrayLayer;
-    vkInfo.subresourceRange.baseMipLevel = info->baseMipLevel;
-    vkInfo.subresourceRange.layerCount = info->layerCount;
-    vkInfo.subresourceRange.levelCount = info->levelCount;
+    vkInfo.viewType = UnwrapImageViewType(info->m_viewType);
+    vkInfo.subresourceRange.aspectMask = UnwrapAspectMask(info->m_imageAspect);
+    vkInfo.subresourceRange.baseArrayLayer = info->m_baseArrayLayer;
+    vkInfo.subresourceRange.baseMipLevel = info->m_baseMipLevel;
+    vkInfo.subresourceRange.layerCount = info->m_layerCount;
+    vkInfo.subresourceRange.levelCount = info->m_levelCount;
 
     return vkInfo;
 }
 
-VkImageCreateInfo GfxVk::Unwrap::UnWrapImageCreateInfo(Core::Wrappers::ImageInfo * info)
+VkImageCreateInfo GfxVk::Unwrap::UnWrapImageCreateInfo(const Core::Wrappers::ImageCreateInfo * info)
 {
     VkImageCreateInfo vkInfo = {};
-    vkInfo.arrayLayers = info->layers;
-    vkInfo.extent.width = info->width;
-    vkInfo.extent.height = info->height;
-    vkInfo.extent.depth = info->depth;
-    vkInfo.format = UnWrapFormat(info->format);
-    vkInfo.imageType = UnWrapImageType(info->imageType) ;
-    vkInfo.initialLayout = UnWrapImageLayout(info->initialLayout);
-    vkInfo.mipLevels = info->mips;
+    vkInfo.arrayLayers = info->m_layers;
+    vkInfo.extent.width = info->m_width;
+    vkInfo.extent.height = info->m_height;
+    vkInfo.extent.depth = info->m_depth;
+    vkInfo.format = UnWrapFormat(info->m_format);
+    vkInfo.imageType = UnWrapImageType(info->m_imageType) ;
+    vkInfo.initialLayout = UnWrapImageLayout(info->m_initialLayout);
+    vkInfo.mipLevels = info->m_mips;
     vkInfo.pQueueFamilyIndices = nullptr ;
     vkInfo.queueFamilyIndexCount = 0;
-    vkInfo.samples = UnWrapSampleCount(info->sampleCount);
+    vkInfo.samples = UnWrapSampleCount(info->m_sampleCount);
     vkInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     vkInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     vkInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    vkInfo.usage = UnwrapUsage(info->usage);
+    vkInfo.usage = UnwrapUsage(info->m_usages);
 
     return vkInfo;
 }

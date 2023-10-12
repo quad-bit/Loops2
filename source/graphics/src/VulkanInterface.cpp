@@ -2,7 +2,7 @@
 #include <VulkanManager.h>
 #include <windowing/WindowManager.h>
 #include <PresentationEngine.h>
-#include <VkAttachmentFactory.h>
+#include <utility/VkImageFactory.h>
 #include <VkRenderPassFactory.h>
 #include <VkFrameBufferFactory.h>
 #include <utility/VkRenderingUnwrapper.h>
@@ -441,93 +441,117 @@ namespace
 
 Core::Enums::Format Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat()
 {
-    //VkSurfaceFormatKHR * vkFormat = GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat();
     return WrapFormat(GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat().format);
 }
 
 Core::Enums::ColorSpace Renderer::Utility::VulkanInterface::GetWindowColorSpace()
 {
-
-    //VkSurfaceFormatKHR * vkFormat = GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat();
     return WrapColorSpace(GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat().colorSpace);
 }
 
-int Renderer::Utility::VulkanInterface::FindBestDepthFormat(Core::Enums::Format * imageFormat, const uint32_t & count)
+Core::Enums::Format Renderer::Utility::VulkanInterface::FindBestDepthFormat()
 {
-    return GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->FindBestDepthFormat(imageFormat, count);
+    return WrapFormat(DeviceInfo::GetDepthFormat());
 }
 
-void Renderer::Utility::VulkanInterface::SetupPresentationEngine(Core::Wrappers::ImageInfo info)
+//void Renderer::Utility::VulkanInterface::SetupPresentationEngine(Core::Wrappers::VkImageInfo info)
+//{
+//    GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
+//}
+//
+//void Renderer::Utility::VulkanInterface::CreateRenderTarget(Core::Wrappers::VkImageInfo * info, Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count, bool defaultTarget,
+//    uint32_t * ids)
+//{
+//    //VkImageFactory::GetInstance()->CreateColorAttachment(info, count, defaultTarget, ids);
+//}
+
+//void Renderer::Utility::VulkanInterface::CreateDefaultRenderTarget(Core::Wrappers::VkImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t & count, uint32_t * ids)
+//{
+//    VkImageCreateInfo vkImageCreateInfo = GfxVk::Unwrap::UnWrapImageCreateInfo(&info);
+//    VkImageViewCreateInfo vkImageViewCreateInfo = GfxVk::Unwrap::UnWrapImageViewCreateInfo(&viewInfo);
+//
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateSwapChainImage(vkImageCreateInfo, vkImageViewCreateInfo, count, ids);
+//}
+//
+//void Renderer::Utility::VulkanInterface::DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget)
+//{
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
+//}
+//
+//void Renderer::Utility::VulkanInterface::CreateImage(Core::Wrappers::ImageInfo * info, const uint32_t & count, uint32_t * ids)
+//{
+//    /*VkImageCreateInfo * imageCreateInfo = new VkImageCreateInfo[count];
+//    VkImageViewCreateInfo * viewCreateInfo = new VkImageViewCreateInfo[count];
+//
+//    for (uint32_t i = 0; i < count; i++)
+//    {
+//        imageCreateInfo[i] = GfxVk::Unwrap::UnWrapImageCreateInfo(info);
+//        viewCreateInfo[i]  = GfxVk::Unwrap::UnWrapImageViewCreateInfo(viewInfo);
+//    }
+//
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateDepthAttachment(imageCreateInfo, count, viewCreateInfo,
+//        stencilRequired, ids);
+//
+//    delete[] imageCreateInfo;
+//    delete[] viewCreateInfo;
+//*/
+//    std::vector<VkImageCreateInfo> vkInfo;
+//    for(uint32_t i = 0 ;i < count;i++)
+//       vkInfo.push_back(GfxVk::Unwrap::UnWrapImageCreateInfo(info));
+//
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
+//}
+
+//void Renderer::Utility::VulkanInterface::DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget)
+//{
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
+//}
+//
+//uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::ImageInfo& info, const std::string)
+//{
+//    std::vector<VkImageCreateInfo> vkInfo;
+//    for (uint32_t i = 0; i < info.size(); i++)
+//        vkInfo.push_back(GfxVk::Unwrap::UnWrapImageCreateInfo(&info[i]));
+//
+//    GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
+//
+//    for (uint32_t i = 0; i < info.size(); i++)
+//    {
+//        GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
+//
+//    }
+//
+//    return std::vector<uint32_t>();
+//}
+
+//void Renderer::Utility::VulkanInterface::DestroyAttachment(uint32_t * ids, bool * destroyImageView, bool * freeImageMemory, const uint32_t & count)
+//{
+//    GfxVk::Utility::VkImageFactory::GetInstance()->DestroyAttachment(ids, destroyImageView, freeImageMemory, count);
+//}
+
+//void Renderer::Utility::VulkanInterface::FreeAttachmentMemory(uint32_t * imageIds, const uint32_t & count)
+//{
+//    GfxVk::Utility::VkImageFactory::GetInstance()->FreeAttachmentMemory(imageIds, count);
+//}
+
+//void Renderer::Utility::VulkanInterface::DestroySwapChainImageViews(uint32_t * ids, const uint32_t & count)
+//{
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroySwapChainImageViews(ids, count);
+//}
+
+//void Renderer::Utility::VulkanInterface::CreateImageView(Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count)
+//{
+//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateImageView(viewInfo, count);
+//}
+
+uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name)
 {
-    GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
+    return GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(imageInfo, viewInfo, name);
 }
 
-void Renderer::Utility::VulkanInterface::CreateRenderTarget(Core::Wrappers::ImageInfo * info, Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count, bool defaultTarget,
-    uint32_t * ids)
+void Renderer::Utility::VulkanInterface::DestroyImage(uint32_t imageId, bool freeImageMemory)
 {
-    //VkAttachmentFactory::GetInstance()->CreateColorAttachment(info, count, defaultTarget, ids);
-}
-
-void Renderer::Utility::VulkanInterface::CreateDefaultRenderTarget(Core::Wrappers::ImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t & count, uint32_t * ids)
-{
-    VkImageCreateInfo vkImageCreateInfo = GfxVk::Unwrap::UnWrapImageCreateInfo(&info);
-    VkImageViewCreateInfo vkImageViewCreateInfo = GfxVk::Unwrap::UnWrapImageViewCreateInfo(&viewInfo);
-
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->CreateSwapChainImage(vkImageCreateInfo, vkImageViewCreateInfo, count, ids);
-}
-
-void Renderer::Utility::VulkanInterface::DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
-}
-
-void Renderer::Utility::VulkanInterface::CreateAttachment(Core::Wrappers::ImageInfo * info, const uint32_t & count, uint32_t * ids)
-{
-    /*VkImageCreateInfo * imageCreateInfo = new VkImageCreateInfo[count];
-    VkImageViewCreateInfo * viewCreateInfo = new VkImageViewCreateInfo[count];
-
-    for (uint32_t i = 0; i < count; i++)
-    {
-        imageCreateInfo[i] = GfxVk::Unwrap::UnWrapImageCreateInfo(info);
-        viewCreateInfo[i]  = GfxVk::Unwrap::UnWrapImageViewCreateInfo(viewInfo);
-    }
-
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->CreateDepthAttachment(imageCreateInfo, count, viewCreateInfo,
-        stencilRequired, ids);
-
-    delete[] imageCreateInfo;
-    delete[] viewCreateInfo;
-*/
-    std::vector<VkImageCreateInfo> vkInfo;
-    for(uint32_t i = 0 ;i < count;i++)
-       vkInfo.push_back(GfxVk::Unwrap::UnWrapImageCreateInfo(info));
-
-   GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->CreateAttachment(vkInfo.data(), count, ids);
-}
-
-void Renderer::Utility::VulkanInterface::DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
-}
-
-void Renderer::Utility::VulkanInterface::DestroyAttachment(uint32_t * ids, bool * destroyImageView, bool * freeImageMemory, const uint32_t & count)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->DestroyAttachment(ids, destroyImageView, freeImageMemory, count);
-}
-
-void Renderer::Utility::VulkanInterface::FreeAttachmentMemory(uint32_t * imageIds, const uint32_t & count)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->FreeAttachmentMemory(imageIds, count);
-}
-
-void Renderer::Utility::VulkanInterface::DestroySwapChainImageViews(uint32_t * ids, const uint32_t & count)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->DestroySwapChainImageViews(ids, count);
-}
-
-void Renderer::Utility::VulkanInterface::CreateImageView(Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count)
-{
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->CreateImageView(viewInfo, count);
+    GfxVk::Utility::VkImageFactory::GetInstance()->DestroyImage(imageId, freeImageMemory);
 }
 
 void Renderer::Utility::VulkanInterface::CreateRenderPass(
@@ -582,7 +606,7 @@ void Renderer::Utility::VulkanInterface::CreateFrameBuffer(uint32_t numFrameBuff
     std::vector<VkImageView> viewList(numFrameBuffers * viewsPerFB);// = new VkImageView[numFrameBuffers * viewsPerFB];
     for (uint32_t i = 0; i < numFrameBuffers * viewsPerFB; i++)
     {
-        viewList[i]= GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageView(imageViewId[i]);
+        viewList[i]= GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(imageViewId[i]);
     }
 
     GfxVk::Framebuffer::VkFrameBufferFactory::GetInstance()->CreateFrameBuffer(numFrameBuffers, viewList.data(),
@@ -771,7 +795,7 @@ uint32_t * Renderer::Utility::VulkanInterface::AllocateDescriptorsSet(Core::Wrap
 
 void Renderer::Utility::VulkanInterface::BindImageMemory(const uint32_t & imageId, const uint32_t & memId, const size_t & offset)
 {
-    GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->BindImageMemory(imageId, memId, offset);
+    GfxVk::Utility::VkImageFactory::GetInstance()->BindImageMemory(imageId, memId, offset);
 }
 
 uint32_t Renderer::Utility::VulkanInterface::AllocateMemory(Core::Wrappers::MemoryRequirementInfo * memReq, Core::Enums::MemoryType * userReq, const size_t & allocationSize)
@@ -796,8 +820,7 @@ uint32_t Renderer::Utility::VulkanInterface::AllocateMemory(Core::Wrappers::Memo
 
 Core::Wrappers::MemoryRequirementInfo Renderer::Utility::VulkanInterface::GetImageMemoryRequirement(const uint32_t & imageId)
 {
-    Core::Wrappers::MemoryRequirementInfo req = GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageMemoryRequirement(imageId);
-    return req;
+    return GfxVk::Utility::VkImageFactory::GetInstance()->GetImageMemoryRequirement(imageId);
 }
 
 //

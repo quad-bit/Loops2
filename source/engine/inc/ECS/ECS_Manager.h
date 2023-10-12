@@ -62,5 +62,7 @@ namespace Engine
         void PrepareRenderData();
         static ECS_Manager* GetInstance();
         ~ECS_Manager();
+
+        const Core::Utility::RenderData& GetRenderData();
     };
 }

@@ -174,31 +174,18 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanDeviceInfo::GetSurface(), GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(), Renderer::RendererSettings::m_swapBufferCount);
     Renderer::RendererSettings::m_maxFramesInFlight = Renderer::RendererSettings::m_swapBufferCount - 1;
 
-    {
-        std::array<Core::Enums::Format, 5> depthFormats;
-        depthFormats[0] = Core::Enums::Format::D32_SFLOAT_S8_UINT;
-        depthFormats[1] = Core::Enums::Format::D24_UNORM_S8_UINT;
-        depthFormats[2] = Core::Enums::Format::D16_UNORM_S8_UINT;
-        depthFormats[3] = Core::Enums::Format::D32_SFLOAT;
-        depthFormats[4] = Core::Enums::Format::D16_UNORM;
-
-        int index = Renderer::Utility::VulkanInterface::FindBestDepthFormat(&depthFormats[0], 5);
-
-        ASSERT_MSG_DEBUG(index != -1, "depth format not available");
-        Renderer::RendererSettings::m_bestDepthFormat = depthFormats[index];
-    }
+    Renderer::RendererSettings::m_bestDepthFormat = Renderer::Utility::VulkanInterface::FindBestDepthFormat();
 
     // swapchain / presentation setup
     {
-        Core::Wrappers::ImageInfo info = {};
-        info.colorSpace = Renderer::Utility::VulkanInterface::GetWindowColorSpace();
-        info.format = Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat();
-        info.width = m_windowSettings.m_windowWidth;
-        info.height = m_windowSettings.m_windowHeight;
-        info.imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
-        info.usage.push_back(Core::Enums::AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
+        Core::Wrappers::ImageCreateInfo info = {};
+        info.m_colorSpace = Renderer::Utility::VulkanInterface::GetWindowColorSpace();
+        info.m_format = Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat();
+        info.m_width = m_windowSettings.m_windowWidth;
+        info.m_height = m_windowSettings.m_windowHeight;
+        info.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
+        info.m_usages.push_back(Core::Enums::AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
 
-        //Renderer::Utility::VulkanInterface::SetupPresentationEngine(info);
         GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
     }
 

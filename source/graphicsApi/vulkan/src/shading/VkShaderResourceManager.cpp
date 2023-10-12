@@ -9,7 +9,7 @@
 #include "shading/VkShaderResourceAllocator.h"
 #include "shading/VkDescriptorPoolFactory.h"
 #include "shading/VkBufferFactory.h"
-#include "VkAttachmentFactory.h"
+#include "utility/VkImageFactory.h"
 #include "VkSamplerFactory.h"
 #include <CorePrecompiled.h>
 
@@ -1183,9 +1183,9 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
                 VkImageView imageView;
 
                 if (numViews == 1)
-                    imageView = GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[0]);
+                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[0]);
                 else
-                    imageView = GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[i]);
+                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[i]);
 
                 imageInfo.imageView = imageView;
                     
@@ -1281,9 +1281,9 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                 VkImageView imageView;
 
                 if (numViews == 1)
-                    imageView = GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[0]);
+                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[0]);
                 else
-                    imageView = GfxVk::Framebuffer::VkAttachmentFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[i]);
+                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[i]);
 
                 imageInfo.imageView = imageView;
 

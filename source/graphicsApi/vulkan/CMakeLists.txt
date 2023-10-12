@@ -23,7 +23,6 @@ Set (VulkanDataPath "${CMAKE_SOURCE_DIR}/Assets/Graphics/Vulkan")
 set(VULKAN_FILES
 inc/PresentationEngine.h
 inc/ValidationManager.h
-inc/VkAttachmentFactory.h
 inc/VkCommandBufferFactory.h
 inc/VkDrawCommandBuffer.h
 inc/VkFrameBufferFactory.h
@@ -34,7 +33,6 @@ inc/VulkanManager.h
 
 src/PresentationEngine.cpp
 src/ValidationManager.cpp
-src/VkAttachmentFactory.cpp
 src/VkCommandBufferFactory.cpp
 src/VkDrawCommandBuffer.cpp
 src/VkFrameBufferFactory.cpp
@@ -77,10 +75,13 @@ inc/utility/VkRenderingUnwrapper.h
 inc/utility/VulkanMemoryManager.h
 inc/utility/VulkanSettings.h
 inc/utility/VulkanUtility.h
+inc/utility/VkImageFactory.h
 
 src/utility/VkRenderingUnwrapper.cpp
 src/utility/VulkanMemoryManager.cpp
 src/utility/VulkanUtility.cpp
+src/utility/VkImageFactory.cpp
+
 )
 
 set(TARGET_NAME "gfxVulkan")

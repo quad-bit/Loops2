@@ -1,5 +1,5 @@
 #include "PresentationEngine.h"
-#include "VkAttachmentFactory.h"
+#include "utility/VkImageFactory.h"
 #include "utility/VulkanUtility.h"
 #include <Settings.h>
 #include <Platform/Assertion.h>
@@ -53,7 +53,7 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(VkSwapchainCreateInfoKH
     ErrorCheck(vkCreateSwapchainKHR(DeviceInfo::GetLogicalDevice(), &swapChainCreateInfo, DeviceInfo::GetAllocationCallback(), &swapchainObj));
 }
 
-void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageInfo info)
+void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageCreateInfo info)
 {
     VkImageUsageFlags usageFlag = VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
@@ -61,12 +61,12 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageIn
     swapChainCreateInfo.clipped = VK_TRUE; // dont render parts of swapchain image that are out of the frustrum
     swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapChainCreateInfo.imageArrayLayers = 1; // 2 meant for sterescopic rendering
-    swapChainCreateInfo.imageColorSpace = GfxVk::Unwrap::UnWrapColorSpace(info.colorSpace);
-    swapChainCreateInfo.imageExtent.height = info.height;
-    swapChainCreateInfo.imageExtent.width = info.width;
-    swapChainCreateInfo.imageFormat = GfxVk::Unwrap::UnWrapFormat(info.format);
+    swapChainCreateInfo.imageColorSpace = GfxVk::Unwrap::UnWrapColorSpace(info.m_colorSpace);
+    swapChainCreateInfo.imageExtent.height = info.m_height;
+    swapChainCreateInfo.imageExtent.width = info.m_width;
+    swapChainCreateInfo.imageFormat = GfxVk::Unwrap::UnWrapFormat(info.m_format);
     swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    swapChainCreateInfo.imageUsage = GfxVk::Unwrap::UnwrapUsage(info.usage);
+    swapChainCreateInfo.imageUsage = GfxVk::Unwrap::UnwrapUsage(info.m_usages);
     swapChainCreateInfo.minImageCount = m_swapchainImageCount;
     swapChainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapChainCreateInfo.presentMode = presentMode;

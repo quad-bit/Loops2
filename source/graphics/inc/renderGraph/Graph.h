@@ -2,15 +2,15 @@
 
 #include <vector>
 #include <assert.h>
-#include "Stack.h"
+#include "Utility/Container/Stack.h"
 #include <queue>
 #include <deque>
 #include <map>
 
 
-namespace Core
+namespace Renderer
 {
-    namespace Containers
+    namespace RenderGraph
     {
         template <class T>
         class Graph;
@@ -49,12 +49,16 @@ namespace Core
         template<typename T>
         std::uint32_t GraphNode<T>::idCounter = 0;
 
-
         template <class T>
         class Graph
         {
         private:
             std::vector<GraphNode<T>*> vertices;
+
+            std::vector<uint32_t> origins, ends;
+            std::vector<uint32_t> srcIds, destIds;
+            std::string m_printLog;
+            size_t m_insertOffset = 11; // size of "digraph G{\n" 
             int maxVertices, numOfExistingVerts;
             int matrixExtendingLimit = 20;// when the matrix gets exhausted relocate it with additional matrixExtendingLimit size
             char** adjMatrix;
@@ -62,6 +66,8 @@ namespace Core
             char* visitedVertices;
 
             void ValidateVisitation(std::map<std::uint32_t, std::uint32_t>& visitedMap);
+            void AddToSets(uint32_t srcId, uint32_t destId);
+            void AddToPrintLog(std::string sourceName, std::string destName);
 
         public:
             Graph(int numVerts) : maxVertices(numVerts), adjMatrix(NULL)
@@ -90,6 +96,15 @@ namespace Core
                     memset(adjMatrix[i], 0, maxVertices);
                     memset(localMat[i], 0, maxVertices);
                 }
+
+                /*
+                digraph G{
+                "Welcome" -> "To"
+                "To" -> "Web"
+                "To" -> "GraphViz!"
+                }
+                */
+                m_printLog = "digraph G{\n}";
             }
 
             ~Graph()
@@ -125,13 +140,15 @@ namespace Core
                     visitedVertices = NULL;
                 }
 
+                for (auto vertex : vertices)
+                    delete vertex;
                 vertices.clear();
             }
 
-            bool Push(T* node);
+            GraphNode<T>* Push(T* node);
             bool Push(GraphNode<T>* graphNode);
-            void AttachEdge(int index1, int index2);
-            void AttachDirectedEdge(int index1, int index2);
+            void AttachEdge(int index1, int index2) = delete;
+            void AttachDirectedEdge(int index1, int index2) = delete;
             void AttachDirectedEdge(GraphNode<T>* srcNode, GraphNode<T>* destNode);
             int GetNextUnvisitedVertex(int index);
             bool DepthFirstSearch(int startIndex, int endIndex);
@@ -144,25 +161,27 @@ namespace Core
             void CopyMat(char** src, char** dest);
             void PrintAdjMatrix();
             void PrintGraph();
+            const std::vector<uint32_t>& GetGraphOrigins();
+            const std::vector<uint32_t>& GetGraphEnds();
         };
     }
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::Push(T * node)
+inline Renderer::RenderGraph::GraphNode<T>* Renderer::RenderGraph::Graph<T>::Push(T * node)
 {
     if ((int)vertices.size() >= maxVertices)
         ExtendMatrix();
 
-    Core::Containers::GraphNode<T> * graphNode = new Core::Containers::GraphNode<T>(node);
+    Renderer::RenderGraph::GraphNode<T> * graphNode = new Renderer::RenderGraph::GraphNode<T>(node);
 
     vertices.push_back(graphNode);
     numOfExistingVerts++;
-    return true;
+    return graphNode;
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::Push(Core::Containers::GraphNode<T>* graphNode)
+inline bool Renderer::RenderGraph::Graph<T>::Push(Renderer::RenderGraph::GraphNode<T>* graphNode)
 {
     if ((int)vertices.size() >= maxVertices)
         ExtendMatrix();
@@ -173,33 +192,36 @@ inline bool Core::Containers::Graph<T>::Push(Core::Containers::GraphNode<T>* gra
     return true;
 }
 
+//template<class T>
+//inline void Renderer::RenderGraph::Graph<T>::AttachEdge(int index1, int index2)
+//{
+//    assert(adjMatrix != NULL);
+//
+//    adjMatrix[index1][index2] = 1;
+//    adjMatrix[index2][index1] = 1;
+//}
+//
+//template<class T>
+//inline void Renderer::RenderGraph::Graph<T>::AttachDirectedEdge(int index1, int index2)
+//{
+//    assert(adjMatrix != NULL);
+//
+//    adjMatrix[index1][index2] = 1;
+//    AddToSets(index1, index2);
+//}
+
 template<class T>
-inline void Core::Containers::Graph<T>::AttachEdge(int index1, int index2)
-{
-    assert(adjMatrix != NULL);
-
-    adjMatrix[index1][index2] = 1;
-    adjMatrix[index2][index1] = 1;
-}
-
-template<class T>
-inline void Core::Containers::Graph<T>::AttachDirectedEdge(int index1, int index2)
-{
-    assert(adjMatrix != NULL);
-
-    adjMatrix[index1][index2] = 1;
-}
-
-template<class T>
-inline void Core::Containers::Graph<T>::AttachDirectedEdge(Core::Containers::GraphNode<T> * srcNode, Core::Containers::GraphNode<T> * destNode)
+inline void Renderer::RenderGraph::Graph<T>::AttachDirectedEdge(Renderer::RenderGraph::GraphNode<T> * srcNode, Renderer::RenderGraph::GraphNode<T> * destNode)
 {
     assert(adjMatrix != NULL);
 
     adjMatrix[srcNode->nodeId][destNode->nodeId] = 1;
+    AddToSets(srcNode->nodeId, destNode->nodeId);
+    AddToPrintLog(srcNode->GetNodeData()->GetNodeName(), destNode->GetNodeData()->GetNodeName());
 }
 
 template<class T>
-inline int Core::Containers::Graph<T>::GetNextUnvisitedVertex(int index)
+inline int Renderer::RenderGraph::Graph<T>::GetNextUnvisitedVertex(int index)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -216,7 +238,7 @@ inline int Core::Containers::Graph<T>::GetNextUnvisitedVertex(int index)
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::DepthFirstSearch(int startIndex, int endIndex)
+inline bool Renderer::RenderGraph::Graph<T>::DepthFirstSearch(int startIndex, int endIndex)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -257,7 +279,7 @@ inline bool Core::Containers::Graph<T>::DepthFirstSearch(int startIndex, int end
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::BreadthFirstSearch(int startIndex, int endIndex)
+inline bool Renderer::RenderGraph::Graph<T>::BreadthFirstSearch(int startIndex, int endIndex)
 {
 
     assert(visitedVertices != NULL);
@@ -295,7 +317,7 @@ inline bool Core::Containers::Graph<T>::BreadthFirstSearch(int startIndex, int e
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::BreadthFirstTraversal(Core::Containers::GraphNode<T>* srcNode, Core::Containers::GraphNode<T>* destNode)
+inline bool Renderer::RenderGraph::Graph<T>::BreadthFirstTraversal(Renderer::RenderGraph::GraphNode<T>* srcNode, Renderer::RenderGraph::GraphNode<T>* destNode)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -340,7 +362,7 @@ inline bool Core::Containers::Graph<T>::BreadthFirstTraversal(Core::Containers::
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::DepthFirstTraversal(Core::Containers::GraphNode<T>* srcNode, Core::Containers::GraphNode<T>* destNode)
+inline bool Renderer::RenderGraph::Graph<T>::DepthFirstTraversal(Renderer::RenderGraph::GraphNode<T>* srcNode, Renderer::RenderGraph::GraphNode<T>* destNode)
 {
     int startIndex = srcNode->nodeId; int endIndex = destNode->nodeId;
     return DepthFirstTraversal(startIndex, endIndex);
@@ -392,7 +414,7 @@ inline bool Core::Containers::Graph<T>::DepthFirstTraversal(Core::Containers::Gr
 }
 
 template<class T>
-inline bool Core::Containers::Graph<T>::DepthFirstTraversal(const uint32_t & srcNodeId, const uint32_t & destNodeId)
+inline bool Renderer::RenderGraph::Graph<T>::DepthFirstTraversal(const uint32_t & srcNodeId, const uint32_t & destNodeId)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -443,7 +465,7 @@ inline bool Core::Containers::Graph<T>::DepthFirstTraversal(const uint32_t & src
 
 
 template<class T>
-inline void Core::Containers::Graph<T>::ValidateVisitation(std::map<std::uint32_t, std::uint32_t> & visitedMap)
+inline void Renderer::RenderGraph::Graph<T>::ValidateVisitation(std::map<std::uint32_t, std::uint32_t> & visitedMap)
 {
     if (visitedMap.size() <= 1)
         return;
@@ -474,9 +496,31 @@ inline void Core::Containers::Graph<T>::ValidateVisitation(std::map<std::uint32_
     }
 }
 
+template<class T>
+inline void Renderer::RenderGraph::Graph<T>::AddToSets(uint32_t srcId, uint32_t destId)
+{
+    auto it = std::find(srcIds.begin(), srcIds.end(), srcId);
+    if(it == srcIds.end())
+        srcIds.push_back(srcId);
+
+    it = std::find(destIds.begin(), destIds.end(), destId);
+    if (it == destIds.end())
+        destIds.push_back(destId);
+}
 
 template<class T>
-inline void Core::Containers::Graph<T>::FindAllPaths(int startIndex, int endIndex)
+inline void Renderer::RenderGraph::Graph<T>::AddToPrintLog(std::string sourceName, std::string destName)
+{
+    sourceName = "\"" + sourceName + "\" -> ";
+    destName = "\"" + destName + "\"\n";
+    std::string result = sourceName + destName;
+    m_printLog.insert(m_insertOffset, result);
+    m_insertOffset += (result.size());
+}
+
+
+template<class T>
+inline void Renderer::RenderGraph::Graph<T>::FindAllPaths(int startIndex, int endIndex)
 {
     assert(visitedVertices != NULL);
     assert(adjMatrix != NULL);
@@ -528,13 +572,13 @@ inline void Core::Containers::Graph<T>::FindAllPaths(int startIndex, int endInde
 }
 
 template<class T>
-inline void Core::Containers::Graph<T>::ExtendMatrix()
+inline void Renderer::RenderGraph::Graph<T>::ExtendMatrix()
 {
     assert(0);
 }
 
 template<class T>
-inline void Core::Containers::Graph<T>::CopyMat(char ** src, char ** dest)
+inline void Renderer::RenderGraph::Graph<T>::CopyMat(char ** src, char ** dest)
 {
     for (int i = 0; i < maxVertices; i++)
     {
@@ -559,7 +603,7 @@ inline void Core::Containers::Graph<T>::CopyMat(char ** src, char ** dest)
 }
 
 template<class T>
-inline void Core::Containers::Graph<T>::PrintAdjMatrix()
+inline void Renderer::RenderGraph::Graph<T>::PrintAdjMatrix()
 {
     std::cout << std::endl;
     for (std::uint32_t i = 0; i < (std::uint32_t)numOfExistingVerts; i++)
@@ -573,7 +617,39 @@ inline void Core::Containers::Graph<T>::PrintAdjMatrix()
 }
 
 template<class T>
-inline void Core::Containers::Graph<T>::PrintGraph()
+inline void Renderer::RenderGraph::Graph<T>::PrintGraph()
 {
+    std::cout << m_printLog;
+}
 
+template<class T>
+inline const std::vector<uint32_t>& Renderer::RenderGraph::Graph<T>::GetGraphOrigins()
+{
+    if (origins.empty())
+    {
+        // calculate the difference
+        std::sort(srcIds.begin(), srcIds.end());
+        std::sort(destIds.begin(), destIds.end());
+
+        std::set_difference(srcIds.begin(), srcIds.end(), destIds.begin(), destIds.end(),
+            std::inserter(origins, origins.end()));
+    }
+
+    return origins;
+}
+
+template<class T>
+inline const std::vector<uint32_t>& Renderer::RenderGraph::Graph<T>::GetGraphEnds()
+{
+    if (ends.empty())
+    {
+        // calculate the difference
+        std::sort(srcIds.begin(), srcIds.end());
+        std::sort(destIds.begin(), destIds.end());
+        
+        std::set_difference(destIds.begin(), destIds.end(), srcIds.begin(), srcIds.end(),
+            std::inserter(ends, ends.end()));
+    }
+
+    return ends;
 }

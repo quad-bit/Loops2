@@ -14,7 +14,7 @@
 #include "PresentationEngine.h"
 #include "VkFrameBufferFactory.h"
 #include "VkRenderPassFactory.h"
-#include "VkAttachmentFactory.h"
+#include "utility/VkImageFactory.h"
 #include "shading/VkShaderFactory.h"
 #include "shading/VkDescriptorPoolFactory.h"
 #include "shading/VkShaderResourceManager.h"

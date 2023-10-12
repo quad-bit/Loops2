@@ -19,13 +19,29 @@ inc/renderGraph/Effect.h
 inc/renderGraph/Pipeline.h
 inc/renderGraph/RenderPass.h
 inc/renderGraph/Technique.h
-inc/renderGraph/TechniqueNode.h
+inc/renderGraph/Task.h
+inc/renderGraph/RenderGraphManager.h
+inc/renderGraph/Graph.h
 
-# src/windowing/InputManager.cpp
-# src/windowing/InputManagerGLFW.cpp
-# src/windowing/MouseInputManager.cpp
-# src/windowing/Window_glfw.cpp
-# src/windowing/WindowManager.cpp
+inc/renderGraph/effects/Opaque.h
+# inc/renderGraph/pipelines/DepthViewPipeline.h
+inc/renderGraph/pipelines/LowEndPipeline.h
+inc/renderGraph/techniques/LambertianLit.h
+inc/renderGraph/tasks/RenderTask.h
+inc/renderGraph/tasks/ComputeTask.h
+inc/renderGraph/tasks/BlitTask.h
+inc/renderGraph/tasks/DownloadTask.h
+
+src/renderGraph/RenderGraphManager.cpp
+
+src/renderGraph/effects/Opaque.cpp
+# src/renderGraph/pipelines/DepthViewPipeline.cpp
+src/renderGraph/pipelines/LowEndPipeline.cpp
+src/renderGraph/techniques/LambertianLit.cpp
+src/renderGraph/tasks/RenderTask.cpp
+src/renderGraph/tasks/ComputeTask.cpp
+src/renderGraph/tasks/BlitTask.cpp
+src/renderGraph/tasks/DownloadTask.cpp
 )
 
 set(SHADER_RESOURCE_FILES
@@ -60,7 +76,7 @@ set(TARGET_NAME "renderer")
 add_library(${TARGET_NAME} 
     ${WINDOWING_FILES} 
     ${GRAPHIC_FILES} 
-    # ${RENDER_GRAPH_FILES}
+    ${RENDER_GRAPH_FILES}
     ${SHADER_RESOURCE_FILES}
 )
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})

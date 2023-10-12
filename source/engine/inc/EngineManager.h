@@ -2,10 +2,16 @@
 #include <string>
 #include <Settings.h>
 #include <RenderData.h>
+#include <memory>
+#include <renderGraph/RenderGraphManager.h>
 
 namespace Renderer
 {
     class GraphicsManager;
+    namespace RenderGraph
+    {
+        class RenderGraphManager;
+    }
 }
 
 namespace Engine
@@ -26,6 +32,7 @@ namespace Engine
 
         Core::WindowSettings m_windowSettings;
         Core::Utility::RenderData m_renderData;
+        std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
 
     public:
         void Init(const std::string& windowName = std::string{ "Test" },

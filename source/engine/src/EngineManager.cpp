@@ -9,6 +9,9 @@
 #include <Utility/Timer.h>
 #include "ECS/SceneManager.h"
 
+#include <renderGraph/pipelines/LowEndPipeline.h>
+#include <renderGraph/Graph.h>
+
 Engine::EngineManager* Engine::EngineManager::instance = nullptr;
 
 void Engine::EngineManager::Init(const std::string& windowName,
@@ -37,10 +40,20 @@ void Engine::EngineManager::Init(const std::string& windowName,
     ECS_Manager::GetInstance()->Init();
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
+
+    m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData);
+
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>();
+    m_renderGraphManager->AddPipeline(std::move(pipeline));
+
+    m_renderGraphManager->Init();
 }
 
 void Engine::EngineManager::DeInit()
 {
+    m_renderGraphManager->DeInit();
+    m_renderGraphManager.reset();
+
     Core::Utility::Timer::GetInstance()->DeInit();
     delete Core::Utility::Timer::GetInstance();
 
@@ -109,8 +122,6 @@ void Engine::EngineManager::Update()
     }
 }
 
-
-
 /*
 void EngineManager::Update()
 {
@@ -165,5 +176,5 @@ Engine::EngineManager * Engine::EngineManager::GetInstance()
 
 Engine::EngineManager::~EngineManager()
 {
-    
+
 }

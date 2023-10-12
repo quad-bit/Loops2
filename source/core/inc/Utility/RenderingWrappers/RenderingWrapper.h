@@ -663,31 +663,28 @@ namespace Core
 
         #if (RENDERING_API == VULKAN)
 
-            struct ImageInfo
+            struct ImageCreateInfo
             {
-                uint32_t width, height, depth, mips, layers;
-                Core::Enums::Format format;
-                Core::Enums::ImageViewType viewType;
-                Core::Enums::ImageType imageType;
-                //Dimensions degree;
-                Core::Enums::ColorSpace colorSpace;
-                std::vector<Core::Enums::AttachmentUsage> usage;
-                Core::Enums::Samples sampleCount;
-                Core::Enums::ImageLayout initialLayout;
+                uint32_t                    m_width, m_height, m_depth, m_mips, m_layers;
+                Core::Enums::Format         m_format;
+                Core::Enums::ImageViewType  m_viewType;
+                Core::Enums::ImageType      m_imageType;
+                Core::Enums::ColorSpace     m_colorSpace;
+                Core::Enums::Samples        m_sampleCount;
+                Core::Enums::ImageLayout    m_initialLayout;
+                std::vector<Core::Enums::AttachmentUsage> m_usages;
             };
 
-            struct ImageViewInfo
+            struct ImageViewCreateInfo
             {
-                //VkImageViewCreateFlags     flags;// not required for now.
-                uint32_t                   imageId;
-                Core::Enums::ImageViewType            viewType;
-                Core::Enums::Format                   format;
-                Core::Enums::ComponentSwizzle         components[4];
-                Core::Enums::ImageAspectFlag       imageAspect;
-                uint32_t              baseMipLevel;
-                uint32_t              levelCount;
-                uint32_t              baseArrayLayer;
-                uint32_t              layerCount;
+                Core::Enums::ImageViewType            m_viewType;
+                Core::Enums::Format                   m_format;
+                Core::Enums::ComponentSwizzle         m_components[4];
+                Core::Enums::ImageAspectFlag          m_imageAspect;
+                uint32_t                              m_baseMipLevel;
+                uint32_t                              m_levelCount;
+                uint32_t                              m_baseArrayLayer;
+                uint32_t                              m_layerCount;
             };
 
 

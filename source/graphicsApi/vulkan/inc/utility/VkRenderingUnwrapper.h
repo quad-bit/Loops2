@@ -29,15 +29,15 @@ namespace GfxVk
         Core::Enums::Samples UnWrapSampleCount(VkSampleCountFlags vkSampleCount);
         VkImageType UnWrapImageType(Core::Enums::ImageType type);
         VkImageUsageFlagBits UnwrapUsage(Core::Enums::AttachmentUsage usage);
-        VkImageUsageFlags UnwrapUsage(std::vector<Core::Enums::AttachmentUsage>& usage);
+        VkImageUsageFlags UnwrapUsage(const std::vector<Core::Enums::AttachmentUsage>& usage);
 
         VkRenderPassBeginInfo UnwrapRenderPassBeginInfo(Core::Wrappers::RenderPassBeginInfo info);
 
         VkShaderStageFlags UnwrapShaderStage(Core::Enums::ShaderType type);
         VkShaderStageFlags UnwrapShaderStage(Core::Enums::ShaderType* type, const uint32_t& count);
 
-        VkImageViewCreateInfo UnWrapImageViewCreateInfo(Core::Wrappers::ImageViewInfo* info);
-        VkImageCreateInfo UnWrapImageCreateInfo(Core::Wrappers::ImageInfo* info);
+        VkImageViewCreateInfo UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo* info);
+        VkImageCreateInfo UnWrapImageCreateInfo(const Core::Wrappers::ImageCreateInfo* info);
         VkComponentSwizzle UnWrapSwizzle(Core::Enums::ComponentSwizzle obj);
         VkImageViewType UnwrapImageViewType(Core::Enums::ImageViewType type);
         VkImageAspectFlags UnwrapAspectMask(Core::Enums::ImageAspectFlag flag);

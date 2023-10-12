@@ -1,11 +1,11 @@
 #ifndef RENDERER_RENDERPASS_H_
 #define RENDERER_RENDERPASS_H_
 
-
 namespace Renderer
 {
     namespace RenderGraph
     {
+        /*
         class RenderPass
         {
             /// Returns the identifier of this pass.
@@ -44,6 +44,7 @@ namespace Renderer
             /// @return The created clone of this pass.
             virtual IPassPtr Clone() = 0;
         };
+        */
     }
 }
 #endif//RENDERER_RENDERPASS_H_

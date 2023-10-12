@@ -97,3 +97,8 @@ Engine::ECS_Manager * Engine::ECS_Manager::GetInstance()
 Engine::ECS_Manager::~ECS_Manager()
 {
 }
+
+const Core::Utility::RenderData& Engine::ECS_Manager::GetRenderData()
+{
+    return m_renderData;
+}

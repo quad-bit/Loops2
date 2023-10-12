@@ -75,24 +75,27 @@ namespace Renderer
             Core::Enums::Format GetWindowSurfaceFormat();
             Core::Enums::ColorSpace GetWindowColorSpace();
 
-            int FindBestDepthFormat(Core::Enums::Format* imageFormat, const uint32_t& count);
+            Core::Enums::Format FindBestDepthFormat();
 
-            void SetupPresentationEngine(Core::Wrappers::ImageInfo info);
-            void CreateRenderTarget(Core::Wrappers::ImageInfo* info, Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count, bool defaultTarget,
-                uint32_t* ids);
-            void CreateDefaultRenderTarget(Core::Wrappers::ImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t& count, uint32_t* ids);
+            //void SetupPresentationEngine(Core::Wrappers::VkImageInfo info);
+            //void CreateRenderTarget(Core::Wrappers::VkImageInfo* info, Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count, bool defaultTarget,
+            //    uint32_t* ids);
+            //void CreateDefaultRenderTarget(Core::Wrappers::VkImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t& count, uint32_t* ids);
             //deprecated.
-            void DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget);
-
-            void CreateAttachment(Core::Wrappers::ImageInfo* info, const uint32_t& count, uint32_t* ids);
+            //void DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget);
             //deprecated.
-            void DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget);
+            //void DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget);
 
-            void DestroyAttachment(uint32_t* ids, bool* destroyImageView, bool* freeImageMemory, const uint32_t& count);
-            void FreeAttachmentMemory(uint32_t* imageIds, const uint32_t& count);
-            void DestroySwapChainImageViews(uint32_t* ids, const uint32_t& count);
+            //std::vector<uint32_t> CreateImage(const std::vector<Core::Wrappers::ImageInfo>& info);
 
-            void CreateImageView(Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count);
+            //void DestroyAttachment(uint32_t* ids, bool* destroyImageView, bool* freeImageMemory, const uint32_t& count);
+            //void FreeAttachmentMemory(uint32_t* imageIds, const uint32_t& count);
+            //void DestroySwapChainImageViews(uint32_t* ids, const uint32_t& count);
+
+            //void CreateImageView(Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count);
+
+            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name);
+            void DestroyImage(uint32_t imageId, bool freeImageMemory);
 
             void CreateRenderPass(
                 const Core::Wrappers::RenderPassAttachmentInfo* renderpassAttachmentList, const uint32_t& attachmentCount,

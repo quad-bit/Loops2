@@ -42,7 +42,7 @@ namespace GfxVk
         public:
             void Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount);
             void CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo);
-            void CreateSwapChain(Core::Wrappers::ImageInfo swapChainCreateInfo);
+            void CreateSwapChain(Core::Wrappers::ImageCreateInfo swapChainCreateInfo);
 
             std::vector<VkImage>* CreateSwapchainImage(Core::Wrappers::AttachmentInfo* info, uint32_t count);
             std::vector<VkImageView>* CreateSwapchainImageViews(Core::Wrappers::AttachmentInfo* info, uint32_t count);

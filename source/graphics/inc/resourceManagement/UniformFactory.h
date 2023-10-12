@@ -51,7 +51,6 @@ namespace Renderer
             Core::Wrappers::SetWrapper* AllocateSetResources(const Core::Utility::DescriptorSetInfo& setDescription);
             void AllocateDescriptorSets(Core::Wrappers::SetWrapper* wrapper, Core::Utility::DescriptorSetInfo& setDescription, const uint32_t& numDescriptorSets);
 
-            //Core::Wrappers::SetWrapper* GetSetWrapper(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
             Core::Wrappers::SetWrapper* GetSetWrapper(const Core::Utility::DescriptorSetInfo& setDescription);
             std::vector<uint32_t> AcquireMeshList(Core::Wrappers::SetWrapper* wrapper);
 
