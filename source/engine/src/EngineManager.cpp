@@ -43,7 +43,7 @@ void Engine::EngineManager::Init(const std::string& windowName,
 
     m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData);
 
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>();
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
     m_renderGraphManager->AddPipeline(std::move(pipeline));
 
     m_renderGraphManager->Init();

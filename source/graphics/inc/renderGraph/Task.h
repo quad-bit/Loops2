@@ -3,33 +3,16 @@
 
 #include <optional>
 #include <functional>
-#include <CorePrecompiled.h>
 #include <string>
+#include <CorePrecompiled.h>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
+#include <resourceManagement/Resource.h>
+#include <renderGraph/utility/Utils.h>
 
 namespace Renderer
 {
     namespace RenderGraph
     {
-        enum class RenderGraphNodeType
-        {
-            TASK_NODE,
-            RESOURCE_NODE
-        };
-
-        enum class ResourceType
-        {
-            BUFFER,
-            IMAGE
-        };
-
-        enum class ResourceMemoryUsage
-        {
-            READ_ONLY,
-            READ_WRITE,
-            WRITE_ONLY
-        };
-
         enum class TaskType
         {
             RENDER_TASK,
@@ -38,76 +21,12 @@ namespace Renderer
             DOWNLOAD_TASK
         };
 
-        class RenderGraphNodeBase
+        struct TaskInputInfo
         {
-        protected:
-            RenderGraphNodeType m_type;
-            const std::string m_name;
-
-        public:
-            RenderGraphNodeBase(const RenderGraphNodeType& nodeType, const std::string& nodeName) :
-                m_type(nodeType), m_name(nodeName)
-            {}
-
-            const std::string& GetNodeName()
-            {
-                return m_name;
-            }
-
-            virtual void Execute() = 0;
+            Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
+            ResourceAlias* m_resource;
+            uint32_t m_resourceParentNodeId;
         };
-
-
-        class Resource
-        {
-        protected:
-            /// <summary>
-            /// The resource might be represented by multiple nodes in the graph, hence the logical id 
-            /// is assigned to identify the uniqueness of the resource thorughtout the graph.
-            /// The physicalId will be assigned in later stages.
-            /// </summary>
-            uint32_t m_logicalResourceId;
-
-            /// <summary>
-            /// Will point to the TextureId or BufferId
-            /// </summary>
-            std::optional<uint32_t> m_physicalResourceId;
-            ResourceType m_resourceType;
-            std::string m_name;
-
-        public:
-            Resource() = delete;
-            Resource(const ResourceType& resourceType, const std::string& name) :
-                m_resourceType(resourceType), m_name(name)
-            {}
-
-            void AssignPhysicalResourceId(const uint32_t id)
-            {
-                m_physicalResourceId = id;
-            }
-
-        };
-
-        class ImageResource final : public Resource
-        {
-        private:
-            Core::Enums::ImageLayout m_currentLayout, m_targetLayout;
-            size_t m_width, m_height;
-
-        public:
-            ImageResource(const size_t& width, const size_t& height, const std::string& name) :
-                Resource(ResourceType::IMAGE, name), m_width(width), m_height(height)
-            {}
-        };
-
-        class BufferResource final : public Resource
-        {
-        private:
-            size_t m_dataSize, m_dataSizeAligned;
-
-        public:
-        };
-
         /// <summary>
         /// Any cmd can be encapsulated into a task node. The standard types will be RenderTask, ComputeTask, DownloadTask
         /// and BlitTask
@@ -115,10 +34,13 @@ namespace Renderer
         class Task
         {
         private:
+
         protected:
-            std::vector<Resource*> m_inputs, m_outputs;
+            std::vector<TaskInputInfo> m_inputs;
+            std::vector <ResourceAlias*> m_outputs;
             std::string m_name;
             TaskType m_taskType;
+
         public:
             //virtual const uint32_t& GetId() = 0;
             Task() = delete;
@@ -130,51 +52,56 @@ namespace Renderer
             {
                 return m_name;
             }
-            void AddInput(Resource* input)
+            void AddInput(ResourceAlias* input,const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, uint32_t nodeId)
             {
-                m_inputs.push_back(input);
+                m_inputs.push_back(TaskInputInfo{usage, input, nodeId});
             }
-            void AddOutput(Resource* output)
+            void AddOutput(ResourceAlias* output)
             {
                 m_outputs.push_back(output);
             }
-            const std::vector<Resource*>& GetInputs()
+            const std::vector<TaskInputInfo>& GetInputs()
             {
                 return m_inputs;
             }
-            const std::vector<Resource*>& GetOutputs()
+            const std::vector<ResourceAlias*>& GetOutputs()
             {
                 return m_outputs;
             }
         };
 
-        class TaskNode : public RenderGraphNodeBase
+        class TaskNode : public Renderer::RenderGraph::Utils::RenderGraphNodeBase
         {
         protected:
             std::unique_ptr<Task> m_task;
         public:
-            TaskNode(std::unique_ptr<Task> task) :
-                RenderGraphNodeBase(RenderGraphNodeType::TASK_NODE, task->GetTaskName()), m_task(std::move(task))
+            TaskNode(std::unique_ptr<Task> task, Utils::GraphTraversalCallback& funcs) :
+                RenderGraphNodeBase(Renderer::RenderGraph::Utils::RenderGraphNodeType::TASK_NODE, task->GetTaskName(), funcs), m_task(std::move(task))
             {}
+
+            Task* GetTask()
+            {
+                return m_task.get();
+            }
 
             virtual void Execute() override
             {
-                //m_task->
+                m_graphTraversalCallback.PipelineCompileCallback(this);
             }
         };
 
-        class ResourceNode : public RenderGraphNodeBase
+        class ResourceNode : public Renderer::RenderGraph::Utils::RenderGraphNodeBase
         {
         protected:
-            ResourceType m_resourceType;
-            std::map<uint32_t, ResourceMemoryUsage> sourceTaskIdToUsageMap, destTaskIdToUsageMap;
-            Resource* m_resource;
+            Renderer::ResourceManagement::ResourceType m_resourceType;
+            std::map<uint32_t, Renderer::RenderGraph::Utils::ResourceMemoryUsage> sourceTaskIdToUsageMap, destTaskIdToUsageMap;
+            ResourceAlias* m_resource;
         public:
-            ResourceNode(Resource* resource, const std::string& nodeName, const ResourceType& resourceType) :
-                RenderGraphNodeBase(RenderGraphNodeType::RESOURCE_NODE, nodeName), m_resourceType(resourceType), m_resource(resource)
+            ResourceNode(ResourceAlias* resource, const std::string& nodeName, const Renderer::ResourceManagement::ResourceType& resourceType, Utils::GraphTraversalCallback& funcs) :
+                RenderGraphNodeBase(Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE, nodeName, funcs), m_resourceType(resourceType), m_resource(resource)
             {}
 
-            void RegisterAsTaskInput(const uint32_t taskId, const ResourceMemoryUsage& usage)
+            void RegisterAsTaskInput(const uint32_t taskId, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
             {
                 if(sourceTaskIdToUsageMap.find(taskId) != sourceTaskIdToUsageMap.end())
                 {
@@ -183,7 +110,7 @@ namespace Renderer
                 sourceTaskIdToUsageMap.insert({ taskId, usage });
             }
 
-            void RegisterAsTaskOutput(const uint32_t taskId, const ResourceMemoryUsage& usage)
+            void RegisterAsTaskOutput(const uint32_t taskId, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
             {
                 if (destTaskIdToUsageMap.find(taskId) != destTaskIdToUsageMap.end())
                 {
@@ -192,9 +119,14 @@ namespace Renderer
                 destTaskIdToUsageMap.insert({ taskId, usage });
             }
 
+            ResourceAlias* GetResource()
+            {
+                return m_resource;
+            }
+
             virtual void Execute() override
             {
-
+                m_graphTraversalCallback.PipelineCompileCallback(this);
             }
         };
 

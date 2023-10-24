@@ -690,12 +690,8 @@ namespace Core
 
             struct BufferCreateInfo
             {
-                //VkBufferCreateFlags flags;
                 size_t size;
                 std::vector<Core::Enums::BufferUsage> usage;
-                //SharingMode sharingMode;
-                //uint32_t queueFamilyIndexCount;
-                //const uint32_t* pQueueFamilyIndices;
             };
 
             struct SamplerCreateInfo

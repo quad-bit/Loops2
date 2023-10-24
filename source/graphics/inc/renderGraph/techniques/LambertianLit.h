@@ -16,12 +16,15 @@ namespace Renderer
                 const Core::Utility::RenderData& m_renderData;
 
             public:
-                LambertianLit(const Core::Utility::RenderData& renderData, const Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) :
-                    Technique(graph, "LambertianLit"), m_renderData(renderData)
+                LambertianLit(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
+                    Technique(graph, "LambertianLit", funcs), m_renderData(renderData)
                 {
                     // Create resource node
-
                 }
+
+                virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphOriginResourceNodes() override;
+                virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphEndResourceNodes() override;
+
             };
         }
     }

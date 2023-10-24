@@ -6,12 +6,20 @@
 #include <queue>
 #include <deque>
 #include <map>
-
+#include <functional>
 
 namespace Renderer
 {
     namespace RenderGraph
     {
+
+        struct NodeDrawAttribs
+        {
+            std::string nodeName;
+            std::string nodeColor;
+            std::string nodeShape;
+        };
+
         template <class T>
         class Graph;
 
@@ -54,11 +62,12 @@ namespace Renderer
         {
         private:
             std::vector<GraphNode<T>*> vertices;
+            std::vector<GraphNode<T>*> origins, ends;
 
-            std::vector<uint32_t> origins, ends;
-            std::vector<uint32_t> srcIds, destIds;
+            //std::vector<uint32_t> origins, ends;
+            //std::vector<uint32_t> srcIds, destIds;
             std::string m_printLog;
-            size_t m_insertOffset = 11; // size of "digraph G{\n" 
+            size_t m_insertOffsetHeader = 11; // size of "digraph G{\n" 
             int maxVertices, numOfExistingVerts;
             int matrixExtendingLimit = 20;// when the matrix gets exhausted relocate it with additional matrixExtendingLimit size
             char** adjMatrix;
@@ -66,8 +75,7 @@ namespace Renderer
             char* visitedVertices;
 
             void ValidateVisitation(std::map<std::uint32_t, std::uint32_t>& visitedMap);
-            void AddToSets(uint32_t srcId, uint32_t destId);
-            void AddToPrintLog(std::string sourceName, std::string destName);
+            void AddToSets(Renderer::RenderGraph::GraphNode<T>* srcNode, Renderer::RenderGraph::GraphNode<T>* destNode);
 
         public:
             Graph(int numVerts) : maxVertices(numVerts), adjMatrix(NULL)
@@ -161,8 +169,9 @@ namespace Renderer
             void CopyMat(char** src, char** dest);
             void PrintAdjMatrix();
             void PrintGraph();
-            const std::vector<uint32_t>& GetGraphOrigins();
-            const std::vector<uint32_t>& GetGraphEnds();
+            const std::vector<GraphNode<T>*>& GetGraphOrigins();
+            const std::vector<GraphNode<T>*>& GetGraphEnds();
+            void AddToPrintLog(NodeDrawAttribs srcAttrib, NodeDrawAttribs dstAttribs, const std::string& edgeLabel);
         };
     }
 }
@@ -174,7 +183,7 @@ inline Renderer::RenderGraph::GraphNode<T>* Renderer::RenderGraph::Graph<T>::Pus
         ExtendMatrix();
 
     Renderer::RenderGraph::GraphNode<T> * graphNode = new Renderer::RenderGraph::GraphNode<T>(node);
-
+    node->SetId(graphNode->GetNodeId());
     vertices.push_back(graphNode);
     numOfExistingVerts++;
     return graphNode;
@@ -185,7 +194,7 @@ inline bool Renderer::RenderGraph::Graph<T>::Push(Renderer::RenderGraph::GraphNo
 {
     if ((int)vertices.size() >= maxVertices)
         ExtendMatrix();
-
+    graphNode->GetNodeData()->SetId(graphNode->GetNodeId());
     vertices.push_back(graphNode);
     numOfExistingVerts++;
 
@@ -216,8 +225,7 @@ inline void Renderer::RenderGraph::Graph<T>::AttachDirectedEdge(Renderer::Render
     assert(adjMatrix != NULL);
 
     adjMatrix[srcNode->nodeId][destNode->nodeId] = 1;
-    AddToSets(srcNode->nodeId, destNode->nodeId);
-    AddToPrintLog(srcNode->GetNodeData()->GetNodeName(), destNode->GetNodeData()->GetNodeName());
+    AddToSets(srcNode, destNode);
 }
 
 template<class T>
@@ -497,25 +505,99 @@ inline void Renderer::RenderGraph::Graph<T>::ValidateVisitation(std::map<std::ui
 }
 
 template<class T>
-inline void Renderer::RenderGraph::Graph<T>::AddToSets(uint32_t srcId, uint32_t destId)
+inline void Renderer::RenderGraph::Graph<T>::AddToSets(Renderer::RenderGraph::GraphNode<T>* srcNode, Renderer::RenderGraph::GraphNode<T>* destNode)
 {
-    auto it = std::find(srcIds.begin(), srcIds.end(), srcId);
-    if(it == srcIds.end())
-        srcIds.push_back(srcId);
+    //auto it = std::find(srcIds.begin(), srcIds.end(), srcId);
+    //if(it == srcIds.end())
+    //    srcIds.push_back(srcId);
 
-    it = std::find(destIds.begin(), destIds.end(), destId);
-    if (it == destIds.end())
-        destIds.push_back(destId);
+    //it = std::find(destIds.begin(), destIds.end(), destId);
+    //if (it == destIds.end())
+    //    destIds.push_back(destId);
+
+    auto FindIterator = [](Renderer::RenderGraph::GraphNode<T>* target, std::vector< Renderer::RenderGraph::GraphNode<T>*>& list) -> std::vector<Renderer::RenderGraph::GraphNode<T>*>::iterator
+    {
+        auto it = std::find_if(list.begin(), list.end(), [&](Renderer::RenderGraph::GraphNode<T>* node)
+        {
+            // return true if destNode is found in the origins
+            return node->GetNodeId() == target->GetNodeId();
+        });
+
+        return it;
+    };
+
+    auto it = FindIterator(srcNode, origins);
+    if (it == origins.end())
+        origins.push_back(srcNode);
+
+    it = FindIterator(destNode, ends);
+    if (it == ends.end())
+        ends.push_back(destNode);
+
+    return;
+
+    auto AddElements = [&FindIterator](Renderer::RenderGraph::GraphNode<T>* target,
+        std::vector< Renderer::RenderGraph::GraphNode<T>*>& currentList,
+        std::vector< Renderer::RenderGraph::GraphNode<T>*>& oppositeList)
+    {
+        // check if node exists in ends
+        // if yes then it can't be in origin
+        // if no then add it origin, avoid duplication
+        auto oppIt = FindIterator(target, oppositeList);
+        if (oppIt != oppositeList.end())
+        {
+            // remove it from ends
+            oppositeList.erase(oppIt);
+        }
+        else
+        {
+            auto currentIt = FindIterator(target, currentList);
+            if (currentIt == currentList.end())
+            {
+                currentList.push_back(target);
+            }
+        }
+    };
+
+    if (origins.empty())
+    {
+        origins.push_back(srcNode);
+    }
+    else
+    {
+        AddElements(srcNode, origins, ends);
+    }
+
+    if (ends.empty())
+    {
+        ends.push_back(destNode);
+    }
+    else
+    {
+        AddElements(destNode, ends, origins);
+    }
 }
 
 template<class T>
-inline void Renderer::RenderGraph::Graph<T>::AddToPrintLog(std::string sourceName, std::string destName)
+inline void Renderer::RenderGraph::Graph<T>::AddToPrintLog(NodeDrawAttribs srcAttrib, NodeDrawAttribs dstAttrib, const std::string& edgeLabel)
 {
-    sourceName = "\"" + sourceName + "\" -> ";
-    destName = "\"" + destName + "\"\n";
-    std::string result = sourceName + destName;
-    m_printLog.insert(m_insertOffset, result);
-    m_insertOffset += (result.size());
+    std::string srcAttribDesc = "\"" + srcAttrib.nodeName + "\"" + "[color=" + "\"" + srcAttrib.nodeColor + "\"" + "shape="+ "\"" + srcAttrib.nodeShape + "\"]; \n";
+    m_printLog.insert(m_insertOffsetHeader, srcAttribDesc);
+    m_insertOffsetHeader += (srcAttribDesc.size());
+    
+    std::string destAttribDesc = "\"" + dstAttrib.nodeName + "\"" + "[color=" + "\"" + dstAttrib.nodeColor + "\"" + "shape=" + "\"" + dstAttrib.nodeShape + "\"]; \n";
+    m_printLog.insert(m_insertOffsetHeader, destAttribDesc);
+    m_insertOffsetHeader += (destAttribDesc.size());
+
+    std::string sourceName = "\"" + srcAttrib.nodeName + "\" -> ";
+    std::string destName = "\"" + dstAttrib.nodeName + "\"";
+    std::string nodes = sourceName + destName;
+    if (edgeLabel != "")
+        nodes += "[label = \" " + edgeLabel + "\"]\n";
+    else
+        destName += "\n";
+    m_printLog.insert(m_insertOffsetHeader, nodes);
+    m_insertOffsetHeader += (nodes.size());
 }
 
 
@@ -622,34 +704,71 @@ inline void Renderer::RenderGraph::Graph<T>::PrintGraph()
     std::cout << m_printLog;
 }
 
-template<class T>
-inline const std::vector<uint32_t>& Renderer::RenderGraph::Graph<T>::GetGraphOrigins()
+namespace
 {
-    if (origins.empty())
+    template<typename T>
+    void RemoveCommon(std::vector<Renderer::RenderGraph::GraphNode<T>*>& origins, std::vector<Renderer::RenderGraph::GraphNode<T>*>& ends)
     {
-        // calculate the difference
-        std::sort(srcIds.begin(), srcIds.end());
-        std::sort(destIds.begin(), destIds.end());
+        std::sort(origins.begin(), origins.end(), [](Renderer::RenderGraph::GraphNode<T>* a, Renderer::RenderGraph::GraphNode<T>* b)
+        {
+            return a->GetNodeId() < b->GetNodeId();
+        });
 
-        std::set_difference(srcIds.begin(), srcIds.end(), destIds.begin(), destIds.end(),
-            std::inserter(origins, origins.end()));
+        std::sort(ends.begin(), ends.end(), [](Renderer::RenderGraph::GraphNode<T>* a, Renderer::RenderGraph::GraphNode<T>* b)
+        {
+            return a->GetNodeId() < b->GetNodeId();
+        });
+
+        uint32_t originCounter = 0, endsCounter = 0;
+        std::vector<uint32_t> originIndicies, endIndicies;
+        while(true)
+        {
+            auto originNodeId = origins[originCounter]->GetNodeId();
+            auto endNodeId = ends[endsCounter]->GetNodeId();
+            if (originNodeId == endNodeId)
+            {
+                originIndicies.push_back(originCounter++);
+                endIndicies.push_back(endsCounter++);
+            }
+            else if(origins[originCounter]->GetNodeId() < ends[endsCounter]->GetNodeId())
+            {
+                originCounter++;
+            }
+            else
+            {
+                endsCounter++;
+            }
+
+            if (originCounter >= origins.size() || endsCounter >= ends.size())
+                break;
+        }
+
+        auto EraseElements = [](std::vector<Renderer::RenderGraph::GraphNode<T>*>& list, const std::vector<uint32_t>& indicies)
+        {
+            for (uint32_t i = 0; i < indicies.size(); i++)
+            {
+                {
+                    auto index = (indicies[i] - i);
+                    list.erase(std::next(list.begin(), index));
+                }
+            }
+        };
+
+        EraseElements(origins, originIndicies);
+        EraseElements(ends, endIndicies);
     }
+}
 
+template<class T>
+inline const std::vector<Renderer::RenderGraph::GraphNode<T>*>& Renderer::RenderGraph::Graph<T>::GetGraphOrigins()
+{
+    RemoveCommon(origins, ends);
     return origins;
 }
 
 template<class T>
-inline const std::vector<uint32_t>& Renderer::RenderGraph::Graph<T>::GetGraphEnds()
+inline const std::vector<Renderer::RenderGraph::GraphNode<T>*>& Renderer::RenderGraph::Graph<T>::GetGraphEnds()
 {
-    if (ends.empty())
-    {
-        // calculate the difference
-        std::sort(srcIds.begin(), srcIds.end());
-        std::sort(destIds.begin(), destIds.end());
-        
-        std::set_difference(destIds.begin(), destIds.end(), srcIds.begin(), srcIds.end(),
-            std::inserter(ends, ends.end()));
-    }
-
+    RemoveCommon(origins, ends);
     return ends;
 }

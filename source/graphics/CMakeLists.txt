@@ -21,6 +21,7 @@ inc/renderGraph/RenderPass.h
 inc/renderGraph/Technique.h
 inc/renderGraph/Task.h
 inc/renderGraph/RenderGraphManager.h
+inc/renderGraph/utility/Utils.h
 inc/renderGraph/Graph.h
 
 inc/renderGraph/effects/Opaque.h
@@ -33,7 +34,8 @@ inc/renderGraph/tasks/BlitTask.h
 inc/renderGraph/tasks/DownloadTask.h
 
 src/renderGraph/RenderGraphManager.cpp
-
+src/renderGraph/Pipeline.cpp
+src/renderGraph/utility/Utils.cpp
 src/renderGraph/effects/Opaque.cpp
 # src/renderGraph/pipelines/DepthViewPipeline.cpp
 src/renderGraph/pipelines/LowEndPipeline.cpp
@@ -48,10 +50,12 @@ set(SHADER_RESOURCE_FILES
 inc/resourceManagement/UniformFactory.h
 inc/resourceManagement/MaterialFactory.h
 inc/resourceManagement/MeshFactory.h
+inc/resourceManagement/Resource.h
 
 src/resourceManagement/UniformFactory.cpp
 src/resourceManagement/MaterialFactory.cpp
 src/resourceManagement/MeshFactory.cpp
+src/resourceManagement/Resource.cpp
 )
 
 set(GRAPHIC_FILES

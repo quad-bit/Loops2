@@ -19,7 +19,7 @@ namespace Renderer
             const Core::Utility::RenderData& m_renderData;
 
             std::vector<std::unique_ptr<Renderer::RenderGraph::Pipeline>> m_pipelines;
-            std::vector<std::unique_ptr<Renderer::RenderGraph::Graph<RenderGraphNodeBase>>> m_graphs;
+            //std::vector<std::unique_ptr<Renderer::RenderGraph::Graph<RenderGraphNodeBase>>> m_graphs;
         public:
             explicit RenderGraphManager(const Core::Utility::RenderData& renderData);
             void AddPipeline(std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline);

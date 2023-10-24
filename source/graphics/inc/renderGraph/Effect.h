@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Technique.h"
+//#include "renderGraph/utility/Utils.h"
 
 namespace Renderer
 {
@@ -15,8 +16,9 @@ namespace Renderer
         {
         protected:
             std::vector<std::unique_ptr<Technique>> m_techniques;
-            Renderer::RenderGraph::Graph<RenderGraphNodeBase>& m_graph;
+            Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& m_graph;
             const std::string m_name;
+            Utils::CallbackUtility& m_callbackUtility;
 
         public:
             //virtual const uint32_t& GetId() = 0;
@@ -31,8 +33,16 @@ namespace Renderer
             //virtual Technique GetTechnique(const float effectLOD) = 0;
             //virtual Technique GetTechnique(const std::string& techniqueName) = 0;
 
-            Effect(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph, const std::string& name) :
-                m_graph(graph), m_name(name) {}
+            Effect(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Utils::CallbackUtility& funcs) :
+                m_graph(graph), m_name(name), m_callbackUtility(funcs) {}
+
+            virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphOriginResourceNodes() = 0;
+            virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphEndResourceNodes() = 0;
+
+            const std::vector<std::unique_ptr<Technique>>& GetTechniques()
+            {
+                return m_techniques;
+            }
         };
     }
 }

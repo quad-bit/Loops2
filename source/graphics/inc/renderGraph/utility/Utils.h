@@ -1,0 +1,102 @@
+#ifndef RENDERER_UTILS_H_
+#define RENDERER_UTILS_H_
+
+#include <string>
+#include <Utility/RenderingWrappers/RenderingWrapper.h>
+#include <optional>
+#include "renderGraph/Graph.h"
+#include <functional>
+#include "resourceManagement/Resource.h"
+
+namespace Renderer
+{
+    namespace RenderGraph
+    {
+        namespace Utils
+        {
+            enum class RenderGraphNodeType
+            {
+                TASK_NODE,
+                RESOURCE_NODE
+            };
+
+            enum class ResourceMemoryUsage
+            {
+                READ_ONLY,
+                READ_WRITE,
+                WRITE_ONLY,
+                NONE //for output node resource nodes
+            };
+
+            enum class PipelineActivityState
+            {
+                COMPILE,
+                EXECUTE,
+                DESTROY,
+                NONE
+            };
+
+            class RenderGraphNodeBase;
+
+            struct ResourceCreationCallback
+            {
+                std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)> CreateImageFunc;
+                std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)> CreateBufferFunc;
+            };
+
+            struct GraphTraversalCallback
+            {
+                std::function<void(Renderer::RenderGraph::Utils::RenderGraphNodeBase*)> PipelineCompileCallback;
+            };
+
+            struct CallbackUtility
+            {
+                ResourceCreationCallback m_resourceCreationCallback;
+                GraphTraversalCallback m_graphTraversalCallback;
+            };
+
+            class RenderGraphNodeBase
+            {
+            protected:
+                RenderGraphNodeType m_type;
+                const std::string m_name;
+                Utils::GraphTraversalCallback m_graphTraversalCallback;
+                uint32_t m_id;
+
+            public:
+                RenderGraphNodeBase(const RenderGraphNodeType& nodeType, const std::string& nodeName, Utils::GraphTraversalCallback& funcs) :
+                    m_type(nodeType), m_name(nodeName), m_graphTraversalCallback(funcs)
+                {}
+
+                void SetId(uint32_t id)
+                {
+                    m_id = id;
+                }
+
+                const uint32_t& GetId()
+                {
+                    return m_id;
+                }
+
+                const std::string& GetNodeName()
+                {
+                    return m_name;
+                }
+
+                const RenderGraphNodeType& GetNodeType()
+                {
+                    return m_type;
+                }
+
+                virtual void Execute() = 0;
+            };
+
+            void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
+                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
+        }
+    }
+}
+
+#endif //RENDERER_UTILS_H_
