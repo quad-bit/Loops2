@@ -1,5 +1,6 @@
 #include "renderGraph/Pipeline.h"
 #include <vector>
+#include <algorithm>
 
 static std::vector<Renderer::RenderGraph::Utils::RenderGraphNodeBase*> singlePath;
 
@@ -52,7 +53,7 @@ namespace
                                 {
                                     auto& targetTaskInputs = task->GetInputs();
                                     auto ittt = std::find_if(targetTaskInputs.begin(), targetTaskInputs.end(), [&input]
-                                    (const Renderer::RenderGraph::TaskInputInfo& info)
+                                    (const Renderer::RenderGraph::Utils::ConnectionInfo& info)
                                     {
                                         return info.m_resourceParentNodeId == input.m_resourceParentNodeId;
                                     });
@@ -177,24 +178,64 @@ namespace
         // Sort the tasks within the level. 
         // If there is dependency (breadth first) within a level there might be depth first 
         // dependency between tasks.
-        //for (auto& level : perLevelTaskInfo)
-        //{
-        //    for (auto pair : level.second.m_localDependency)
-        //    {
-        //        uint32_t index = 0;
-        //        for (auto taskNode : level.second.m_taskList)
-        //        {
-        //            auto taskFirst = ((Renderer::RenderGraph::TaskNode*)level.second.m_taskList[pair.first])->GetTask();
-        //            auto taskSecond = ((Renderer::RenderGraph::TaskNode*)level.second.m_taskList[pair.first])->GetTask();
+        
+        // Within the same level, but depth wise in the graph
+        auto DepthWiseTaskSort = [&]() 
+        {
+            for (auto& level : perLevelTaskInfo)
+            {
+                for (auto pair : level.second.m_dependency)
+                {
+                    auto firstNode = pair.first;
+                    auto secondNode = pair.second;
 
-        //            if (index != pair.first || index != pair.second)
-        //            {
+                    // check for depthwise dependency within the level
+                    auto firstTask = ((Renderer::RenderGraph::TaskNode*)(firstNode))->GetTask();
+                    auto secondTask = ((Renderer::RenderGraph::TaskNode*)(secondNode))->GetTask();
 
-        //            }
-        //        }
-        //    }
-        //}
+                    auto copyList = level.second.m_taskList;
+                    auto& originalList = level.second.m_taskList;
+                    for (auto taskNode : copyList)
+                    {
+                        if (taskNode->GetId() != firstNode->GetId() && taskNode->GetId() != secondNode->GetId())
+                        {
+                            auto FindCommon = [](Renderer::RenderGraph::Utils::RenderGraphNodeBase* node,
+                                Renderer::RenderGraph::Utils::RenderGraphNodeBase* taskNode) -> bool
+                            {
+                                auto inputs = ((Renderer::RenderGraph::TaskNode*)node)->GetTask()->GetInputs();
+                                auto outputs = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask()->GetOutputs();
 
+                                auto result = std::find_first_of(inputs.begin(), inputs.end(), outputs.begin(), outputs.end(),
+                                    [&](const Renderer::RenderGraph::Utils::ConnectionInfo& inp,
+                                        const Renderer::RenderGraph::Utils::ConnectionInfo& out)
+                                {
+                                    return inp.m_resourceParentNodeId == out.m_resourceParentNodeId;
+                                });
+                                if (result != inputs.end())
+                                {
+                                    return true;
+                                }
+                                return false;
+                            };
+
+                            if (FindCommon(firstNode, taskNode) || FindCommon(secondNode, taskNode))
+                            {
+                                // swap position
+                                auto pos = std::find(originalList.begin(), originalList.end(), taskNode);
+                                pos = originalList.insert(++pos, firstNode);
+                                originalList.insert(++pos, secondNode);
+
+                                auto posFirstNode = std::find(originalList.begin(), originalList.end(), firstNode);
+                                originalList.erase(posFirstNode);
+
+                                auto posSecondNode = std::find(originalList.begin(), originalList.end(), secondNode);
+                                originalList.erase(posSecondNode);
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
         std::vector<Renderer::RenderGraph::Utils::RenderGraphNodeBase*> nodeListSorted;
         uint32_t levelCounter = 0;
@@ -262,26 +303,6 @@ namespace
                                             taskList.erase(itt);
                                         }
                                     }
-
-                                    // check for depthwise dependency within the level
-                                    /*uint32_t index = 0;
-                                    auto firstTask = ((Renderer::RenderGraph::TaskNode*)(firstNode))->GetTask();
-                                    auto secondTask = ((Renderer::RenderGraph::TaskNode*)(secondNode))->GetTask();
-                                    for (auto taskNode : perLevelTaskInfo[i].m_taskList)
-                                    {
-                                        if (index != pair.first || index != pair.second)
-                                        {
-                                            auto inputs = ((Renderer::RenderGraph::TaskNode*)node)->GetTask()->GetInputs();
-                                            auto outputs = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask()->GetOutputs();
-
-                                            auto result = std::find_first_of(inputs.begin(), inputs.end(), outputs.begin(), outputs.end());
-                                            if (result != inputs.end())
-                                            {
-
-                                            }
-                                        }
-                                        index++;
-                                    }*/
                                 }
                                 else // Erase it from sorted list
                                 {
@@ -300,12 +321,14 @@ namespace
                 for (auto id : eraseId)
                 {
                     auto it = std::next(perLevelTaskInfo[i].m_taskList.begin(), id);
-                    std::cout << "erasing : " << (*it)->GetNodeName();
+                    std::cout << "erasing : " << (*it)->GetNodeName()<<"\n";
                     perLevelTaskInfo[i].m_taskList.erase(it);
                 }
             }
             levelCounter++;
         }
+
+        DepthWiseTaskSort();
     }
 }
 
@@ -369,6 +392,7 @@ void Renderer::RenderGraph::Pipeline::CompilePipeline()
                 }
             }
         }
+        std::cout << "\n\n";
     };
 
     //2. Level wise segregation

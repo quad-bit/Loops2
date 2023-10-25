@@ -21,12 +21,7 @@ namespace Renderer
             DOWNLOAD_TASK
         };
 
-        struct TaskInputInfo
-        {
-            Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
-            ResourceAlias* m_resource;
-            uint32_t m_resourceParentNodeId;
-        };
+
         /// <summary>
         /// Any cmd can be encapsulated into a task node. The standard types will be RenderTask, ComputeTask, DownloadTask
         /// and BlitTask
@@ -36,8 +31,8 @@ namespace Renderer
         private:
 
         protected:
-            std::vector<TaskInputInfo> m_inputs;
-            std::vector <ResourceAlias*> m_outputs;
+            std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_inputs;
+            std::vector <Renderer::RenderGraph::Utils::ConnectionInfo> m_outputs;
             std::string m_name;
             TaskType m_taskType;
 
@@ -52,19 +47,29 @@ namespace Renderer
             {
                 return m_name;
             }
-            void AddInput(ResourceAlias* input,const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, uint32_t nodeId)
+            /*void AddInput(ResourceAlias* input,const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, uint32_t nodeId)
             {
                 m_inputs.push_back(TaskInputInfo{usage, input, nodeId});
+            }*/
+            void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
+            {
+                m_inputs.push_back(info);
             }
-            void AddOutput(ResourceAlias* output)
+
+            void AddOutput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
+            {
+                m_outputs.push_back(info);
+            }
+
+            /*void AddOutput(ResourceAlias* output)
             {
                 m_outputs.push_back(output);
-            }
-            const std::vector<TaskInputInfo>& GetInputs()
+            }*/
+            const std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& GetInputs()
             {
                 return m_inputs;
             }
-            const std::vector<ResourceAlias*>& GetOutputs()
+            const std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& GetOutputs()
             {
                 return m_outputs;
             }

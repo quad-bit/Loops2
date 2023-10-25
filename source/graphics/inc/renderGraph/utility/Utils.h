@@ -36,6 +36,13 @@ namespace Renderer
                 NONE
             };
 
+            struct ConnectionInfo
+            {
+                Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
+                ResourceAlias* m_resource;
+                uint32_t m_resourceParentNodeId;
+            };
+
             class RenderGraphNodeBase;
 
             struct ResourceCreationCallback

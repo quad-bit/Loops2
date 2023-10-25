@@ -54,7 +54,15 @@ void Renderer::RenderGraph::Utils::AddEdge(Renderer::RenderGraph::Graph<RenderGr
         auto task = static_cast<Renderer::RenderGraph::TaskNode*>(destNode->GetNodeData())->GetTask();
         auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(srcNode->GetNodeData())->GetResource();
 
-        task->AddInput(resource, usage, srcNode->GetNodeId());
+        task->AddInput(ConnectionInfo{ usage, resource, srcNode->GetNodeId() });
+    }
+    else if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
+        destNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(srcNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(destNode->GetNodeData())->GetResource();
+
+        task->AddOutput(ConnectionInfo{ usage, resource, destNode->GetNodeId() });
     }
 
     graph.AttachDirectedEdge(srcNode, destNode);
