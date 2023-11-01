@@ -19,7 +19,7 @@ namespace Renderer
         protected:
             Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& m_graph;
             const std::string m_name;
-            std::vector<std::unique_ptr<Task>> m_tasks;
+            //std::vector<std::unique_ptr<Task>> m_tasks;
             std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> m_taskNodes, m_resourceNodes;
             Utils::CallbackUtility& m_callbackUtility;
         public:
@@ -36,6 +36,11 @@ namespace Renderer
             Technique(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Utils::CallbackUtility& funcs) :
                 m_graph(graph), m_name(name), m_callbackUtility(funcs)
             {}
+
+            virtual ~Technique()
+            {
+
+            }
 
             const std::vector<graphNodeAlias*>& GetTaskNodeList()
             {

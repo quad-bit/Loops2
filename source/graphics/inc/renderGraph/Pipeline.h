@@ -77,22 +77,28 @@ namespace Renderer
             std::vector<PathsPerOrigin> m_pathPerOrigin;
 
             uint32_t m_passLevelCount = 0;
-            //std::map<uint32_t, std::vector<Renderer::RenderGraph::Utils::RenderGraphNodeBase*>> m_perLevelTaskMap;
             std::map<uint32_t, PerLevelTaskInfo> m_perLevelTaskInfo;
 
             Renderer::RenderGraph::Utils::RenderGraphNodeBase* m_currentOrigin;
             void PopulatePath(Renderer::RenderGraph::Utils::RenderGraphNodeBase* node);
 
-            /*virtual void ValidatePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>&) = 0;
-            virtual void CreateLogicalPasses(Renderer::RenderGraph::Graph<RenderGraphNodeBase>&) = 0;
-            virtual void CreatePassResources(Renderer::RenderGraph::Graph<RenderGraphNodeBase>&) = 0;
-            virtual void CreateRenderPasses(Renderer::RenderGraph::Graph<RenderGraphNodeBase>&) = 0;
-            virtual void CreateSynchronisations(Renderer::RenderGraph::Graph<RenderGraphNodeBase>&) = 0;
-            */
-
         public:
+            virtual ~Pipeline()
+            {
+                m_graph.reset();
 
-            virtual ~Pipeline() {}
+                for (auto& effect : m_effects)
+                    effect.reset();
+                m_effects.clear();
+
+                for (auto& buffer : m_bufferList)
+                    buffer.reset();
+                m_bufferList.clear();
+
+                for (auto& image : m_imageList)
+                    image.reset();
+                m_imageList.clear();
+            }
 
             /// <summary>
             /// Declare technique and effect dependencies, populate the graph
@@ -102,9 +108,6 @@ namespace Renderer
                 m_name(name),
                 m_graph(std::make_unique< Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>>(MAX_GRAPH_VERTICES))
             {
-                //using std::placeholders::_1;
-                //using std::placeholders::_2;
-
                 m_resourseCreationCallback.CreateImageFunc = std::bind(&Pipeline::CreateImage, this, std::placeholders::_1, std::placeholders::_2);
                 m_resourseCreationCallback.CreateBufferFunc = std::bind(&Pipeline::CreateBuffer, this, std::placeholders::_1, std::placeholders::_2);
 

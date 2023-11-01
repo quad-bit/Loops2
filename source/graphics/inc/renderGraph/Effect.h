@@ -21,6 +21,12 @@ namespace Renderer
             Utils::CallbackUtility& m_callbackUtility;
 
         public:
+            virtual ~Effect()
+            {
+                for (auto& technique : m_techniques)
+                    technique.reset();
+                m_techniques.clear();
+            }
             //virtual const uint32_t& GetId() = 0;
             //virtual const std::vector<Technique> & GetTechniques() = 0;
 

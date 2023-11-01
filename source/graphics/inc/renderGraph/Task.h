@@ -43,6 +43,9 @@ namespace Renderer
                 m_name(name), m_taskType(taskType)
             {}
 
+            virtual ~Task()
+            {}
+
             std::string GetTaskName()
             {
                 return m_name;

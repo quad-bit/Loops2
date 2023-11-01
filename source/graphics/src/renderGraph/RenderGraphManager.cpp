@@ -33,4 +33,7 @@ void Renderer::RenderGraph::RenderGraphManager::Update(const uint32_t frameIndex
 
 Renderer::RenderGraph::RenderGraphManager::~RenderGraphManager()
 {
+    for (auto& pipeline : m_pipelines)
+        pipeline.reset();
+    m_pipelines.clear();
 }

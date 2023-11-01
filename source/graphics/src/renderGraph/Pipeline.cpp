@@ -372,7 +372,25 @@ void Renderer::RenderGraph::Pipeline::CompilePipeline()
         singlePath.clear();
     }
 
-    auto print = [&]()
+    auto printPaths = [&]()
+    {
+        for (auto origin : m_pathPerOrigin)
+        {
+            std::cout << "\norigin node : " << origin.m_origin->GetNodeName() << "\n";
+            for (auto path : origin.m_paths)
+            {
+                std::cout << "path : ";
+                for (auto node : path)
+                {
+                    if(node->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::TASK_NODE)
+                        std::cout << node->GetNodeName() << " ";
+                }
+                std::cout << "\n";
+            }
+        }
+    };
+
+    auto printLevels = [&]()
     {
         std::cout << "\ninfo";
         for (auto& perLevelInfo : m_perLevelTaskInfo)
@@ -395,11 +413,13 @@ void Renderer::RenderGraph::Pipeline::CompilePipeline()
         std::cout << "\n\n";
     };
 
+    printPaths();
+
     //2. Level wise segregation
     LevelSegregation(m_pathPerOrigin, m_perLevelTaskInfo);
-    print();
+    printLevels();
 
     //3. Go through the levels and refine the dependency
     LevelRefinement(m_passLevelCount, m_perLevelTaskInfo);
-    print();
+    printLevels();
 }
