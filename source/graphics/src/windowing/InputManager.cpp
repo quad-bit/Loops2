@@ -61,11 +61,11 @@ void Renderer::Windowing::InputManager::EventNotification(KeyInputEvent * event)
 
 Renderer::Windowing::KeyInputEvent * Renderer::Windowing::InputManager::FetchKeyInputEvent()
 {
-    Renderer::Windowing::KeyInputEvent * event = keyEventPool[eventCounter];
-
     if (eventCounter >= poolSize)
     {
         eventCounter = 0;
     }
+    Renderer::Windowing::KeyInputEvent * event = keyEventPool[eventCounter];
+
     return event;
 }

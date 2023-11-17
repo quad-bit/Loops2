@@ -32,7 +32,7 @@ namespace Engine
 
         Core::WindowSettings m_windowSettings;
         Core::Utility::RenderData m_renderData;
-        std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
+        //std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
 
     public:
         void Init(const std::string& windowName = std::string{ "Test" },

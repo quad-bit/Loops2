@@ -17,14 +17,20 @@ namespace GfxVk
             INVALID
         };
 
-        class VkCommandPoolWrapper
+        struct VkCommandBufferWrapper
         {
-        public:
-            VkCommandPool* pool;
-            uint32_t poolId;
+            VkCommandBuffer m_cmdBuffer = VK_NULL_HANDLE;
+            uint32_t m_id;
         };
 
-        class VkDrawCommandBuffer;
+        struct VkCommandPoolWrapper
+        {
+            VkCommandPool m_pool = VK_NULL_HANDLE;
+            VkQueueFlagBits m_queueType;
+            uint32_t m_poolId;
+            // id to commandBuffer
+            std::map<uint32_t, VkCommandBufferWrapper> m_cmdBufferList;
+        };
 
         class VkCommandBufferFactory
         {
@@ -36,18 +42,21 @@ namespace GfxVk
             static VkCommandBufferFactory* instance;
             static uint32_t poolIdCounter, bufferIdCounter;
 
-            std::vector<VkCommandPoolWrapper> poolList;
+            VkCommandPoolWrapper m_graphicsPool, m_computePool, m_transferPool;
+
+            std::map<uint32_t, VkCommandPoolWrapper> m_additionsPoolList;
             //std::vector<VkCommandBufferWrapper> bufferList;
 
-            std::vector<VkDrawCommandBuffer* > drawCommandBufferList;
+            //std::vector<VkDrawCommandBuffer* > drawCommandBufferList;
 
             uint32_t GetPoolId();
             uint32_t GetBufferId();
 
-            VkQueue* renderQueue, * computeQueue, * transferQueue;
+            VkQueue* renderQueue, *computeQueue, *transferQueue;
             uint32_t graphicsQueueFamilyId, computeQueueFamilyId, transferQueueFamilyId;
 
-            VkCommandBuffer* activeCommandBuffer;
+            //VkCommandBuffer* activeCommandBuffer;
+            VkCommandPoolWrapper& GetPoolWrapper(const VkQueueFlags& queueType);
 
         public:
             void Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId);
@@ -56,9 +65,12 @@ namespace GfxVk
             static VkCommandBufferFactory* GetInstance();
             ~VkCommandBufferFactory();
 
-            void CreateCommandPool(VkCommandPoolCreateFlagBits flags, VkQueueFlagBits queueType, uint32_t& id);
+            uint32_t CreateCommandPool(VkCommandPoolCreateFlagBits flags, VkQueueFlagBits queueType);
+            uint32_t CreateCommandBuffer(const VkCommandBufferLevel& level, const VkQueueFlags& queueType);
+            void DestroyCommandBuffer(uint32_t bufferId, const VkQueueFlags& queueType);
+            void DestroyCommandBufferCustomPool(uint32_t bufferId, uint32_t poolId);
             //void CreateCommandBuffer(uint32_t poolId, VkCommandBufferLevel level, uint32_t count, uint32_t * ids);
-            VkDrawCommandBuffer* CreateCommandBuffer(uint32_t poolId, VkCommandBufferLevel level, Core::Enums::PipelineType commandBufferType, uint32_t* ids);
+            /*VkDrawCommandBuffer* CreateCommandBuffer(uint32_t poolId, VkCommandBufferLevel level, Core::Enums::PipelineType commandBufferType, uint32_t* ids);
             void DestroyCommandPool(const uint32_t& id);
             void ResetCommandPool(const uint32_t& id);
             void ResetCommandBuffer(const uint32_t& id, const uint32_t& poolId);
@@ -67,11 +79,13 @@ namespace GfxVk
             void EndCommandBufferRecording(const uint32_t& id);
             void EndCommandBufferRecording();
             void DestroyCommandBuffer(const uint32_t& id);
-            void ActivateCommandBuffer(const uint32_t& id);
+            void ActivateCommandBuffer(const uint32_t& id);*/
 
-            VkCommandBuffer* GetCommandBuffer(const uint32_t& id);
-            VkCommandBuffer* GetCommandBuffer(const uint32_t* ids, const uint32_t& count);
-            VkCommandPool* GetCommandPool(const uint32_t& poolId);
+            //VkCommandBuffer* GetCommandBuffer(const uint32_t& id);
+            //VkCommandBuffer* GetCommandBuffer(const uint32_t* ids, const uint32_t& count);
+            const VkCommandPool& GetCommandPool(uint32_t poolId);
+            const VkCommandBuffer& GetCommandBuffer(uint32_t bufferId, uint32_t poolId);
+            const VkCommandBuffer& GetCommandBuffer(uint32_t bufferId,const VkQueueFlagBits& queueType);
         };
     }
 }

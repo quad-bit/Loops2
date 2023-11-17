@@ -6,6 +6,7 @@
 #include <PlatformSettings.h>
 #include <Settings.h>
 #include <RendererSettings.h>
+#include <RenderData.h>
 
 #if defined(GLFW_ENABLED)
 #define GLFW_INCLUDE_VULKAN
@@ -30,6 +31,11 @@ namespace Renderer
 {
     class RenderingManager;
 
+    namespace RenderGraph
+    {
+        class RenderGraphManager;
+    }
+
     namespace Windowing
     {
         class WindowManager;
@@ -43,16 +49,18 @@ namespace Renderer
         GraphicsManager const& operator= (GraphicsManager const&) = delete;
 
         const Core::WindowSettings& m_windowSettings;
+        Core::Utility::RenderData& m_renderData;
 
         std::unique_ptr <Renderer::RenderingManager> m_renderingMngrObj;
         std::unique_ptr <Windowing::WindowManager> m_windowMngrObj;
+        std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
 
         void KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent * evt);
 
     public:
         ~GraphicsManager();
         GraphicsManager() = delete;
-        GraphicsManager(const Core::WindowSettings& windowSettings);
+        GraphicsManager(const Core::WindowSettings& windowSettings, Core::Utility::RenderData& renderData);
         void Init();
         void DeInit();
         void Update();

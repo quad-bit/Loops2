@@ -11,22 +11,9 @@ void GfxVk::Sync::VkSynchroniserFactory::Init()
 
 void GfxVk::Sync::VkSynchroniserFactory::DeInit()
 {
-    PLOGD << "GfxVk::Sync::VkSynchroniserFactory Deinit";
-
-    for each(FenceWrapper wrapper in fenceList)
-    {
-        if (wrapper.fence != nullptr)
-            delete wrapper.fence;
-    }
+    PLOGD << "VkSynchroniserFactory Deinit";
 
     fenceList.clear();
-
-    for each(SemaphoreWrapper wrapper in semaphoreList)
-    {
-        if (wrapper.semaphore != nullptr)
-            delete wrapper.semaphore;
-    }
-
     semaphoreList.clear();
 }
 
@@ -50,8 +37,7 @@ GfxVk::Sync::VkSynchroniserFactory::~VkSynchroniserFactory()
 
 uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateFence(bool isFenceSignaled)
 {
-    FenceWrapper wrapper;
-    wrapper.fence = new VkFence;
+    FenceWrapper wrapper = {};
     wrapper.id = GetFenceId();
 
     VkFenceCreateInfo info = {};
@@ -60,19 +46,20 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateFence(bool isFenceSignaled)
     info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
     GfxVk::Utility::ErrorCheck(vkCreateFence(DeviceInfo::GetLogicalDevice(), &info, 
-        DeviceInfo::GetAllocationCallback(), wrapper.fence));
+        DeviceInfo::GetAllocationCallback(), &wrapper.fence));
 
-    fenceList.push_back(wrapper);
+    auto id = wrapper.id;
+    fenceList.push_back(std::move(wrapper));
 
-    return wrapper.id;
+    return id;
 }
 
 void GfxVk::Sync::VkSynchroniserFactory::DestroyFence(uint32_t id)
 {
-    vkDestroyFence(DeviceInfo::GetLogicalDevice(), *GetFence(id), DeviceInfo::GetAllocationCallback());
+    vkDestroyFence(DeviceInfo::GetLogicalDevice(), GetFence(id), DeviceInfo::GetAllocationCallback());
 }
 
-VkFence * GfxVk::Sync::VkSynchroniserFactory::GetFence(uint32_t id)
+const VkFence& GfxVk::Sync::VkSynchroniserFactory::GetFence(uint32_t id)
 {
     std::vector<FenceWrapper>::iterator it;
     it = std::find_if(fenceList.begin(), fenceList.end(), [&](FenceWrapper e) { return e.id == id; });
@@ -83,8 +70,7 @@ VkFence * GfxVk::Sync::VkSynchroniserFactory::GetFence(uint32_t id)
 
 uint32_t GfxVk::Sync::VkSynchroniserFactory::Create_Semaphore(bool isSemaphoreSignaled)
 {
-    SemaphoreWrapper wrapper;
-    wrapper.semaphore = new VkSemaphore;
+    SemaphoreWrapper wrapper = {};
     wrapper.id = GetSemaphoreId();
     
     VkSemaphoreCreateInfo info = {};
@@ -93,21 +79,21 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::Create_Semaphore(bool isSemaphoreSi
     info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
     GfxVk::Utility::ErrorCheck(vkCreateSemaphore(DeviceInfo::GetLogicalDevice(), &info,
-        DeviceInfo::GetAllocationCallback(), wrapper.semaphore));
+        DeviceInfo::GetAllocationCallback(), &wrapper.semaphore));
+    
+    auto id = wrapper.id;
+    semaphoreList.push_back(std::move(wrapper));
 
-    semaphoreList.push_back(wrapper);
-
-    return wrapper.id;
+    return id;
 }
 
 void GfxVk::Sync::VkSynchroniserFactory::DestroySemaphore(uint32_t id)
 {
-    VkSemaphore * semaphore = GetSemaphore(id);
-    vkDestroySemaphore(DeviceInfo::GetLogicalDevice(), *semaphore, DeviceInfo::GetAllocationCallback());
+    vkDestroySemaphore(DeviceInfo::GetLogicalDevice(), GetSemaphore(id), DeviceInfo::GetAllocationCallback());
     //delete semaphore;
 }
 
-VkSemaphore* GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(uint32_t id)
+const VkSemaphore& GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(uint32_t id)
 {
     std::vector<SemaphoreWrapper>::iterator it;
     it = std::find_if(semaphoreList.begin(), semaphoreList.end(), [&](SemaphoreWrapper e) { return e.id == id; });
@@ -116,9 +102,10 @@ VkSemaphore* GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(uint32_t id)
     return it->semaphore;
 }
 
-VkSemaphore * GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(const uint32_t * id, const uint32_t & count)
+std::vector<VkSemaphore> GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(uint32_t* ids, uint32_t count)
 {
-    //return the first one's address. Care should be taken while creating multiple sems in a single call
-    //TODO : Create function to handle creation of multiple semaphores simultaneously
-    return GetSemaphore(id[0]);
+    std::vector<VkSemaphore> semaphoreList;
+    for (uint32_t i = 0; i < count; i++)
+        semaphoreList.push_back(GetSemaphore(ids[i]));
+    return semaphoreList;
 }

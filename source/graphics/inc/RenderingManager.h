@@ -13,7 +13,7 @@ namespace GfxVk
 
 namespace Core
 {
-    class RendererSettings;
+    //class RendererSettings;
     struct WindowSettings;
 }
 
@@ -35,10 +35,10 @@ namespace Renderer
         static bool m_multiSamplingAvailable;
         static Core::Enums::Samples m_maxSampleCountAvailable;
 
-        static std::vector<uint32_t> depthPrepassImageId;
+        //static std::vector<uint32_t> depthPrepassImageId;
         static uint32_t m_shadowMapWidth, m_shadowMapHeight;
         
-        static uint32_t m_swapBufferCount;
+        static uint32_t m_swapBufferCount, m_currentSwapBufferIndex;
         static uint32_t m_maxFramesInFlight, m_currentFrameInFlight;
         static uint32_t m_maxFrameRate;
         static Core::Enums::Format m_bestDepthFormat;

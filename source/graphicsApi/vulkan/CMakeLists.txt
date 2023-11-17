@@ -25,6 +25,7 @@ inc/PresentationEngine.h
 inc/ValidationManager.h
 inc/VkCommandBufferFactory.h
 inc/VkDrawCommandBuffer.h
+inc/VkCommandWriter.h
 inc/VkFrameBufferFactory.h
 inc/VkQueueFactory.h
 inc/VkRenderPassFactory.h
@@ -35,6 +36,7 @@ src/PresentationEngine.cpp
 src/ValidationManager.cpp
 src/VkCommandBufferFactory.cpp
 src/VkDrawCommandBuffer.cpp
+src/VkCommandWriter.cpp
 src/VkFrameBufferFactory.cpp
 src/VkQueueFactory.cpp
 src/VkRenderPassFactory.cpp

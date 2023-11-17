@@ -1,5 +1,5 @@
-#ifndef RENDERER_COMPUTETASK_H_
-#define RENDERER_COMPUTETASK_H_
+#ifndef RENDERER_BLITTASK_H_
+#define RENDERER_BLITTASK_H_
 
 #include <renderGraph/Task.h>
 
@@ -9,11 +9,11 @@ namespace Renderer
     {
         namespace Tasks
         {
-            class ComputeTask : public Task
+            class TransferTask : public Task
             {
             public:
-                ComputeTask(const std::string& name) :
-                    Task(name, TaskType::COMPUTE_TASK)
+                TransferTask(const std::string& name) :
+                    Task(name, TaskType::TRANSFER_TASK)
                 {}
 
                 void Execute()
@@ -25,4 +25,4 @@ namespace Renderer
     }
 }
 
-#endif //RENDERER_COMPUTETASK_H_
+#endif //RENDERER_BLITTASK_H_

@@ -30,12 +30,13 @@ bool Renderer::RendererSettings::m_multiSamplingAvailable;
 
 Core::Enums::Samples Renderer::RendererSettings::m_maxSampleCountAvailable;
 
-std::vector<uint32_t> Renderer::RendererSettings::depthPrepassImageId;
+//std::vector<uint32_t> Renderer::RendererSettings::depthPrepassImageId;
 uint32_t Renderer::RendererSettings::m_shadowMapWidth, Renderer::RendererSettings::m_shadowMapHeight;
 
 Core::Enums::Format Renderer::RendererSettings::m_bestDepthFormat;
 
 uint32_t Renderer::RendererSettings::m_swapBufferCount;
+uint32_t Renderer::RendererSettings::m_currentSwapBufferIndex;
 uint32_t Renderer::RendererSettings::m_maxFramesInFlight, Renderer::RendererSettings::m_currentFrameInFlight;
 uint32_t Renderer::RendererSettings::m_maxFrameRate;
 
@@ -216,16 +217,17 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
 
 void Renderer::RenderingManager::SetupRenderer()
 {
-    /*PipelineType pipelineType = PipelineType::GRAPHICS;
-    CommandPoolProperty prop = CommandPoolProperty::TRANS_RESET;
+    /*
+    Core::Enums::PipelineType pipelineType = Core::Enums::PipelineType::GRAPHICS;
+    Core::Enums::CommandPoolProperty prop = Core::Enums::CommandPoolProperty::TRANS_RESET;
 
     m_graphicCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
 
-    pipelineType = PipelineType::COMPUTE;
+    pipelineType = Core::Enums::PipelineType::COMPUTE;
     m_computeCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
 
-    pipelineType = PipelineType::GRAPHICS;
-    m_guiCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);*/
+    pipelineType = Core::Enums::PipelineType::GRAPHICS;
+    m_guiCommandPoolId = CommandBufferManager<T>::GetInstance()->CreateCommandPool(&pipelineType, &prop);
 
     //=============================================================================================
 
@@ -315,6 +317,7 @@ void Renderer::RenderingManager::DeInit()
     GfxVk::Utility::PresentationEngine::GetInstance()->DeInit();
 
     m_vulkanMngrObj->DeInit();
+
 }
 
 void Renderer::RenderingManager::PreRender()

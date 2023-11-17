@@ -280,13 +280,17 @@ namespace
 
     VkSubmitInfo* UnwrapSubmitInfo(const Core::Wrappers::SubmitInfo* info)
     {
+        auto waitSempahoreList = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->waitSemaphoreIds, info->waitSemaphoreCount);
+        auto signalSempahoreList = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->signalSemaphoreIds, info->signalSemaphoreCount);
+
+        ASSERT_MSG_DEBUG(0, "CHeck this, command buffer");
         VkSubmitInfo* vkSubmitInfo = new VkSubmitInfo;
         vkSubmitInfo->waitSemaphoreCount = info->waitSemaphoreCount;
-        vkSubmitInfo->pWaitSemaphores = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->waitSemaphoreIds, info->waitSemaphoreCount);
+        vkSubmitInfo->pWaitSemaphores = waitSempahoreList.data();
         vkSubmitInfo->signalSemaphoreCount = info->signalSemaphoreCount;
-        vkSubmitInfo->pSignalSemaphores = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->signalSemaphoreIds, info->signalSemaphoreCount);
+        vkSubmitInfo->pSignalSemaphores = signalSempahoreList.data();
         vkSubmitInfo->commandBufferCount = info->commandBufferCount;
-        vkSubmitInfo->pCommandBuffers = GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->GetCommandBuffer(info->commandBufferIds, info->commandBufferCount);
+        //vkSubmitInfo->pCommandBuffers = GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->GetCommandBuffer(info->commandBufferIds, info->commandBufferCount);
         vkSubmitInfo->pWaitDstStageMask = UnwrapStageFlags(&info->pipelineStage);
         vkSubmitInfo->sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         vkSubmitInfo->pNext = nullptr;
@@ -375,6 +379,29 @@ namespace
         }
 
         return bufferUsage;
+    }
+
+    VkQueueFlags UnwrapQueueType(const Core::Enums::QueueType& queueType)
+    {
+        VkQueueFlags flag;
+        switch (queueType)
+        {
+        case Core::Enums::QueueType::RENDER:
+            flag = VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT;
+            break;
+
+        case Core::Enums::QueueType::COMPUTE:
+            flag = VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT;
+            break;
+
+        case Core::Enums::QueueType::TRANSFER:
+            flag = VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT;
+            break;
+
+        default:
+            ASSERT_MSG_DEBUG(0, "Command buffer for this queue not supported");
+        }
+        return flag;
     }
 
     Core::Enums::ColorSpace WrapColorSpace(VkColorSpaceKHR space)
@@ -620,39 +647,53 @@ void Renderer::Utility::VulkanInterface::DestroyFrameBuffer(uint32_t * pid, cons
     GfxVk::Framebuffer::VkFrameBufferFactory::GetInstance()->DestroyFrameBuffer(pid, count);
 }
 
-void Renderer::Utility::VulkanInterface::DestroyCommandBuffer(const uint32_t & id)
+uint32_t Renderer::Utility::VulkanInterface::CreateCommandBuffer(const Core::Enums::QueueType& queueType)
 {
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DestroyCommandBuffer(id);
+    VkQueueFlags flag = UnwrapQueueType(queueType);
+
+    return GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->CreateCommandBuffer(VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        flag);
+}
+
+void Renderer::Utility::VulkanInterface::DestroyCommandBuffer(uint32_t id, const Core::Enums::QueueType& queueType)
+{
+    const VkQueueFlags flag = UnwrapQueueType(queueType);
+    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DestroyCommandBuffer(id, flag);
+}
+
+void Renderer::Utility::VulkanInterface::DestroyCommandBuffer(uint32_t id, uint32_t poolId)
+{
+    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DestroyCommandBufferCustomPool(id, poolId);
 }
 
 void Renderer::Utility::VulkanInterface::ResetCommandBuffer(const uint32_t & id, const uint32_t & poolId)
 {
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->ResetCommandBuffer(id, poolId);
+    //GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->ResetCommandBuffer(id, poolId);
 }
 
 void Renderer::Utility::VulkanInterface::BeginCommandBufferRecording(const uint32_t & id,
     const Core::Enums::CommandBufferUsage * usage, const Core::Wrappers::CommandBufferInheritanceInfo * inheritanceInfo)
 {
-    VkCommandBufferUsageFlagBits vkUsage = UnwrapCommandBufferUsage(usage);
+    /*VkCommandBufferUsageFlagBits vkUsage = UnwrapCommandBufferUsage(usage);
     VkCommandBufferInheritanceInfo * vkInheritanceInfo = nullptr;
 
     GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->BeginCommandBufferRecording(id, vkUsage, vkInheritanceInfo);
 
     if(vkInheritanceInfo != nullptr)
-        delete vkInheritanceInfo;
+        delete vkInheritanceInfo;*/
 }
 
 void Renderer::Utility::VulkanInterface::EndCommandBufferRecording(const uint32_t & id)
 {
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->EndCommandBufferRecording(id);
+    //GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->EndCommandBufferRecording(id);
 }
 
 void Renderer::Utility::VulkanInterface::SubmitJob(const Core::Wrappers::QueueWrapper * queueWrapper, const Core::Wrappers::SubmitInfo * info, const uint32_t & submitInfoCount, const uint32_t & fenceId)
 {
     VkSubmitInfo * vkSubmitInfo = UnwrapSubmitInfo(info);
-    VkFence * fence = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetFence(fenceId);
+    auto fence = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetFence(fenceId);
 
-    GfxVk::Utility::VkQueueFactory::GetInstance()->SubmitQueue(queueWrapper, vkSubmitInfo, submitInfoCount, fence);
+    GfxVk::Utility::VkQueueFactory::GetInstance()->SubmitQueue(queueWrapper, vkSubmitInfo, submitInfoCount, &fence);
 
     delete vkSubmitInfo->pWaitDstStageMask;
     delete vkSubmitInfo;
@@ -673,12 +714,14 @@ void Renderer::Utility::VulkanInterface::PresentSwapchainImage(const Core::Wrapp
 {
     VkResult presentationResult;
 
+    auto semaphoreList = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->pWaitSemaphoreIds, info->waitSemaphoreCount);
+
     VkPresentInfoKHR vkPresentInfo = {};
     vkPresentInfo.pImageIndices = info->pImageIndices;
     //vkPresentInfo.swapchainCount = 1; // completed in PresentationFactory
     //vkPresentInfo.pSwapchains = PresentationEngine::GetInstance()->GetSwapchain(); // completed in PresentationFactory
     vkPresentInfo.waitSemaphoreCount = info->waitSemaphoreCount;
-    vkPresentInfo.pWaitSemaphores = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(info->pWaitSemaphoreIds, info->waitSemaphoreCount);
+    vkPresentInfo.pWaitSemaphores = semaphoreList.data();
     vkPresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     vkPresentInfo.pResults = &presentationResult;
 
@@ -938,7 +981,7 @@ uint32_t Renderer::Utility::VulkanInterface::CreateSampler(const Core::Wrappers:
 
 uint32_t Renderer::Utility::VulkanInterface::CreateCommandPool(Core::Enums::PipelineType * pipelineType, Core::Enums::CommandPoolProperty * prop)
 {
-    uint32_t poolId = 0;
+    /*uint32_t poolId = 0;
 
     VkQueueFlagBits queueFlag;
     switch (*pipelineType)
@@ -981,12 +1024,13 @@ uint32_t Renderer::Utility::VulkanInterface::CreateCommandPool(Core::Enums::Pipe
 
     GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->CreateCommandPool(poolCreateFlag, queueFlag, poolId);
 
-    return poolId;
+    return poolId;*/
+    return -1;
 }
 
 void Renderer::Utility::VulkanInterface::DestroyCommandPool(const uint32_t & poolId)
 {
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DestroyCommandPool(poolId);
+    //GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DestroyCommandPool(poolId);
 }
 
 uint32_t Renderer::Utility::VulkanInterface::CreateFence(bool isSignaled)
@@ -1017,32 +1061,8 @@ void Renderer::Utility::VulkanInterface::SetRenderpassBeginInfo(Core::Wrappers::
 
 uint32_t Renderer::Utility::VulkanInterface::GetAvailableSwapchainIndex(const uint32_t & fenceId, const uint32_t & semaphoreId)
 {
-    VkFence * fence = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetFence(fenceId);
-    VkSemaphore * semaphore = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(semaphoreId);
+    auto fence = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetFence(fenceId);
+    auto semaphore = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetSemaphore(semaphoreId);
 
     return GfxVk::Utility::PresentationEngine::GetInstance()->VkGetAvailableSwapChainId(fence, semaphore);
-}
-
-void Renderer::Utility::VulkanInterface::ActivateCommandBuffer(const uint32_t & index)
-{
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->ActivateCommandBuffer(index);
-}
-
-GfxVk::CommandPool::VkDrawCommandBuffer * Renderer::Utility::VulkanInterface::CreateCommandBuffer(const uint32_t & poolId, uint32_t * cmdBufferId, Core::Enums::CommandBufferLevel* commandBufferLevel, Core::Enums::PipelineType bufferType)
-{
-    VkCommandBufferLevel level;
-    switch (*commandBufferLevel)
-    {
-    case Core::Enums::CommandBufferLevel::PRIMARY:
-        level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        break;
-
-    case Core::Enums::CommandBufferLevel::SECONDARY:
-        level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-        break;
-
-    default:
-        ASSERT_MSG_DEBUG(0, "Wrong command level");
-    }
-    return GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->CreateCommandBuffer(poolId, level, bufferType, cmdBufferId);
 }

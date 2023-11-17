@@ -60,9 +60,11 @@ namespace GfxVk
             ~PresentationEngine();
 
             uint32_t VkGetAvailableSwapChainId(VkFence* fence, VkSemaphore* semaphore);
+            uint32_t VkGetAvailableSwapChainId(const VkFence& fence, const VkSemaphore& semaphore);
             VkSwapchainKHR* GetSwapchain() { return &swapchainObj; }
 
             void PresentSwapchainImage(VkPresentInfoKHR* info, VkQueue* presentationQueue);
+            void PresentSwapchainImage(const VkPresentInfoKHR& info, const VkQueue& presentationQueue);
         };
     }
 }

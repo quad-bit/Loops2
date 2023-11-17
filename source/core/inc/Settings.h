@@ -10,7 +10,7 @@ namespace Core
     /// </summary>
     struct Settings
     {
-        static uint32_t m_swapBufferCount;
+        static uint32_t m_swapBufferCount, m_currentSwapBufferIndex;
         static uint32_t m_maxFramesInFlight, m_currentFrameInFlight;
         static uint32_t m_maxFrameRate;
     };

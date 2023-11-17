@@ -122,15 +122,9 @@ namespace Renderer
 
             uint32_t GetAvailableSwapchainIndex(const uint32_t& fenceId, const uint32_t& semaphoreId);
 
-            void ActivateCommandBuffer(const uint32_t& id);
-
-#if (RENDERING_API == VULKAN)
-            GfxVk::CommandPool::VkDrawCommandBuffer* CreateCommandBuffer(const uint32_t& poolId, uint32_t* cmdBufferId, Core::Enums::CommandBufferLevel* commandBufferLevel, Core::Enums::PipelineType bufferType);
-#elif (RENDERING_API == DX)
-            apiInterface = new DxInterface();
-#endif
-
-            void DestroyCommandBuffer(const uint32_t& id);
+            uint32_t CreateCommandBuffer(const Core::Enums::QueueType& queueType);
+            void DestroyCommandBuffer(uint32_t id, const Core::Enums::QueueType& queueType);
+            void DestroyCommandBuffer(uint32_t id, uint32_t poolId);
             void ResetCommandBuffer(const uint32_t& id, const uint32_t& poolId);
             void BeginCommandBufferRecording(const uint32_t& id, const Core::Enums::CommandBufferUsage* usage, const Core::Wrappers::CommandBufferInheritanceInfo* inheritanceInfo);
             void EndCommandBufferRecording(const uint32_t& id);

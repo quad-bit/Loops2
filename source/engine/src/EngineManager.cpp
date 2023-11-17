@@ -30,7 +30,7 @@ void Engine::EngineManager::Init(const std::string& windowName,
 
     Core::CoreManager::GetInstance()->Init();
     
-    m_graphicsMngrObj = new Renderer::GraphicsManager(m_windowSettings);
+    m_graphicsMngrObj = new Renderer::GraphicsManager(m_windowSettings, m_renderData);
     m_graphicsMngrObj->Init();
     m_graphicsMngrObj->SetupRenderer();
 
@@ -41,18 +41,12 @@ void Engine::EngineManager::Init(const std::string& windowName,
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
 
-    m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData);
-
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
-    m_renderGraphManager->AddPipeline(std::move(pipeline));
-
-    m_renderGraphManager->Init();
 }
 
 void Engine::EngineManager::DeInit()
 {
-    m_renderGraphManager->DeInit();
-    m_renderGraphManager.reset();
+    /*m_renderGraphManager->DeInit();
+    m_renderGraphManager.reset();*/
 
     Core::Utility::Timer::GetInstance()->DeInit();
     delete Core::Utility::Timer::GetInstance();
@@ -111,7 +105,7 @@ void Engine::EngineManager::Update()
         ECS_Manager::GetInstance()->Update((float)(lag / msPerUpdate));
         // lag = msPerUpdate;
 
-        Renderer::Windowing::MouseInputManager::GetInstance()->Update();
+        //Renderer::Windowing::MouseInputManager::GetInstance()->Update();
 
         m_graphicsMngrObj->Update();
     }

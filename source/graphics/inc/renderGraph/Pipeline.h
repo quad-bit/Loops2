@@ -128,6 +128,8 @@ namespace Renderer
             virtual void CompilePipeline();
             //virtual void DestroyPipeline() = 0;
             //virtual void ExecutePipeline() = 0;
+
+            const std::map<uint32_t, PerLevelTaskInfo>& GetPerLevelTaskInfo();
         };
     }
 }

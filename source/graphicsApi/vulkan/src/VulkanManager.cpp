@@ -5,7 +5,7 @@
 #include "utility/VulkanUtility.h"
 #include "utility/VulkanMemoryManager.h"
 #include "VkQueueFactory.h"
-#include "VkCommandBufferFactory.h"
+//#include "VkCommandBufferFactory.h"
 #include "synchronisation/VkSynchroniserFactory.h"
 #include "pipeline/VulkanGraphicsPipelineFactory.h"
 #include <Settings.h>
@@ -281,60 +281,8 @@ void GfxVk::Utility::VulkanManager::Init(std::vector<Core::Wrappers::QueueWrappe
         };
 
     CreateQueues();
-
 }
-#if 0
-void GfxVk::Utility::VulkanManager::Init(Core::Wrappers::QueueWrapper * queueRequirement, const uint32_t & count)
-{
-    PLOGD << "VulkanManager init";
 
-    CreateInstance();
-    GetPhysicalDevice();
-    m_validationManagerObj->InitDebug(&DeviceInfo::m_instanceObj, GfxVk::Utility::VulkanSettings::pAllocator);
-    GfxVk::Utility::VkQueueFactory::GetInstance()->Init();
-    CreateLogicalDevice();
-
-    //TODO : expose queue creation.
-
-    for (uint32_t i = 0; i < count; i++)
-    {
-        if (*queueRequirement[i].queueType == Core::Enums::PipelineType::GRAPHICS)
-        {
-            if (*queueRequirement[i].purpose == Core::Enums::QueueType::PRESENT)
-            {
-                GfxVk::Utility::VkQueueFactory::GetInstance()->CreateGraphicsQueues(&queueRequirement[i].queueId, 1);
-                GfxVk::Utility::CoreObjects::presentationQueuedId = queueRequirement[i].queueId;
-            }
-
-            if (*queueRequirement[i].purpose == Core::Enums::QueueType::RENDER)
-            {
-                GfxVk::Utility::VkQueueFactory::GetInstance()->CreateGraphicsQueues(&queueRequirement[i].queueId, 1);
-                GfxVk::Utility::CoreObjects::renderQueueId = queueRequirement[i].queueId;
-            }
-        }
-
-        if (*queueRequirement[i].queueType == Core::Enums::PipelineType::COMPUTE)
-        {
-            GfxVk::Utility::VkQueueFactory::GetInstance()->CreateComputeQueues(&queueRequirement[i].queueId, 1);
-            GfxVk::Utility::CoreObjects::computeQueueId = queueRequirement[i].queueId;
-        }
-
-        if (*queueRequirement[i].queueType == Core::Enums::PipelineType::TRANSFER)
-        {
-            GfxVk::Utility::VkQueueFactory::GetInstance()->CreateTransferQueues(&queueRequirement[i].queueId, 1);
-            GfxVk::Utility::CoreObjects::transferQueueId = queueRequirement[i].queueId;
-        }
-
-        queueRequirement[i].queueFamilyId = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(*queueRequirement[i].queueType, queueRequirement[i].queueId);
-        GfxVk::Utility::VkQueueFactory::GetInstance()->SetQueuePurpose(queueRequirement[i].purpose, *queueRequirement[i].queueType, queueRequirement[i].queueId);
-    }
-
-    GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::m_physicalDeviceMemProps);
-    /*VkCommandBufferFactory::GetInstance()->Init();
-    VkSynchroniserFactory::GetInstance()->Init();
-    VulkanGraphicsPipelineFactory::GetInstance()->Init();*/
-}
-#endif
 void GfxVk::Utility::VulkanManager::InitializeFactories()
 {
     //GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanManager::GetInstance()->GetSurface(), GfxVk::Utility::VulkanManager::GetInstance()->GetSurfaceFormat());
@@ -395,6 +343,7 @@ void GfxVk::Utility::VulkanManager::DeInit()
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->DeInit();
     delete GfxVk::Utility::VulkanMemoryManager::GetSingleton();
     */
+
     vkDestroySurfaceKHR(DeviceInfo::m_instanceObj, DeviceInfo::m_surface, GfxVk::Utility::VulkanSettings::pAllocator);
     vkDestroyDevice(DeviceInfo::m_logicalDeviceObj, GfxVk::Utility::VulkanSettings::pAllocator);
     m_validationManagerObj->DeinitDebug();

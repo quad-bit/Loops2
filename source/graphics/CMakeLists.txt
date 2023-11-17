@@ -30,7 +30,7 @@ inc/renderGraph/pipelines/LowEndPipeline.h
 inc/renderGraph/techniques/LambertianLit.h
 inc/renderGraph/tasks/RenderTask.h
 inc/renderGraph/tasks/ComputeTask.h
-inc/renderGraph/tasks/BlitTask.h
+inc/renderGraph/tasks/TransferTask.h
 inc/renderGraph/tasks/DownloadTask.h
 
 src/renderGraph/RenderGraphManager.cpp
@@ -42,7 +42,7 @@ src/renderGraph/pipelines/LowEndPipeline.cpp
 src/renderGraph/techniques/LambertianLit.cpp
 src/renderGraph/tasks/RenderTask.cpp
 src/renderGraph/tasks/ComputeTask.cpp
-src/renderGraph/tasks/BlitTask.cpp
+src/renderGraph/tasks/TransferTask.cpp
 src/renderGraph/tasks/DownloadTask.cpp
 )
 
@@ -64,6 +64,7 @@ inc/GraphicsManager.h
 inc/RenderingManager.h
 inc/RenderingPrecompiled.h
 inc/VulkanInterface.h
+inc/CommandReader.h
 # inc/ForwardInterface.h
 # inc/DeferredInterface.h
 
@@ -72,6 +73,7 @@ src/GraphicsManager.cpp
 src/RenderingManager.cpp
 src/RenderingPrecompiled.cpp
 src/VulkanInterface.cpp
+src/CommandReader.cpp
 )
 
 

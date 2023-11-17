@@ -1,5 +1,7 @@
 #include "renderGraph/pipelines/LowEndPipeline.h"
 #include "renderGraph/tasks/RenderTask.h"
+#include "renderGraph/tasks/ComputeTask.h"
+#include "renderGraph/tasks/TransferTask.h"
 //#include "renderGraph/Graph.h"
 #include "resourceManagement/Resource.h"
 #include "renderGraph/utility/Utils.h"
@@ -75,12 +77,12 @@ namespace
             t2Node = graph.Push(t2.get());
             m_taskNodes.push_back(t2Node);
 
-            task3 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task3_T0_E0");
+            task3 = std::make_unique<Renderer::RenderGraph::Tasks::ComputeTask>("task3_T0_E0");
             t3 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task3), m_callbackUtility.m_graphTraversalCallback);
             t3Node = graph.Push(t3.get());
             m_taskNodes.push_back(t3Node);
 
-            task4 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task4_T0_E0");
+            task4 = std::make_unique<Renderer::RenderGraph::Tasks::TransferTask>("task4_T0_E0");
             t4 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task4), m_callbackUtility.m_graphTraversalCallback);
             t4Node = graph.Push(t4.get());
             m_taskNodes.push_back(t4Node);
@@ -162,12 +164,12 @@ namespace
             t1Node = graph.Push(t1.get());
             m_taskNodes.push_back(t1Node);
 
-            task2 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task2_T1_E1");
+            task2 = std::make_unique<Renderer::RenderGraph::Tasks::ComputeTask>("task2_T1_E1");
             t2 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task2), m_callbackUtility.m_graphTraversalCallback);
             t2Node = graph.Push(t2.get());
             m_taskNodes.push_back(t2Node);
 
-            task3 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task3_T1_E1");
+            task3 = std::make_unique<Renderer::RenderGraph::Tasks::TransferTask>("task3_T1_E1");
             t3 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task3), m_callbackUtility.m_graphTraversalCallback);
             t3Node = graph.Push(t3.get());
             m_taskNodes.push_back(t3Node);

@@ -6,8 +6,13 @@ void Renderer::RenderGraph::Utils::AddEdge(Renderer::RenderGraph::Graph<RenderGr
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
     const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
 {
-    auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib, RenderGraphNodeType type, std::string name)
+    auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib,
+        Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* node
+        )
     {
+        RenderGraphNodeType type = node->GetNodeData()->GetNodeType();
+        std::string name = node->GetNodeData()->GetNodeName();
+
         if (type == RenderGraphNodeType::RESOURCE_NODE)
         {
             attrib.nodeColor = "red";
@@ -16,15 +21,23 @@ void Renderer::RenderGraph::Utils::AddEdge(Renderer::RenderGraph::Graph<RenderGr
         }
         else
         {
-            attrib.nodeColor = "green";
+            Renderer::RenderGraph::TaskType taskType = ((TaskNode*)node->GetNodeData())->GetTask()->GetTaskType();
+            if (taskType == TaskType::RENDER_TASK)
+                attrib.nodeColor = "green";
+            else if (taskType == TaskType::COMPUTE_TASK)
+                attrib.nodeColor = "blue";
+            else if (taskType == TaskType::TRANSFER_TASK)
+                attrib.nodeColor = "purple";
+            else if (taskType == TaskType::DOWNLOAD_TASK)
+                attrib.nodeColor = "pink";
             attrib.nodeName = name;
             attrib.nodeShape = "rectangle";
         }
     };
 
     Renderer::RenderGraph::NodeDrawAttribs srcAttrib{}, dstAttrib{};
-    fillAttrib(srcAttrib, srcNode->GetNodeData()->GetNodeType(), srcNode->GetNodeData()->GetNodeName());
-    fillAttrib(dstAttrib, destNode->GetNodeData()->GetNodeType(), destNode->GetNodeData()->GetNodeName());
+    fillAttrib(srcAttrib, srcNode);// ->GetNodeData()->GetNodeType(), srcNode->GetNodeData()->GetNodeName());
+    fillAttrib(dstAttrib, destNode);//->GetNodeData()->GetNodeType(), destNode->GetNodeData()->GetNodeName());
 
     std::string edgeLabel = "";
     if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&

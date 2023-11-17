@@ -7,6 +7,7 @@
 #include <array>
 #include <bitset>
 #include "PlatformSettings.h"
+#include <variant>
 
 namespace Core
 {
@@ -1081,6 +1082,31 @@ namespace Core
                 Core::Enums::ShaderType shaderType;
                 uint32_t shaderId;
             };
+
+            class CommandBufferInfo
+            {
+            private:
+                uint32_t m_bufId;
+                std::variant<uint32_t, Core::Enums::QueueType> m_poolIdOrPoolType;
+
+                CommandBufferInfo() = delete;
+                CommandBufferInfo(CommandBufferInfo const&) = delete;
+
+            public:
+                CommandBufferInfo(uint32_t bufId, std::variant<uint32_t, Core::Enums::QueueType> poolIdOrPoolType) :
+                    m_bufId(bufId), m_poolIdOrPoolType(poolIdOrPoolType) {}
+
+                const std::variant<uint32_t, Core::Enums::QueueType>& GetPool()
+                {
+                    return m_poolIdOrPoolType;
+                }
+
+                const uint32_t& GetBufferId()
+                {
+                    return m_bufId;
+                }
+            };
+
 
         #elif (RENDERING_API == DX12)
 

@@ -17,10 +17,21 @@ namespace Renderer
         {
             RENDER_TASK,
             COMPUTE_TASK,
-            BLIT_TASK,
+            TRANSFER_TASK,
             DOWNLOAD_TASK
         };
 
+        struct TaskCommandBufferInfo
+        {
+            uint32_t m_bufId;
+            std::optional<bool> m_shouldStart, m_shouldStop;
+        };
+
+        struct TaskSubmitInfo
+        {
+            std::optional<uint32_t> m_waitSemaphoreId, m_signalSemaphoreId;
+            std::optional<uint32_t> m_fenceId;
+        };
 
         /// <summary>
         /// Any cmd can be encapsulated into a task node. The standard types will be RenderTask, ComputeTask, DownloadTask
@@ -36,8 +47,10 @@ namespace Renderer
             std::string m_name;
             TaskType m_taskType;
 
+            std::vector<TaskCommandBufferInfo> m_cmdBufferInfo;
+            std::vector<TaskSubmitInfo> m_taskSubmitInfo;
+
         public:
-            //virtual const uint32_t& GetId() = 0;
             Task() = delete;
             Task(const std::string& name, const TaskType& taskType) :
                 m_name(name), m_taskType(taskType)
@@ -50,10 +63,12 @@ namespace Renderer
             {
                 return m_name;
             }
-            /*void AddInput(ResourceAlias* input,const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, uint32_t nodeId)
+
+            const TaskType& GetTaskType()
             {
-                m_inputs.push_back(TaskInputInfo{usage, input, nodeId});
-            }*/
+                return m_taskType;
+            }
+
             void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
             {
                 m_inputs.push_back(info);
@@ -64,10 +79,73 @@ namespace Renderer
                 m_outputs.push_back(info);
             }
 
-            /*void AddOutput(ResourceAlias* output)
+            void AssignSubmitInfo(const std::vector<TaskSubmitInfo>& submitInfo)
             {
-                m_outputs.push_back(output);
-            }*/
+                for (auto& item : submitInfo)
+                    m_taskSubmitInfo.push_back(item);
+            }
+
+            void AssignCommandBufferInfo(const std::vector<TaskCommandBufferInfo>& info)
+            {
+                for (auto& item : info)
+                {
+                    m_cmdBufferInfo.push_back(item);
+                }
+            }
+
+            void CloseTaskCommandBuffer()
+            {
+                for (auto& item : m_cmdBufferInfo)
+                {
+                    item.m_shouldStop = true;
+                }
+            }
+
+            void OpenTaskCommandBuffer()
+            {
+                for (auto& item : m_cmdBufferInfo)
+                {
+                    item.m_shouldStart = true;
+                }
+            }
+
+            void PrintTaskInfo()
+            {
+                std::cout << "task id : " << m_name << "\n";
+                for (auto& item : m_cmdBufferInfo)
+                {
+                    std::cout << "command buffer id : " << item.m_bufId << "\n";
+                    if (item.m_shouldStart.has_value())
+                    {
+                        if (item.m_shouldStart.value())
+                            std::cout << "command should start : " << "true" << "\n";
+                        else
+                            std::cout << "command should start : " << "false" << "\n";
+                    }
+
+                    if (item.m_shouldStop.has_value())
+                    {
+                        if (item.m_shouldStop.value())
+                            std::cout << "command should stop : " << "true" << "\n";
+                        else
+                            std::cout << "command should stop : " << "false" << "\n";
+                    }
+                }
+
+                for (auto& item : m_taskSubmitInfo)
+                {
+                    if (item.m_signalSemaphoreId.has_value())
+                    {
+                        std::cout << "signal " << item.m_signalSemaphoreId.value() << "\n";
+                    }
+
+                    if (item.m_waitSemaphoreId.has_value())
+                    {
+                        std::cout << "wait " << item.m_waitSemaphoreId.value() << "\n";
+                    }
+                }
+            }
+
             const std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& GetInputs()
             {
                 return m_inputs;

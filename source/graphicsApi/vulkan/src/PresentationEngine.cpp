@@ -222,6 +222,17 @@ uint32_t GfxVk::Utility::PresentationEngine::VkGetAvailableSwapChainId(VkFence *
     return activeSwapchainImageID;
 }
 
+uint32_t GfxVk::Utility::PresentationEngine::VkGetAvailableSwapChainId(const VkFence& fence, const VkSemaphore& semaphore)
+{
+    ErrorCheck(vkWaitForFences(DeviceInfo::GetLogicalDevice(), 1, &fence, VK_TRUE, UINT64_MAX));
+    ErrorCheck(vkResetFences(DeviceInfo::GetLogicalDevice(), 1, &fence));
+
+    ErrorCheck(vkAcquireNextImageKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, UINT64_MAX,
+        semaphore, VK_NULL_HANDLE, &activeSwapchainImageID));
+
+    return activeSwapchainImageID;
+}
+
 void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(VkPresentInfoKHR * info, VkQueue * presentationQueue)
 {
     info->swapchainCount = 1;
@@ -229,4 +240,10 @@ void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(VkPresentInfoKHR 
 
     ErrorCheck(vkQueuePresentKHR(*presentationQueue, info));
     ErrorCheck(*info->pResults);
+}
+
+void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(const VkPresentInfoKHR& info, const VkQueue& presentationQueue)
+{
+    ErrorCheck(vkQueuePresentKHR(presentationQueue, &info));
+    ErrorCheck(*info.pResults);
 }

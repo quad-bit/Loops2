@@ -423,3 +423,8 @@ void Renderer::RenderGraph::Pipeline::CompilePipeline()
     LevelRefinement(m_passLevelCount, m_perLevelTaskInfo);
     printLevels();
 }
+
+const std::map<uint32_t, Renderer::RenderGraph::PerLevelTaskInfo>& Renderer::RenderGraph::Pipeline::GetPerLevelTaskInfo()
+{
+    return m_perLevelTaskInfo;
+}

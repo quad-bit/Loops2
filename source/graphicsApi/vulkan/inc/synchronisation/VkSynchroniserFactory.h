@@ -9,13 +9,13 @@ namespace GfxVk
         struct FenceWrapper
         {
             uint32_t id;
-            VkFence* fence;
+            VkFence fence = VK_NULL_HANDLE;
         };
 
         struct SemaphoreWrapper
         {
             uint32_t id;
-            VkSemaphore* semaphore;
+            VkSemaphore semaphore = VK_NULL_HANDLE;
         };
 
         class VkSynchroniserFactory
@@ -45,12 +45,12 @@ namespace GfxVk
 
             uint32_t CreateFence(bool isFenceSignaled);
             void DestroyFence(uint32_t id);
-            VkFence* GetFence(uint32_t id);
+            const VkFence& GetFence(uint32_t id);
 
             uint32_t Create_Semaphore(bool isSemaphoreSignaled); // "CreateSemaphore" is already existing, not available
             void DestroySemaphore(uint32_t id);
-            VkSemaphore* GetSemaphore(uint32_t id);
-            VkSemaphore* GetSemaphore(const uint32_t* id, const uint32_t& count);
+            const VkSemaphore& GetSemaphore(uint32_t id);
+            std::vector<VkSemaphore> GetSemaphore(uint32_t* ids, uint32_t count);
         };
     }
 }
