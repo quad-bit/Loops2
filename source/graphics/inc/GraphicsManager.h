@@ -63,15 +63,16 @@ namespace Renderer
         GraphicsManager(const Core::WindowSettings& windowSettings, Core::Utility::RenderData& renderData);
         void Init();
         void DeInit();
-        void Update();
+        void Update(const Core::Wrappers::FrameInfo& frameInfo);
         static GraphicsManager* GetInstance();
 
         void SetupRenderer();
         void DislogeRenderer();
 
-        void PreUpdate();
-        void PostUpdate();
+        void PreRender(Core::Wrappers::FrameInfo& frameInfo);
+        void PostRender();
 
+        void RenderExit();
         bool IsWindowActive();
 
         GLFWwindow* GetGlfwWindow();

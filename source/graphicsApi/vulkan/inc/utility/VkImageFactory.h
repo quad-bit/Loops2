@@ -42,8 +42,8 @@ namespace GfxVk
             uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name );
             void DestroyImage(uint32_t imageId, bool freeImageMemory);
 
-            VkImageView GetImageView(uint32_t id);
-            VkImage GetImage(uint32_t id);
+            const VkImageView& GetImageView(uint32_t id);
+            const VkImage& GetImage(uint32_t id);
             Core::Wrappers::MemoryRequirementInfo GetImageMemoryRequirement(uint32_t id);
             void BindImageMemory(uint32_t imageId, uint32_t memId, size_t offset);
         };

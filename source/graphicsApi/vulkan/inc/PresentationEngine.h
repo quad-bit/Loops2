@@ -32,23 +32,23 @@ namespace GfxVk
             VkSwapchainKHR swapchainObj;
             VkPresentModeKHR presentMode;
 
-            std::vector<VkImage> swapChainImageList;
-            std::vector<VkImageView> swapChainImageViewList;
-
-            //vector<VkImage *> swapChainImageList;
-            //vector<VkImageView *> swapChainImageViewList;
+            std::vector<VkImage> m_swapChainImageList;
+            std::vector<VkImageView> m_swapChainImageViewList;
 
             uint32_t activeSwapchainImageID;
+            uint32_t m_presentationQueueId;
+            void ChangeImageLayout();
+
         public:
-            void Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount);
+            void Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount, uint32_t presentationQueueId);
             void CreateSwapChain(VkSwapchainCreateInfoKHR swapChainCreateInfo);
             void CreateSwapChain(Core::Wrappers::ImageCreateInfo swapChainCreateInfo);
 
             std::vector<VkImage>* CreateSwapchainImage(Core::Wrappers::AttachmentInfo* info, uint32_t count);
             std::vector<VkImageView>* CreateSwapchainImageViews(Core::Wrappers::AttachmentInfo* info, uint32_t count);
 
-            std::vector<VkImage> CreateSwapchainImages(const VkImageCreateInfo& info, uint32_t count);
-            std::vector<VkImageView> CreateSwapchainImageViews(VkImageViewCreateInfo info, VkImage* images, uint32_t count);
+            void CreateSwapchainImages();
+            void CreateSwapchainImageViews(const std::vector<VkImageViewCreateInfo>& info);
 
             void DestroySwapChain();
             //deprecated.
@@ -64,7 +64,9 @@ namespace GfxVk
             VkSwapchainKHR* GetSwapchain() { return &swapchainObj; }
 
             void PresentSwapchainImage(VkPresentInfoKHR* info, VkQueue* presentationQueue);
-            void PresentSwapchainImage(const VkPresentInfoKHR& info, const VkQueue& presentationQueue);
+            void PresentSwapchainImage(VkPresentInfoKHR& info, const VkQueue& presentationQueue);
+            const VkImage& GetSwapchainImage(uint32_t swapbufferIndex);
+            const VkImageView& GetSwapchainImageView(uint32_t swapbufferIndex);
         };
     }
 }

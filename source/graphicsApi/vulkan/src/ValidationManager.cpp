@@ -132,5 +132,6 @@ void GfxVk::Utility::ValidationManager::SetupLayersAndExtensions()
 {
     instanceExtensionNameList.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
     deviceExtensionNameList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
     AddRequiredPlatformInstanceExtensions(&instanceExtensionNameList);
 }

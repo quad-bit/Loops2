@@ -43,10 +43,9 @@ namespace GfxVk
             std::vector<VkQueueFamilyProperties> propertyList;
             //std::vector<uint32_t> uniqueIndiciesInFamily;
             const float* graphicQueuePriority, * computeQueuePriority, * transferQueuePriority;
-            //uint32_t familyIndex = -1;
 
             uint32_t minGraphicQueueRequired = 2, minCopmuteQueueRequired = 2, minTransferQueueRequired = 1;
-            uint32_t graphicsQueueFamilyIndex = -1, computeQueueFamilyIndex = -1, transferQueueFamilyIndex = -1;
+            std::optional<uint32_t> graphicsQueueFamilyIndex, computeQueueFamilyIndex, transferQueueFamilyIndex;
             uint32_t graphicQueueInitCounter = 0, computeQueueInitCounter = 0, transferQueueInitCounter = 0;
 
             uint32_t queueIdCounter = 0;
@@ -74,13 +73,13 @@ namespace GfxVk
             uint32_t GetQueueFamilyIndex(Core::Enums::PipelineType qType, uint32_t queueId);
             //uint32_t GetQueueFamilyIndex(PipelineType qType, uint32_t queueId);
             uint32_t GetQueueFamilyIndex(VkQueueFlagBits qType, uint32_t queueId);
-            uint32_t GetGraphicsQueueFamilyIndex() { return graphicsQueueFamilyIndex; }
+            uint32_t GetGraphicsQueueFamilyIndex() { return graphicsQueueFamilyIndex.value(); }
 
             void CreateGraphicsQueues(uint32_t* ids, const uint32_t& count);
-            void CreateComputeQueues(uint32_t* ids, const uint32_t& count);
+            void CreateComputeQueues(uint32_t* ids, const uint32_t& count); 
             void CreateTransferQueues(uint32_t* ids, const uint32_t& count);
 
-            void SubmitQueue(const uint32_t& queueId, const Core::Enums::PipelineType* queueType, VkSubmitInfo* info, const uint32_t& submitCount, VkFence* fence);
+            void SubmitQueue(const uint32_t& queueId, const Core::Enums::PipelineType& queueType, const VkSubmitInfo* info, uint32_t submitCount, const VkFence& fence);
             void SubmitQueue(const Core::Wrappers::QueueWrapper* req, VkSubmitInfo* info, const uint32_t& submitCount, VkFence* fence);
             //void SubmitQueueForRendering(const QueueWrapper * req, const VkSubmitInfo * info, const uint32_t & submitCount, VkFence * fence);
             //void SubmitQueueForPresentation(const QueueWrapper * req,const VkSubmitInfo * info, const uint32_t & submitCount, VkFence * fence);

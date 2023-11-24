@@ -64,7 +64,7 @@ const VkFence& GfxVk::Sync::VkSynchroniserFactory::GetFence(uint32_t id)
     std::vector<FenceWrapper>::iterator it;
     it = std::find_if(fenceList.begin(), fenceList.end(), [&](FenceWrapper e) { return e.id == id; });
 
-    ASSERT_MSG_DEBUG(it != fenceList.end(), "Image id not found");
+    ASSERT_MSG_DEBUG(it != fenceList.end(), "Fence id not found");
     return it->fence;
 }
 

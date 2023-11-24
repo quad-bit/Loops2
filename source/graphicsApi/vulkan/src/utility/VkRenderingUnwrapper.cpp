@@ -432,7 +432,7 @@ VkShaderStageFlags GfxVk::Unwrap::UnwrapShaderStage(Core::Enums::ShaderType* typ
     return shaderFlag;
 }
 
-VkImageViewCreateInfo GfxVk::Unwrap::UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo * info)
+VkImageViewCreateInfo GfxVk::Unwrap::UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo * info, const VkImage& image)
 {
     VkImageViewCreateInfo vkInfo = {};
     vkInfo.components.a = UnWrapSwizzle(info->m_components[0]);
@@ -447,7 +447,7 @@ VkImageViewCreateInfo GfxVk::Unwrap::UnWrapImageViewCreateInfo(const Core::Wrapp
     vkInfo.subresourceRange.baseMipLevel = info->m_baseMipLevel;
     vkInfo.subresourceRange.layerCount = info->m_layerCount;
     vkInfo.subresourceRange.levelCount = info->m_levelCount;
-
+    vkInfo.image = image;
     return vkInfo;
 }
 

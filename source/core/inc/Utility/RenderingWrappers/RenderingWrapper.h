@@ -8,6 +8,7 @@
 #include <bitset>
 #include "PlatformSettings.h"
 #include <variant>
+#include <optional>
 
 namespace Core
 {
@@ -819,16 +820,16 @@ namespace Core
                 uint32_t commandBufferCount;
                 uint32_t * commandBufferIds;
                 Core::Enums::PipelineStage pipelineStage;
-                uint32_t queueId;
+                std::optional<uint32_t> queueId;
                 Core::Enums::PipelineType * queueType;
                 Core::Enums::QueueType * purpose;
             };
 
             struct PresentInfo
             {
-                uint32_t                 waitSemaphoreCount;
-                uint32_t *               pWaitSemaphoreIds;
-                uint32_t *               pImageIndices;
+                std::vector<uint32_t> m_waitSemaphoreIds;
+                std::vector<uint32_t> m_imageIndices;
+                std::optional<uint32_t> m_queueId;
             };
 
             struct QueueWrapper
@@ -1081,6 +1082,12 @@ namespace Core
                 const char* shaderText;
                 Core::Enums::ShaderType shaderType;
                 uint32_t shaderId;
+            };
+
+            struct FrameInfo
+            {
+                uint32_t m_swapBufferIndex;
+                uint32_t m_farmeInFlightIndex;
             };
 
             class CommandBufferInfo

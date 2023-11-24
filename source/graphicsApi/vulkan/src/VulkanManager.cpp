@@ -67,6 +67,7 @@ void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
     vkDeviceCreateInfoObj.pEnabledFeatures = &GfxVk::Utility::VulkanDeviceInfo::m_enabledPhysicalDeviceFeatures;
     vkDeviceCreateInfoObj.ppEnabledExtensionNames = m_validationManagerObj->deviceExtensionNameList.data();
     vkDeviceCreateInfoObj.ppEnabledLayerNames = nullptr;
+    //vkDeviceCreateInfoObj.pNext = &sync2;
 
     ErrorCheck(vkCreateDevice(DeviceInfo::m_physicalDeviceObj, &vkDeviceCreateInfoObj, GfxVk::Utility::VulkanSettings::pAllocator, &DeviceInfo::m_logicalDeviceObj));
 }

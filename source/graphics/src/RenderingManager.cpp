@@ -36,8 +36,7 @@ uint32_t Renderer::RendererSettings::m_shadowMapWidth, Renderer::RendererSetting
 Core::Enums::Format Renderer::RendererSettings::m_bestDepthFormat;
 
 uint32_t Renderer::RendererSettings::m_swapBufferCount;
-uint32_t Renderer::RendererSettings::m_currentSwapBufferIndex;
-uint32_t Renderer::RendererSettings::m_maxFramesInFlight, Renderer::RendererSettings::m_currentFrameInFlight;
+uint32_t Renderer::RendererSettings::m_maxFramesInFlight;// , Renderer::RendererSettings::m_currentFrameInFlight;
 uint32_t Renderer::RendererSettings::m_maxFrameRate;
 
 void Renderer::RenderingManager::BeginRenderLoop()
@@ -172,7 +171,7 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     VkInstance obj = DeviceInfo::GetVkInstance();
     m_vulkanMngrObj->CreateSurface(window);
 
-    GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanDeviceInfo::GetSurface(), GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(), Renderer::RendererSettings::m_swapBufferCount);
+    GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanDeviceInfo::GetSurface(), GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(), Renderer::RendererSettings::m_swapBufferCount, Renderer::RendererSettings::m_presentationQueueId);
     Renderer::RendererSettings::m_maxFramesInFlight = Renderer::RendererSettings::m_swapBufferCount - 1;
 
     Renderer::RendererSettings::m_bestDepthFormat = Renderer::Utility::VulkanInterface::FindBestDepthFormat();
@@ -393,11 +392,6 @@ const uint32_t& Renderer::RendererSettings::GetMaxFramesInFlightCount()
     return m_maxFramesInFlight;
 }
 
-const uint32_t& Renderer::RendererSettings::GetCurrentFrameIndex()
-{
-    return m_currentFrameInFlight;
-}
-
 const uint32_t& Renderer::RendererSettings::GetSwapBufferCount()
 {
     return m_swapBufferCount;
@@ -407,6 +401,27 @@ const Core::Enums::Format& Renderer::RendererSettings::GetBestDepthFormat()
 {
     return m_bestDepthFormat;
 }
+
+//const Core::Wrappers::QueueWrapper& Renderer::RendererSettings::GetRenderQueueInfo()
+//{
+//    return m_renderQueueWrapper;
+//}
+//
+//const Core::Wrappers::QueueWrapper& Renderer::RendererSettings::GetPresentationQueueInfo()
+//{
+//    return m_presentationQueueWrapper;
+//}
+//
+//const Core::Wrappers::QueueWrapper& Renderer::RendererSettings::GetComputeQueueInfo()
+//{
+//    return m_computeQueueWrapper;
+//}
+//
+//const Core::Wrappers::QueueWrapper& Renderer::RendererSettings::GetTransferQueueInfo()
+//{
+//    return m_transferQueueWrapper;
+//}
+//
 
 #if 0
 inline void ForwardRendering<T>::SetupRenderer()

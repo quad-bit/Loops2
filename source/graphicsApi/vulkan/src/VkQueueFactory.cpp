@@ -52,28 +52,28 @@ void GfxVk::Utility::VkQueueFactory::Init()
 
     for (uint32_t j = 0; j < qFamilyCount; j++)
     {
-        if (graphicsQueueFamilyIndex == -1 && ((propertyList[j].queueFlags & graphicsReq) == graphicsReq)
+        if (!graphicsQueueFamilyIndex.has_value() && ((propertyList[j].queueFlags & graphicsReq) == graphicsReq)
             && propertyList[j].queueCount >= minGraphicQueueRequired)
         {
             graphicsQueueFamilyIndex = j;
         }
 
-        if (computeQueueFamilyIndex == -1 && ((propertyList[j].queueFlags & computeReq) == computeReq)
+        if (!computeQueueFamilyIndex.has_value() && ((propertyList[j].queueFlags & computeReq) == computeReq)
             && propertyList[j].queueCount >= minCopmuteQueueRequired)
         {
             computeQueueFamilyIndex = j;
         }
 
-        if (transferQueueFamilyIndex == -1 && ((propertyList[j].queueFlags & transferReq) == transferReq)
+        if (!transferQueueFamilyIndex.has_value() && ((propertyList[j].queueFlags & transferReq) == transferReq)
             && propertyList[j].queueCount >= minTransferQueueRequired)
         {
             transferQueueFamilyIndex = j;
         }
     }
 
-    ASSERT_MSG_DEBUG(graphicsQueueFamilyIndex != -1, "min 2 graphic queues required in a family");
-    ASSERT_MSG_DEBUG(computeQueueFamilyIndex != -1, "min 2 compute queues required in a family");
-    ASSERT_MSG_DEBUG(transferQueueFamilyIndex != -1, "min 1 transfer queues required in a family");
+    ASSERT_MSG_DEBUG(graphicsQueueFamilyIndex.has_value(), "min 2 graphic queues required in a family");
+    ASSERT_MSG_DEBUG(computeQueueFamilyIndex.has_value(), "min 2 compute queues required in a family");
+    ASSERT_MSG_DEBUG(transferQueueFamilyIndex.has_value(), "min 1 transfer queues required in a family");
 }
 
 void GfxVk::Utility::VkQueueFactory::DeInit()
@@ -147,7 +147,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
     info.pNext = nullptr;
     info.pQueuePriorities = graphicQueuePriority;
     info.queueCount = minGraphicQueueRequired;
-    info.queueFamilyIndex = graphicsQueueFamilyIndex;
+    info.queueFamilyIndex = graphicsQueueFamilyIndex.value();
     info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 
     creatInfoList.push_back(info);
@@ -157,7 +157,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
     uint32_t indexInGraphicFamily = 0;
     for (uint32_t i = 0; i < minGraphicQueueRequired; i++)
     {
-        graphicsQueueWrapperList[i].queueFamilyIndex = graphicsQueueFamilyIndex;
+        graphicsQueueWrapperList[i].queueFamilyIndex = graphicsQueueFamilyIndex.value();
         graphicsQueueWrapperList[i].queueType = Core::Enums::PipelineType::GRAPHICS;
         graphicsQueueWrapperList[i].indexInFamily = indexInGraphicFamily;
         graphicsQueueWrapperList[i].queueId = GetQueueId();
@@ -185,7 +185,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
         info.pNext = nullptr;
         info.pQueuePriorities = computeQueuePriority;
         info.queueCount = minCopmuteQueueRequired;
-        info.queueFamilyIndex = computeQueueFamilyIndex;
+        info.queueFamilyIndex = computeQueueFamilyIndex.value();
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         creatInfoList.push_back(info);
 
@@ -195,7 +195,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
     computeQueueWrapperList.resize(minCopmuteQueueRequired);
     for (uint32_t i = 0; i < minCopmuteQueueRequired; i++)
     {
-        computeQueueWrapperList[i].queueFamilyIndex = computeQueueFamilyIndex;
+        computeQueueWrapperList[i].queueFamilyIndex = computeQueueFamilyIndex.value();
         computeQueueWrapperList[i].queueType = Core::Enums::PipelineType::COMPUTE;
         computeQueueWrapperList[i].indexInFamily = indexInComputeFamily;
         computeQueueWrapperList[i].queueId = GetQueueId();
@@ -234,7 +234,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
         info.pNext = nullptr;
         info.pQueuePriorities = transferQueuePriority;
         info.queueCount = minTransferQueueRequired;
-        info.queueFamilyIndex = transferQueueFamilyIndex;
+        info.queueFamilyIndex = transferQueueFamilyIndex.value();
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         creatInfoList.push_back(info);
 
@@ -244,7 +244,7 @@ std::vector<VkDeviceQueueCreateInfo> GfxVk::Utility::VkQueueFactory::FindQueue()
     transferQueueWrapperList.resize(minTransferQueueRequired);
     for (uint32_t i = 0; i < minTransferQueueRequired; i++)
     {
-        transferQueueWrapperList[i].queueFamilyIndex = transferQueueFamilyIndex;
+        transferQueueWrapperList[i].queueFamilyIndex = transferQueueFamilyIndex.value();
         transferQueueWrapperList[i].queueType = Core::Enums::PipelineType::TRANSFER;
         transferQueueWrapperList[i].indexInFamily = indexInTransferFamily;
         transferQueueWrapperList[i].queueId = GetQueueId();
@@ -533,9 +533,9 @@ void GfxVk::Utility::VkQueueFactory::CreateTransferQueues(uint32_t * ids, const 
     }
 }
 
-void GfxVk::Utility::VkQueueFactory::SubmitQueue(const uint32_t & queueId, const Core::Enums::PipelineType* queueType, VkSubmitInfo * info, const uint32_t & submitCount, VkFence * fence)
+void GfxVk::Utility::VkQueueFactory::SubmitQueue(const uint32_t& queueId, const Core::Enums::PipelineType& queueType, const VkSubmitInfo* info, uint32_t submitCount, const VkFence& fence)
 {
-    ErrorCheck( vkQueueSubmit(*GetQueue(*queueType, queueId), submitCount, info, *fence));
+    ErrorCheck( vkQueueSubmit(*GetQueue(queueType, queueId), submitCount, info, fence));
 }
 
 void GfxVk::Utility::VkQueueFactory::SubmitQueue(const Core::Wrappers::QueueWrapper * req, VkSubmitInfo * info, const uint32_t & submitCount, VkFence * fence)

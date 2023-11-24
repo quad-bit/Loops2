@@ -8,6 +8,7 @@
 #include "Graph.h"
 #include "renderGraph/Task.h"
 #include <queue>
+#include <Settings.h>
 
 namespace Renderer
 {
@@ -56,6 +57,8 @@ namespace Renderer
             uint32_t m_renderQueueId;
             uint32_t m_computeQueueId;
             uint32_t m_transferQueueId;
+            uint32_t m_presentationQueueId;
+            const Core::WindowSettings& m_windowSettings;
 
             std::map<uint32_t, CommandBufferWrapper> m_idToCmdWrapperList;
 
@@ -64,12 +67,22 @@ namespace Renderer
             std::vector<PerFrameCommandBufferInfo> m_perFrameInfo;
             std::vector<PerFrameSemaphoreInfo> m_perFrameSemaphoreInfo;
             std::vector<uint32_t> m_acquireSemaphore, m_presentationSemaphore;
+            std::vector<uint32_t> m_acquireSwapchainFence;
+            uint32_t m_swapBufferIndex = 0, m_frameInFlightIndex = 0;
+
+            Task* m_pipelineEndTask;
+            std::unique_ptr<Task> m_presentationTask;
+
         public:
-            explicit RenderGraphManager(const Core::Utility::RenderData& renderData);
+            RenderGraphManager(const Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings);
             void AddPipeline(std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline);
-            void Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId);
+            void Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId, uint32_t presentationQueueId);
             void DeInit();
-            void Update(const uint32_t frameIndex);
+            void Update(const Core::Wrappers::FrameInfo& frameInfo);
+            void SetupFrame(Core::Wrappers::FrameInfo& frameInfo);
+            void EndFrame();
+            void OnExit();
+
             ~RenderGraphManager();
         };
     }

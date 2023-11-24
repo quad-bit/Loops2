@@ -8,6 +8,7 @@
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include <resourceManagement/Resource.h>
 #include <renderGraph/utility/Utils.h>
+#include <VulkanInterface.h>
 
 namespace Renderer
 {
@@ -18,6 +19,7 @@ namespace Renderer
             RENDER_TASK,
             COMPUTE_TASK,
             TRANSFER_TASK,
+            PRESENTATION_TASK,
             DOWNLOAD_TASK
         };
 
@@ -31,6 +33,9 @@ namespace Renderer
         {
             std::optional<uint32_t> m_waitSemaphoreId, m_signalSemaphoreId;
             std::optional<uint32_t> m_fenceId;
+            std::optional<uint32_t> m_queueId;
+            Core::Enums::PipelineType m_pipelineType;
+            Core::Enums::QueueType m_queuePurpose;
         };
 
         /// <summary>
@@ -49,6 +54,43 @@ namespace Renderer
 
             std::vector<TaskCommandBufferInfo> m_cmdBufferInfo;
             std::vector<TaskSubmitInfo> m_taskSubmitInfo;
+            uint32_t m_activeCommandBuffer;
+
+        protected:
+            void StartTask(const Core::Wrappers::FrameInfo& frameInfo, const Core::Enums::QueueType queueType)
+            {
+                m_activeCommandBuffer = m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId;
+                if (m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_shouldStart)
+                {
+                    Core::Enums::CommandBufferUsage usage{ Core::Enums::CommandBufferUsage::USAGE_ONE_TIME_SUBMIT_BIT };
+                    VulkanInterfaceAlias::BeginCommandBufferRecording(m_activeCommandBuffer, queueType, usage, std::nullopt);
+                }
+            }
+
+            void EndTask(const Core::Wrappers::FrameInfo& frameInfo)
+            {
+                if (m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_shouldStop)
+                {
+                    VulkanInterfaceAlias::EndCommandBufferRecording(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose);
+
+                    Core::Wrappers::SubmitInfo info = {};
+                    info.commandBufferCount = 1;
+                    info.commandBufferIds = &m_activeCommandBuffer;
+                    info.pipelineStage = Core::Enums::PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT;
+                    info.purpose = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose;
+                    info.queueType = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_pipelineType;
+                    info.queueId = m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queueId;
+                    info.signalSemaphoreCount = 1;
+                    info.signalSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_signalSemaphoreId.value();
+                    info.waitSemaphoreCount = 1;
+                    info.waitSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_waitSemaphoreId.value();
+                        
+                    if (m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.has_value())
+                        VulkanInterfaceAlias::SubmitJob(&info, 1, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.value());
+                    else
+                        VulkanInterfaceAlias::SubmitJob(&info, 1, std::nullopt);
+                }
+            }
 
         public:
             Task() = delete;
@@ -58,6 +100,9 @@ namespace Renderer
 
             virtual ~Task()
             {}
+
+            virtual void Execute(const Core::Wrappers::FrameInfo& frameInfo) = 0;
+
 
             std::string GetTaskName()
             {
@@ -109,6 +154,11 @@ namespace Renderer
                 }
             }
 
+            const std::vector<TaskSubmitInfo>& GetTaskSubmitInfo()
+            {
+                return m_taskSubmitInfo;
+            }
+
             void PrintTaskInfo()
             {
                 std::cout << "task id : " << m_name << "\n";
@@ -142,6 +192,11 @@ namespace Renderer
                     if (item.m_waitSemaphoreId.has_value())
                     {
                         std::cout << "wait " << item.m_waitSemaphoreId.value() << "\n";
+                    }
+
+                    if (item.m_fenceId.has_value())
+                    {
+                        std::cout << "fence " << item.m_fenceId.value() << "\n";
                     }
                 }
             }

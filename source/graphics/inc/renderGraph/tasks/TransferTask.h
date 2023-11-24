@@ -16,9 +16,14 @@ namespace Renderer
                     Task(name, TaskType::TRANSFER_TASK)
                 {}
 
-                void Execute()
+                void Execute(const Core::Wrappers::FrameInfo& frameInfo) override
                 {
-                    PLOGD << m_name;
+                    auto queueType = Core::Enums::QueueType::TRANSFER;
+                    auto queuePurpose = Core::Enums::PipelineType::TRANSFER;
+
+                    StartTask(frameInfo, queueType);
+                    //PLOGD << m_name;
+                    EndTask(frameInfo);
                 }
             };
         }

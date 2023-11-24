@@ -44,7 +44,7 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     GfxVk::Utility::ErrorCheck(vkCreateImage(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &image));
 
     VkImageView imageView;
-    VkImageViewCreateInfo vkViewInfo = Unwrap::UnWrapImageViewCreateInfo(&viewInfo);
+    VkImageViewCreateInfo vkViewInfo = Unwrap::UnWrapImageViewCreateInfo(&viewInfo, image);
     GfxVk::Utility::ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &vkViewInfo, DeviceInfo::GetAllocationCallback(), &imageView));
 
     ImageWrapper wrapper;
@@ -122,7 +122,7 @@ uint32_t GfxVk::Utility::VkImageFactory::GetId()
     return s_imageIdCounter++;
 }
 
-VkImageView GfxVk::Utility::VkImageFactory::GetImageView(uint32_t id)
+const VkImageView& GfxVk::Utility::VkImageFactory::GetImageView(uint32_t id)
 {
     std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
     it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == id; });
@@ -131,7 +131,7 @@ VkImageView GfxVk::Utility::VkImageFactory::GetImageView(uint32_t id)
     return (*it).m_imageView;
 }
 
-VkImage GfxVk::Utility::VkImageFactory::GetImage(uint32_t id)
+const VkImage& GfxVk::Utility::VkImageFactory::GetImage(uint32_t id)
 {
     std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
     it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == id; });

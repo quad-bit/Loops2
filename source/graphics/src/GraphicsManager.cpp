@@ -55,7 +55,8 @@ void Renderer::GraphicsManager::Init()
     m_renderGraphManager->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
         Renderer::RendererSettings::GetComputeQueueId(),
-        Renderer::RendererSettings::GetTransferQueueId());
+        Renderer::RendererSettings::GetTransferQueueId(),
+        Renderer::RendererSettings::GetPresentationQueueId());
 }
 
 Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSettings, Core::Utility::RenderData& renderData):
@@ -66,7 +67,7 @@ Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSet
 
     m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>(m_windowSettings);
 
-    m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData);
+    m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData, m_windowSettings);
 
     std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
     m_renderGraphManager->AddPipeline(std::move(pipeline));
@@ -114,10 +115,11 @@ void Renderer::GraphicsManager::DeInit()
     m_windowMngrObj.reset();
 }
 
-void Renderer::GraphicsManager::Update()
+void Renderer::GraphicsManager::Update(const Core::Wrappers::FrameInfo& frameInfo)
 {
     //Renderer::Windowing::MouseInputManager::GetInstance()->Update();
-    m_renderingMngrObj->Render();
+    //m_renderingMngrObj->Render();
+    m_renderGraphManager->Update(frameInfo);
 }
 
 void Renderer::GraphicsManager::KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent* evt)
@@ -142,14 +144,21 @@ void Renderer::GraphicsManager::DislogeRenderer()
     m_renderingMngrObj->DislogeRenderer();
 }
 
-void Renderer::GraphicsManager::PreUpdate()
+void Renderer::GraphicsManager::PreRender(Core::Wrappers::FrameInfo& frameInfo)
 {
-    m_renderingMngrObj->PreRender();
+    //m_renderingMngrObj->PreRender();
+    m_renderGraphManager->SetupFrame(frameInfo);
 }
 
-void Renderer::GraphicsManager::PostUpdate()
+void Renderer::GraphicsManager::PostRender()
 {
-    m_renderingMngrObj->PostRenderLoopEnd();
+    //m_renderingMngrObj->PostRenderLoopEnd();
+    m_renderGraphManager->EndFrame();
+}
+
+void Renderer::GraphicsManager::RenderExit()
+{
+    m_renderGraphManager->OnExit();
 }
 
 bool Renderer::GraphicsManager::IsWindowActive()

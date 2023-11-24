@@ -16,9 +16,14 @@ namespace Renderer
                     Task(name, TaskType::RENDER_TASK)
                 {}
 
-                void Execute()
+                void Execute(const Core::Wrappers::FrameInfo& frameInfo) override
                 {
-                    PLOGD << m_name;
+                    auto queueType = Core::Enums::QueueType::RENDER;
+                    auto queuePurpose = Core::Enums::PipelineType::GRAPHICS;
+
+                    StartTask(frameInfo, queueType);
+                    //PLOGD << m_name;
+                    EndTask(frameInfo);
                 }
             };
         }

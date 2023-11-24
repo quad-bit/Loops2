@@ -3,6 +3,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
+#include <optional>
 
 //using namespace std;
 namespace Core
@@ -120,19 +121,22 @@ namespace Renderer
 
             void SetRenderpassBeginInfo(Core::Wrappers::RenderPassBeginInfo* beginInfo, const uint32_t& renderPassId);
 
-            uint32_t GetAvailableSwapchainIndex(const uint32_t& fenceId, const uint32_t& semaphoreId);
+            //uint32_t GetAvailableSwapchainIndex(const uint32_t& fenceId, const uint32_t& semaphoreId);
+            uint32_t GetAvailableSwapchainIndex(const std::optional<uint32_t>& fenceId, const std::optional<uint32_t>& semaphoreId);
 
             uint32_t CreateCommandBuffer(const Core::Enums::QueueType& queueType);
             void DestroyCommandBuffer(uint32_t id, const Core::Enums::QueueType& queueType);
             void DestroyCommandBuffer(uint32_t id, uint32_t poolId);
             void ResetCommandBuffer(const uint32_t& id, const uint32_t& poolId);
-            void BeginCommandBufferRecording(const uint32_t& id, const Core::Enums::CommandBufferUsage* usage, const Core::Wrappers::CommandBufferInheritanceInfo* inheritanceInfo);
-            void EndCommandBufferRecording(const uint32_t& id);
+            void BeginCommandBufferRecording(const uint32_t& id, const Core::Enums::QueueType& queueType,
+                const Core::Enums::CommandBufferUsage& usage, const std::optional<Core::Wrappers::CommandBufferInheritanceInfo>& inheritanceInfo);
+            void EndCommandBufferRecording(const uint32_t& id, const Core::Enums::QueueType& queueType);
 
             void SubmitJob(const Core::Wrappers::QueueWrapper* queueWrapper, const Core::Wrappers::SubmitInfo* info, const uint32_t& submitInfoCount, const uint32_t& fenceId);
-            void SubmitJob(const Core::Wrappers::SubmitInfo* info, const uint32_t& submitInfoCount);
+            void SubmitJob(const Core::Wrappers::SubmitInfo* info, const uint32_t& submitInfoCount, const std::optional<uint32_t>& fenceId);
 
             void PresentSwapchainImage(const Core::Wrappers::QueueWrapper* queueWrapper, const Core::Wrappers::PresentInfo* info, const uint32_t& presentQueueId);
+            void PresentSwapchainImage(const Core::Wrappers::PresentInfo& info);
 
             bool IsApplicationSafeForClosure();
 

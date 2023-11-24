@@ -32,6 +32,7 @@ inc/renderGraph/tasks/RenderTask.h
 inc/renderGraph/tasks/ComputeTask.h
 inc/renderGraph/tasks/TransferTask.h
 inc/renderGraph/tasks/DownloadTask.h
+inc/renderGraph/tasks/PresentationTask.h
 
 src/renderGraph/RenderGraphManager.cpp
 src/renderGraph/Pipeline.cpp

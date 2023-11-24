@@ -6,17 +6,135 @@
 #include <vector>
 #include <CorePrecompiled.h>
 #include "utility/VkRenderingUnwrapper.h"
+#include <VkQueueFactory.h>
 
 typedef GfxVk::Utility::VulkanDeviceInfo DeviceInfo;
 
 GfxVk::Utility::PresentationEngine* GfxVk::Utility::PresentationEngine::instance = nullptr;
 
-void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount)
+void GfxVk::Utility::PresentationEngine::ChangeImageLayout()
+{
+    VkCommandPool pool = VK_NULL_HANDLE;
+    VkCommandPoolCreateInfo info{};
+    info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    info.pNext = nullptr;
+    info.queueFamilyIndex = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT, m_presentationQueueId) ;
+    info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+
+    ErrorCheck(vkCreateCommandPool(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &pool));
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.commandBufferCount = 1;
+    allocInfo.commandPool = pool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.pNext = nullptr;
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+
+    VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
+    ErrorCheck(vkAllocateCommandBuffers(DeviceInfo::GetLogicalDevice(), &allocInfo, &cmdBuffer));
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    beginInfo.pInheritanceInfo = nullptr;
+    beginInfo.pNext = nullptr;
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    vkBeginCommandBuffer(cmdBuffer, &beginInfo);
+
+#if 0
+    std::vector<VkImageMemoryBarrier2> list;
+    for (auto& image : m_swapChainImageList)
+    {
+        VkImageMemoryBarrier2 imgBarrier{};
+        imgBarrier.dstAccessMask = 0;
+        imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imgBarrier.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+        imgBarrier.image = image;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        imgBarrier.pNext = nullptr;
+        imgBarrier.srcAccessMask = 0;
+        imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imgBarrier.srcStageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.baseArrayLayer = 0;
+        imgBarrier.subresourceRange.baseMipLevel = 0;
+        imgBarrier.subresourceRange.layerCount = 1;
+        imgBarrier.subresourceRange.levelCount = 1;
+        list.push_back(imgBarrier);
+    }
+
+    VkDependencyInfo dependencyInfo{};
+    dependencyInfo.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    dependencyInfo.imageMemoryBarrierCount = list.size();
+    dependencyInfo.pImageMemoryBarriers = list.data();
+    dependencyInfo.pNext = nullptr;
+    dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+
+    vkCmdPipelineBarrier2(cmdBuffer, &dependencyInfo);
+#else
+    std::vector<VkImageMemoryBarrier> list;
+    for (auto& image : m_swapChainImageList)
+    {
+        VkImageMemoryBarrier imgBarrier{};
+        imgBarrier.dstAccessMask = 0;
+        imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imgBarrier.image = image;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imgBarrier.pNext = nullptr;
+        imgBarrier.srcAccessMask = 0;
+        imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        imgBarrier.subresourceRange.baseArrayLayer = 0;
+        imgBarrier.subresourceRange.baseMipLevel = 0;
+        imgBarrier.subresourceRange.layerCount = 1;
+        imgBarrier.subresourceRange.levelCount = 1;
+        list.push_back(imgBarrier);
+    }
+
+    vkCmdPipelineBarrier(
+        cmdBuffer,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT,
+        0, nullptr,
+        0, nullptr,
+        list.size(), list.data()
+    );
+#endif
+    vkEndCommandBuffer(cmdBuffer);
+
+    VkFence fence = VK_NULL_HANDLE;
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.pNext = nullptr;
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        ErrorCheck(vkCreateFence(DeviceInfo::GetLogicalDevice(), &fenceInfo, DeviceInfo::GetAllocationCallback(), &fence));
+
+    VkQueue* queue = GfxVk::Utility::VkQueueFactory::GetInstance()->GetQueue(VK_QUEUE_GRAPHICS_BIT, m_presentationQueueId);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmdBuffer;
+    submitInfo.pNext = nullptr;
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    ErrorCheck(vkQueueSubmit(*queue, 1, &submitInfo, fence));
+
+    ErrorCheck(vkWaitForFences(DeviceInfo::GetLogicalDevice(), 1, &fence, VK_TRUE, UINT64_MAX));
+
+    vkDestroyFence(DeviceInfo::GetLogicalDevice(), fence, DeviceInfo::GetAllocationCallback());
+    vkDestroyCommandPool(DeviceInfo::GetLogicalDevice(), pool, DeviceInfo::GetAllocationCallback());
+}
+
+void GfxVk::Utility::PresentationEngine::Init(VkSurfaceKHR surfaceObj, VkSurfaceFormatKHR surfaceFormat, uint32_t& swapbufferCount, uint32_t presentationQueueId)
 {
     PLOGD << "PresentationEngine Init";
 
     this->surfaceObj = surfaceObj;
     this->surfaceFormat = surfaceFormat;
+    m_presentationQueueId = presentationQueueId;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(DeviceInfo::GetPhysicalDevice(), surfaceObj, &surfaceCapabilities);
 
@@ -77,6 +195,27 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageCr
     swapChainCreateInfo.surface = surfaceObj;
 
     CreateSwapChain(swapChainCreateInfo);
+
+    CreateSwapchainImages();
+
+    std::vector<VkImageViewCreateInfo> infoList;
+    for (auto& image : m_swapChainImageList)
+    {
+        VkImageViewCreateInfo createInfo{};
+        createInfo.components = { VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY };
+        createInfo.format = surfaceFormat.format;
+        createInfo.image = image;
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    }
+    CreateSwapchainImageViews(infoList);
+
+    ChangeImageLayout();
 }
 
 std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(Core::Wrappers::AttachmentInfo * info, uint32_t count)
@@ -105,12 +244,12 @@ std::vector<VkImage>* GfxVk::Utility::PresentationEngine::CreateSwapchainImage(C
 
     ASSERT_MSG_DEBUG(count == m_swapchainImageCount, "Swapchain count mis match");
 
-    swapChainImageList.resize(m_swapchainImageCount);
-    swapChainImageViewList.resize(m_swapchainImageCount);
+    m_swapChainImageList.resize(m_swapchainImageCount);
+    m_swapChainImageViewList.resize(m_swapchainImageCount);
 
-    ErrorCheck(vkGetSwapchainImagesKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, &m_swapchainImageCount, swapChainImageList.data()));
+    ErrorCheck(vkGetSwapchainImagesKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, &m_swapchainImageCount, m_swapChainImageList.data()));
 
-    return &swapChainImageList;
+    return &m_swapChainImageList;
 }
 
 std::vector<VkImageView>* GfxVk::Utility::PresentationEngine::CreateSwapchainImageViews(Core::Wrappers::AttachmentInfo * info, uint32_t count)
@@ -120,7 +259,7 @@ std::vector<VkImageView>* GfxVk::Utility::PresentationEngine::CreateSwapchainIma
         VkImageViewCreateInfo createInfo{};
         createInfo.components = { VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY,VK_COMPONENT_SWIZZLE_IDENTITY };
         createInfo.format = surfaceFormat.format;
-        createInfo.image = swapChainImageList[i];
+        createInfo.image = m_swapChainImageList[i];
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         createInfo.subresourceRange.baseArrayLayer = 0;
@@ -129,61 +268,57 @@ std::vector<VkImageView>* GfxVk::Utility::PresentationEngine::CreateSwapchainIma
         createInfo.subresourceRange.levelCount = 1;
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-        ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &createInfo, DeviceInfo::GetAllocationCallback(), &swapChainImageViewList[i]));
+        ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &createInfo, DeviceInfo::GetAllocationCallback(), &m_swapChainImageViewList[i]));
     }
 
-    return &swapChainImageViewList;
+    return &m_swapChainImageViewList;
 }
 
-std::vector<VkImage> GfxVk::Utility::PresentationEngine::CreateSwapchainImages(const VkImageCreateInfo & info, uint32_t count)
+void GfxVk::Utility::PresentationEngine::CreateSwapchainImages()
 {
     std::vector<VkImage> imageList;
-
+    uint32_t count = 0;
     ErrorCheck(vkGetSwapchainImagesKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, &count, nullptr));
-
     imageList.resize(count);
-
     ErrorCheck(vkGetSwapchainImagesKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, &count, imageList.data()));
 
     for each(auto image in imageList)
     {
-        swapChainImageList.push_back(image);
+        m_swapChainImageList.push_back(image);
     }
-
-    return imageList;
 }
 
-std::vector<VkImageView> GfxVk::Utility::PresentationEngine::CreateSwapchainImageViews(VkImageViewCreateInfo info, VkImage * images, uint32_t count)
+void GfxVk::Utility::PresentationEngine::CreateSwapchainImageViews(const std::vector<VkImageViewCreateInfo>& info)
 {
-    std::vector<VkImageView> imageviewList;
-    imageviewList.resize(count);
-
-    for (uint32_t i = 0; i <count; i++)
+    for (auto& createInfo : info)
     {
-        info.image = images[i];
-        ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), 
-            &imageviewList[i]));
-        swapChainImageViewList.push_back(imageviewList[i]);
+        VkImageView view = VK_NULL_HANDLE;
+        ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &createInfo, DeviceInfo::GetAllocationCallback(),            &view));
+        m_swapChainImageViewList.push_back(std::move(view));
     }
-
-    return imageviewList;
 }
 
 void GfxVk::Utility::PresentationEngine::DestroySwapChain()
 {
+    for (auto& view : m_swapChainImageViewList)
+    {
+        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), view, DeviceInfo::GetAllocationCallback());
+    }
     vkDestroySwapchainKHR(DeviceInfo::GetLogicalDevice(), swapchainObj, DeviceInfo::GetAllocationCallback());
-    swapChainImageList.clear();
-    swapChainImageViewList.clear();
+
+    m_swapChainImageList.clear();
+    m_swapChainImageViewList.clear();
 }
+
 //deprecated.
 void GfxVk::Utility::PresentationEngine::DestroySwapChainImageView()
 {
     DEPRECATED;
     for (uint32_t i = 0; i <m_swapchainImageCount; i++)
     {
-        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), swapChainImageViewList[i], DeviceInfo::GetAllocationCallback());
+        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), m_swapChainImageViewList[i], DeviceInfo::GetAllocationCallback());
     }
-    swapChainImageViewList.clear();
+    m_swapChainImageViewList.clear();
 }
 
 void GfxVk::Utility::PresentationEngine::DeInit()
@@ -242,8 +377,24 @@ void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(VkPresentInfoKHR 
     ErrorCheck(*info->pResults);
 }
 
-void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(const VkPresentInfoKHR& info, const VkQueue& presentationQueue)
+void GfxVk::Utility::PresentationEngine::PresentSwapchainImage(VkPresentInfoKHR& info, const VkQueue& presentationQueue)
 {
+    if (!info.pSwapchains)
+    {
+        info.swapchainCount = 1;
+        info.pSwapchains = &swapchainObj;
+    }
+
     ErrorCheck(vkQueuePresentKHR(presentationQueue, &info));
     ErrorCheck(*info.pResults);
+}
+
+const VkImage& GfxVk::Utility::PresentationEngine::GetSwapchainImage(uint32_t swapbufferIndex)
+{
+    return m_swapChainImageList[swapbufferIndex];
+}
+
+const VkImageView& GfxVk::Utility::PresentationEngine::GetSwapchainImageView(uint32_t swapbufferIndex)
+{
+    return m_swapChainImageViewList[swapbufferIndex];
 }

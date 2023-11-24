@@ -71,11 +71,7 @@ void Engine::EngineManager::DeInit()
 
 void Engine::EngineManager::Update()
 {
-    // Before the update, will run just once
-    {
-        m_graphicsMngrObj->PreUpdate();
-    }
-
+    
     typedef double precision;
 
     precision msPerUpdate = 1000.0f / (precision)60.0f;// Settings::maxFrameRate;
@@ -84,6 +80,11 @@ void Engine::EngineManager::Update()
     Core::Utility::Timer::GetInstance()->Reset();
     while (m_graphicsMngrObj->IsWindowActive())
     {
+        // Before the update
+        {
+            m_graphicsMngrObj->PreRender(m_frameInfo);
+        }
+
         precision delta = Core::Utility::Timer::GetInstance()->GetDeltaTime<precision>();
         lag += delta;
         //if (delta > msPerUpdate)
@@ -107,13 +108,15 @@ void Engine::EngineManager::Update()
 
         //Renderer::Windowing::MouseInputManager::GetInstance()->Update();
 
-        m_graphicsMngrObj->Update();
+        m_graphicsMngrObj->Update(m_frameInfo);
+
+        // After the update
+        {
+            m_graphicsMngrObj->PostRender();
+        }
     }
 
-    // After the update, will run just once
-    {
-        m_graphicsMngrObj->PostUpdate();
-    }
+    m_graphicsMngrObj->RenderExit();
 }
 
 /*
@@ -171,4 +174,9 @@ Engine::EngineManager * Engine::EngineManager::GetInstance()
 Engine::EngineManager::~EngineManager()
 {
 
+}
+
+const Core::Wrappers::FrameInfo& Engine::EngineManager::GetFrameInfo()
+{
+    return m_frameInfo;
 }

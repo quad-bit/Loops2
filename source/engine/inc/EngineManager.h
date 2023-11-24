@@ -34,6 +34,8 @@ namespace Engine
         Core::Utility::RenderData m_renderData;
         //std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
 
+        Core::Wrappers::FrameInfo m_frameInfo;
+
     public:
         void Init(const std::string& windowName = std::string{ "Test" },
             uint32_t windowWidth = 600,
@@ -45,5 +47,7 @@ namespace Engine
         void Update();
         static EngineManager* GetInstance();
         ~EngineManager();
+
+        const Core::Wrappers::FrameInfo& GetFrameInfo();
     };
 }

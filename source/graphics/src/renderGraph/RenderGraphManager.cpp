@@ -2,13 +2,14 @@
 #include "Settings.h"
 #include "VulkanInterface.h"
 #include "renderGraph/Task.h"
+#include "renderGraph/tasks/PresentationTask.h"
 
 uint32_t g_bufferDistributionCount = 0;
 uint32_t g_semaphoreDistributionCount = 0;
 uint32_t g_fenceDistributionCount = 0;
 
-Renderer::RenderGraph::RenderGraphManager::RenderGraphManager(const Core::Utility::RenderData& renderData):
-    m_renderData(renderData)
+Renderer::RenderGraph::RenderGraphManager::RenderGraphManager(const Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings):
+    m_renderData(renderData), m_windowSettings(windowSettings)
 {
 }
 
@@ -91,34 +92,46 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
     };
 
     auto ProcessSemaphores = [&waitSemTracker, &signalSemTracker, &GetNewSemaphore, this](
-        Renderer::RenderGraph::Task* task, bool shouldSignalPresentationSemaphore = false)
+        Renderer::RenderGraph::Task* task,
+        uint32_t queueId)
     {
-        /*std::cout << "======= sem start" << task->GetTaskName() << "\n";
-        std::cout << "wait \n";
-        for (auto& item : waitSemTracker)
+        Core::Enums::PipelineType pipelineType;
+        Core::Enums::QueueType queuePurpose;
+        switch (task->GetTaskType())
         {
-            std::cout << item << "  ";
-        }*/
+        case Renderer::RenderGraph::TaskType::RENDER_TASK:
+            pipelineType = Core::Enums::PipelineType::GRAPHICS;
+            queuePurpose = Core::Enums::QueueType::RENDER;
+            break;
+        case Renderer::RenderGraph::TaskType::COMPUTE_TASK:
+            pipelineType = Core::Enums::PipelineType::COMPUTE;
+            queuePurpose = Core::Enums::QueueType::COMPUTE;
+            break;
+        case Renderer::RenderGraph::TaskType::DOWNLOAD_TASK:
+            ASSERT_MSG_DEBUG(0, "invalid");
+            break;
+        case Renderer::RenderGraph::TaskType::TRANSFER_TASK:
+            pipelineType = Core::Enums::PipelineType::TRANSFER;
+            queuePurpose = Core::Enums::QueueType::TRANSFER;
+            break;
+        default:
+            ASSERT_MSG_DEBUG(0, "invalid");
+            break;
+        }
         // assign the existing wait to task
 
         // get a new signal sem
-        if (shouldSignalPresentationSemaphore)
+        /*if (shouldSignalPresentationSemaphore)
         {
             for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
             {
                 signalSemTracker.push_back(m_presentationSemaphore[i]);
             }
         }
-        else
+        else*/
         {
             GetNewSemaphore(signalSemTracker);
         }
-
-        //std::cout << "\nsignal \n";
-        //for (auto& item : signalSemTracker)
-        //{
-        //    std::cout << item << "  ";
-        //}
 
         std::vector<Renderer::RenderGraph::TaskSubmitInfo> list;
 
@@ -128,9 +141,12 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
             Renderer::RenderGraph::TaskSubmitInfo info = {};
             info.m_signalSemaphoreId = signalSemTracker[i];
             info.m_waitSemaphoreId = waitSemTracker[i];
+            info.m_pipelineType = pipelineType;
+            info.m_queuePurpose = queuePurpose;
+            info.m_queueId = queueId;
             list.push_back(std::move(info));
         }
-        
+
         task->AssignSubmitInfo(list);
 
         // move the signal sem to wait
@@ -140,13 +156,6 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
             waitSemTracker.push_back(item);
         }
         signalSemTracker.clear();
-
-        /*std::cout << "\nwait \n";
-        for (auto& item : waitSemTracker)
-        {
-            std::cout << item << "  ";
-        }
-        std::cout << "\n======= sem end\n";*/
     };
 
 
@@ -174,7 +183,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
         {
             // The previous command buffer should stop recording
             prevTask->CloseTaskCommandBuffer();
-            ProcessSemaphores(prevTask);
+            ProcessSemaphores(prevTask, queueIdTracker.value());
             // queue switch has happened, get a new command buffer, start recording
             GetNewCommandBuffers(commandBufferList, cmdBufferTracker, task->GetTaskType());
             task->AssignCommandBufferInfo(commandBufferList);
@@ -206,12 +215,38 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
                     break;
             }
             prevTask = task;
+            m_pipelineEndTask = task;
         }
     }
     // Last task, hence command buffer should stop recording
     prevTask->CloseTaskCommandBuffer();
+
     // Last task, make it to signal the presentation semaphore
-    ProcessSemaphores(prevTask, true);
+    {
+        for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
+        {
+            signalSemTracker.push_back(m_presentationSemaphore[i]);
+        }
+
+        std::vector<Renderer::RenderGraph::TaskSubmitInfo> list;
+
+        // assign the existing signal to task
+        for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
+        {
+            Renderer::RenderGraph::TaskSubmitInfo info = {};
+            info.m_signalSemaphoreId = signalSemTracker[i];
+            info.m_waitSemaphoreId = waitSemTracker[i];
+            info.m_fenceId = m_acquireSwapchainFence[i];
+            info.m_pipelineType = Core::Enums::PipelineType::TRANSFER;
+            info.m_queuePurpose = Core::Enums::QueueType::TRANSFER;
+            info.m_queueId = m_transferQueueId;
+            list.push_back(std::move(info));
+        }
+
+        ASSERT_MSG_DEBUG(prevTask->GetTaskType() == Renderer::RenderGraph::TaskType::TRANSFER_TASK, "last task has to blit to swapchain");
+        prevTask->AssignSubmitInfo(list);
+    }
+    //ProcessSemaphores(prevTask, true);
 
     auto PrintTaskInfo = [&]()
     {
@@ -229,7 +264,10 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
     PrintTaskInfo();
 }
 
-void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId)
+void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
+    uint32_t computeQueueId,
+    uint32_t transferQueueId,
+    uint32_t presentationQueueId)
 {
     PLOGD << "RenderGraphManager Init";
 
@@ -240,7 +278,7 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId, uin
     m_renderQueueId = renderQueueId;
     m_computeQueueId = computeQueueId;
     m_transferQueueId = transferQueueId;
-
+    m_presentationQueueId = presentationQueueId;
     auto FillCommandBuffer = [&](std::vector<uint32_t>& bufList, uint32_t bufCount, const Core::Enums::QueueType& queueType)
     {
         for (uint32_t i = 0; i < bufCount; i++)
@@ -286,11 +324,15 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId, uin
 
     for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
     {
-
         PerFrameSemaphoreInfo info{};
         FillSemaphore(info.m_semaphoreList, info.c_maxSemaphoreCount);
         FillAvailability(info.m_semaphoreAvailabilityList, info.m_semaphoreList);
         m_perFrameSemaphoreInfo.push_back(std::move(info));
+    }
+
+    for (uint32_t i = 0; i < g_fenceDistributionCount; i++)
+    {
+        m_acquireSwapchainFence.push_back(Renderer::Utility::VulkanInterface::CreateFence(true));
     }
 
     for (auto& pipeline : m_pipelines)
@@ -299,11 +341,36 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId, uin
     }
 
     AssignCommandBuffers();
+
+    m_presentationTask = std::make_unique<Renderer::RenderGraph::Tasks::PresentationTask>("Presentation",
+        Core::Settings::m_swapBufferCount,
+        m_windowSettings.m_windowWidth,
+        m_windowSettings.m_windowHeight);
+
+    std::vector<Renderer::RenderGraph::TaskSubmitInfo> infoList;
+    for (uint32_t i = 0; i < g_fenceDistributionCount; i++)
+    {
+        Renderer::RenderGraph::TaskSubmitInfo info{};
+        info.m_fenceId = m_acquireSwapchainFence[i];
+        info.m_pipelineType = Core::Enums::PipelineType::GRAPHICS;
+        info.m_queueId = m_presentationQueueId;
+        info.m_queuePurpose = Core::Enums::QueueType::PRESENT;
+        info.m_waitSemaphoreId = m_pipelineEndTask->GetTaskSubmitInfo()[i].m_signalSemaphoreId.value();
+        infoList.push_back(std::move(info));
+    }
+    m_presentationTask->AssignSubmitInfo(infoList);
 }
 
 void Renderer::RenderGraph::RenderGraphManager::DeInit()
 {
     PLOGD << "RenderGraphManager DeInit";
+
+    m_presentationTask.reset();
+
+    for (uint32_t i = 0; i < g_fenceDistributionCount; i++)
+    {
+        Renderer::Utility::VulkanInterface::DestroyFence(m_acquireSwapchainFence[i]);
+    }
 
     for (auto& id : m_acquireSemaphore)
         Renderer::Utility::VulkanInterface::DestroySemaphore(id);
@@ -333,8 +400,43 @@ void Renderer::RenderGraph::RenderGraphManager::DeInit()
     }
 }
 
-void Renderer::RenderGraph::RenderGraphManager::Update(const uint32_t frameIndex)
+void Renderer::RenderGraph::RenderGraphManager::Update(const Core::Wrappers::FrameInfo& frameInfo)
 {
+    auto& levelInfoList = m_activePipeline->GetPerLevelTaskInfo();
+    for (auto& level : levelInfoList)
+    {
+        auto& taskInfo = level.second;
+        for (auto taskNode : taskInfo.m_taskList)
+        {
+            auto task = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask();
+            task->Execute(frameInfo);
+            m_pipelineEndTask = task;
+        }
+    }
+
+    m_presentationTask->Execute(frameInfo);
+}
+
+void Renderer::RenderGraph::RenderGraphManager::SetupFrame(Core::Wrappers::FrameInfo& frameInfo)
+{
+    // Acquire the swapchain index
+    auto currentFenceId = m_acquireSwapchainFence[m_frameInFlightIndex];
+    auto currentRenderSemaphoreId = m_acquireSemaphore[m_frameInFlightIndex];
+
+    auto currentSwapchainIndex = Renderer::Utility::VulkanInterface::GetAvailableSwapchainIndex(currentFenceId, currentRenderSemaphoreId);
+
+    frameInfo.m_farmeInFlightIndex = m_frameInFlightIndex;
+    frameInfo.m_swapBufferIndex = currentSwapchainIndex;
+}
+
+void Renderer::RenderGraph::RenderGraphManager::EndFrame()
+{
+    m_frameInFlightIndex = (m_frameInFlightIndex + 1) % Core::Settings::m_maxFramesInFlight;
+}
+
+void Renderer::RenderGraph::RenderGraphManager::OnExit()
+{
+    VulkanInterfaceAlias::IsApplicationSafeForClosure();
 }
 
 Renderer::RenderGraph::RenderGraphManager::~RenderGraphManager()

@@ -36,7 +36,7 @@ namespace GfxVk
         VkShaderStageFlags UnwrapShaderStage(Core::Enums::ShaderType type);
         VkShaderStageFlags UnwrapShaderStage(Core::Enums::ShaderType* type, const uint32_t& count);
 
-        VkImageViewCreateInfo UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo* info);
+        VkImageViewCreateInfo UnWrapImageViewCreateInfo(const Core::Wrappers::ImageViewCreateInfo* info, const VkImage& image);
         VkImageCreateInfo UnWrapImageCreateInfo(const Core::Wrappers::ImageCreateInfo* info);
         VkComponentSwizzle UnWrapSwizzle(Core::Enums::ComponentSwizzle obj);
         VkImageViewType UnwrapImageViewType(Core::Enums::ImageViewType type);

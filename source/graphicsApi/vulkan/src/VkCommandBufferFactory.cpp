@@ -50,7 +50,7 @@ uint32_t GfxVk::CommandPool::VkCommandBufferFactory::GetBufferId()
     return bufferIdCounter++;
 }
 
-GfxVk::CommandPool::VkCommandPoolWrapper& GfxVk::CommandPool::VkCommandBufferFactory::GetPoolWrapper(const VkQueueFlags& queueType)
+GfxVk::CommandPool::VkCommandPoolWrapper& GfxVk::CommandPool::VkCommandBufferFactory::GetPoolWrapper(const VkQueueFlagBits& queueType)
 {
     switch (queueType)
     {
@@ -163,7 +163,7 @@ uint32_t GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandPool(VkCommand
     return id;
 }
 
-uint32_t GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandBuffer(const VkCommandBufferLevel& level, const VkQueueFlags& queueType)
+uint32_t GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandBuffer(const VkCommandBufferLevel& level, const VkQueueFlagBits& queueType)
 {
     auto CreateBuffer = [&](VkCommandPoolWrapper& wrapper) -> uint32_t
     {
@@ -189,7 +189,7 @@ uint32_t GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandBuffer(const V
     return bufferId;
 }
 
-void GfxVk::CommandPool::VkCommandBufferFactory::DestroyCommandBuffer(uint32_t bufferId, const VkQueueFlags& queueType)
+void GfxVk::CommandPool::VkCommandBufferFactory::DestroyCommandBuffer(uint32_t bufferId, const VkQueueFlagBits& queueType)
 {
     auto& wrapper = GetPoolWrapper(queueType);
 
@@ -241,6 +241,22 @@ const VkCommandBuffer& GfxVk::CommandPool::VkCommandBufferFactory::GetCommandBuf
     }
 
     return m_graphicsPool.m_cmdBufferList[bufferId].m_cmdBuffer;
+}
+
+void GfxVk::CommandPool::VkCommandBufferFactory::BeginCommandBufferRecording(const uint32_t& id, const VkQueueFlagBits& queueType, VkCommandBufferUsageFlagBits usage, VkCommandBufferInheritanceInfo* inheritanceInfo)
+{
+    VkCommandBufferBeginInfo info = {};
+    info.pInheritanceInfo = inheritanceInfo;
+    info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    info.flags = usage;
+    info.pNext = nullptr;
+
+    GfxVk::Utility::ErrorCheck(vkBeginCommandBuffer(GetCommandBuffer(id, queueType), &info));
+}
+
+void GfxVk::CommandPool::VkCommandBufferFactory::EndCommandBufferRecording(const uint32_t& id, const VkQueueFlagBits& queueType)
+{
+    GfxVk::Utility::ErrorCheck(vkEndCommandBuffer(GetCommandBuffer(id, queueType)));
 }
 
 /*
@@ -368,15 +384,6 @@ void GfxVk::CommandPool::VkCommandBufferFactory::ActivateCommandBuffer(const uin
     activeCommandBuffer = GetCommandBuffer(id);
 }
 
-VkCommandBuffer * GfxVk::CommandPool::VkCommandBufferFactory::GetCommandBuffer(const uint32_t & id)
-{
-    std::vector<VkDrawCommandBuffer*>::iterator it;
-    it = std::find_if(drawCommandBufferList.begin(), drawCommandBufferList.end(), [&](VkDrawCommandBuffer* e) { return e->id == id; });
-
-    ASSERT_MSG_DEBUG(it != drawCommandBufferList.end(), "Image id not found");
-
-    return (*it)->commandBuffer;
-}
 
 VkCommandBuffer * GfxVk::CommandPool::VkCommandBufferFactory::GetCommandBuffer(const uint32_t * ids, const uint32_t & count)
 {
