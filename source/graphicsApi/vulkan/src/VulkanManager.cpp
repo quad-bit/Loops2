@@ -37,7 +37,7 @@ void GfxVk::Utility::VulkanManager::CreateInstance()
     appInfo.pApplicationName = "Random Game";
     appInfo.pEngineName = "Loops";
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfoObj{};
     createInfoObj.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -56,6 +56,14 @@ void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
     if(DeviceInfo::m_physicalDeviceFeatures.sampleRateShading)
         DeviceInfo::m_enabledPhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
 
+    VkPhysicalDeviceSynchronization2Features sync2 = {};
+    sync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
+    sync2.synchronization2 = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 physicalFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+    physicalFeatures2.pNext = &sync2;
+    vkGetPhysicalDeviceFeatures2(DeviceInfo::GetPhysicalDevice(), &physicalFeatures2);
+
     std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfoList = VkQueueFactory::GetInstance()->FindQueue();
 
     VkDeviceCreateInfo vkDeviceCreateInfoObj{};
@@ -64,10 +72,10 @@ void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
     vkDeviceCreateInfoObj.pQueueCreateInfos = deviceQueueCreateInfoList.data();
     vkDeviceCreateInfoObj.enabledExtensionCount = (uint32_t)m_validationManagerObj->deviceExtensionNameList.size();
     vkDeviceCreateInfoObj.enabledLayerCount = 0;
-    vkDeviceCreateInfoObj.pEnabledFeatures = &GfxVk::Utility::VulkanDeviceInfo::m_enabledPhysicalDeviceFeatures;
+    //vkDeviceCreateInfoObj.pEnabledFeatures = &GfxVk::Utility::VulkanDeviceInfo::m_enabledPhysicalDeviceFeatures;
     vkDeviceCreateInfoObj.ppEnabledExtensionNames = m_validationManagerObj->deviceExtensionNameList.data();
     vkDeviceCreateInfoObj.ppEnabledLayerNames = nullptr;
-    //vkDeviceCreateInfoObj.pNext = &sync2;
+    vkDeviceCreateInfoObj.pNext = &physicalFeatures2;
 
     ErrorCheck(vkCreateDevice(DeviceInfo::m_physicalDeviceObj, &vkDeviceCreateInfoObj, GfxVk::Utility::VulkanSettings::pAllocator, &DeviceInfo::m_logicalDeviceObj));
 }
@@ -129,13 +137,16 @@ void GfxVk::Utility::VulkanManager::CreateSurface(GLFWwindow * glfwWindow)
 
 void GfxVk::Utility::VulkanManager::GetMaxUsableVKSampleCount()
 {
-    VkSampleCountFlags counts =  std::min(DeviceInfo::m_physicalDeviceProps.limits.framebufferColorSampleCounts, DeviceInfo::m_physicalDeviceProps.limits.framebufferDepthSampleCounts);
-    if (counts & VK_SAMPLE_COUNT_64_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_64_BIT; }
-    if (counts & VK_SAMPLE_COUNT_32_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_32_BIT; }
-    if (counts & VK_SAMPLE_COUNT_16_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_16_BIT; }
-    if (counts & VK_SAMPLE_COUNT_8_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_8_BIT; }
-    if (counts & VK_SAMPLE_COUNT_4_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_4_BIT; }
-    if (counts & VK_SAMPLE_COUNT_2_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_2_BIT; }
+    auto colorCount = DeviceInfo::m_physicalDeviceProps.limits.framebufferColorSampleCounts;
+    auto depthCount = DeviceInfo::m_physicalDeviceProps.limits.framebufferDepthSampleCounts;
+    VkSampleCountFlags counts =  std::min(colorCount, depthCount);
+
+    if (counts & VK_SAMPLE_COUNT_64_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_64_BIT; return; }
+    if (counts & VK_SAMPLE_COUNT_32_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_32_BIT; return; }
+    if (counts & VK_SAMPLE_COUNT_16_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_16_BIT; return;    }
+    if (counts & VK_SAMPLE_COUNT_8_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_8_BIT; return;}
+    if (counts & VK_SAMPLE_COUNT_4_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_4_BIT; return;}
+    if (counts & VK_SAMPLE_COUNT_2_BIT) { DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_2_BIT; return;}
     DeviceInfo::m_maxUsableSampleCount = VK_SAMPLE_COUNT_1_BIT;
 }
 
@@ -282,6 +293,7 @@ void GfxVk::Utility::VulkanManager::Init(std::vector<Core::Wrappers::QueueWrappe
         };
 
     CreateQueues();
+    GetMaxUsableVKSampleCount();
 }
 
 void GfxVk::Utility::VulkanManager::InitializeFactories()

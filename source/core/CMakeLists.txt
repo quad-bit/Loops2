@@ -6,14 +6,12 @@ set(CORE_FILES
     inc/CoreManager.h
     inc/CorePrecompiled.h
     inc/PlatformSettings.h
-    inc/RendererSettings.h
     inc/Settings.h
     inc/RenderData.h
     inc/Shader.h
 
     src/CoreManager.cpp
     src/CorePrecompiled.cpp
-    src/RendererSettings.cpp
     src/Settings.cpp
 )
 

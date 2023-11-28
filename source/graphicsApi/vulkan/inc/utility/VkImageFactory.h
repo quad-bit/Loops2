@@ -4,6 +4,7 @@
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include <vulkan/vulkan.h>
 #include <optional>
+#include <map>
 
 namespace GfxVk
 {
@@ -12,8 +13,8 @@ namespace GfxVk
         struct ImageWrapper
         {
             uint32_t m_imageId;
-            VkImage m_image;
-            VkImageView m_imageView;
+            VkImage m_image = VK_NULL_HANDLE;
+            VkImageView m_imageView = VK_NULL_HANDLE;
             std::optional<uint32_t> m_memId;
             std::string m_name;
         };
@@ -30,7 +31,7 @@ namespace GfxVk
 
             uint32_t GetId();
 
-            std::vector<ImageWrapper> m_imageList;
+            std::map<uint32_t, ImageWrapper> m_imageList;
 
         public:
             void Init();
@@ -39,7 +40,9 @@ namespace GfxVk
             static VkImageFactory* GetInstance();
             ~VkImageFactory();
 
-            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name );
+            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name);
+            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
+            void CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId);
             void DestroyImage(uint32_t imageId, bool freeImageMemory);
 
             const VkImageView& GetImageView(uint32_t id);

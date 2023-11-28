@@ -66,6 +66,7 @@ inc/RenderingManager.h
 inc/RenderingPrecompiled.h
 inc/VulkanInterface.h
 inc/CommandReader.h
+inc/RendererSettings.h
 # inc/ForwardInterface.h
 # inc/DeferredInterface.h
 

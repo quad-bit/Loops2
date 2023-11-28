@@ -259,35 +259,35 @@ VkImageType GfxVk::Unwrap::UnWrapImageType(Core::Enums::ImageType type)
     return VkImageType::VK_IMAGE_TYPE_1D;
 }
 
-VkImageUsageFlagBits GfxVk::Unwrap::UnwrapUsage(Core::Enums::AttachmentUsage usage)
+VkImageUsageFlagBits GfxVk::Unwrap::UnwrapUsage(Core::Enums::ImageUsage usage)
 {
     switch (usage)
     {
-    case Core::Enums::AttachmentUsage::USAGE_TRANSFER_DST_BIT:
+    case Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_SAMPLED_BIT:
+    case Core::Enums::ImageUsage::USAGE_SAMPLED_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_STORAGE_BIT:
+    case Core::Enums::ImageUsage::USAGE_STORAGE_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_STORAGE_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT:
+    case Core::Enums::ImageUsage::USAGE_COLOR_ATTACHMENT_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT:
+    case Core::Enums::ImageUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_TRANSIENT_ATTACHMENT_BIT:
+    case Core::Enums::ImageUsage::USAGE_TRANSIENT_ATTACHMENT_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_INPUT_ATTACHMENT_BIT:
+    case Core::Enums::ImageUsage::USAGE_INPUT_ATTACHMENT_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
-    case Core::Enums::AttachmentUsage::USAGE_SHADING_RATE_IMAGE_BIT_NV:
+    case Core::Enums::ImageUsage::USAGE_SHADING_RATE_IMAGE_BIT_NV:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV;
 
-    case Core::Enums::AttachmentUsage::USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT:
+    case Core::Enums::ImageUsage::USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT;
 
     default:
@@ -296,7 +296,7 @@ VkImageUsageFlagBits GfxVk::Unwrap::UnwrapUsage(Core::Enums::AttachmentUsage usa
     }
 }
 
-VkImageUsageFlags GfxVk::Unwrap::UnwrapUsage(const std::vector<Core::Enums::AttachmentUsage>& usage)
+VkImageUsageFlags GfxVk::Unwrap::UnwrapUsage(const std::vector<Core::Enums::ImageUsage>& usage)
 {
     VkImageUsageFlags flag = 0;
     for (uint32_t i = 0; i < usage.size(); i++)

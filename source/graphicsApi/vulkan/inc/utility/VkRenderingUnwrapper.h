@@ -28,8 +28,8 @@ namespace GfxVk
         VkSampleCountFlagBits UnWrapSampleCount(Core::Enums::Samples sampleCount);
         Core::Enums::Samples UnWrapSampleCount(VkSampleCountFlags vkSampleCount);
         VkImageType UnWrapImageType(Core::Enums::ImageType type);
-        VkImageUsageFlagBits UnwrapUsage(Core::Enums::AttachmentUsage usage);
-        VkImageUsageFlags UnwrapUsage(const std::vector<Core::Enums::AttachmentUsage>& usage);
+        VkImageUsageFlagBits UnwrapUsage(Core::Enums::ImageUsage usage);
+        VkImageUsageFlags UnwrapUsage(const std::vector<Core::Enums::ImageUsage>& usage);
 
         VkRenderPassBeginInfo UnwrapRenderPassBeginInfo(Core::Wrappers::RenderPassBeginInfo info);
 

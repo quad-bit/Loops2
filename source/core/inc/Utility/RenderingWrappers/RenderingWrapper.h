@@ -85,7 +85,7 @@ namespace Core
             BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT = 0x00020000,
         };
 
-        enum class AttachmentUsage
+        enum class ImageUsage
         {
             USAGE_TRANSFER_SRC_BIT = 0x00000001,
             USAGE_TRANSFER_DST_BIT = 0x00000002,
@@ -674,7 +674,7 @@ namespace Core
                 Core::Enums::ColorSpace     m_colorSpace;
                 Core::Enums::Samples        m_sampleCount;
                 Core::Enums::ImageLayout    m_initialLayout;
-                std::vector<Core::Enums::AttachmentUsage> m_usages;
+                std::vector<Core::Enums::ImageUsage> m_usages;
             };
 
             struct ImageViewCreateInfo

@@ -572,9 +572,14 @@ Core::Enums::Format Renderer::Utility::VulkanInterface::FindBestDepthFormat()
 //    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateImageView(viewInfo, count);
 //}
 
-uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name)
+void Renderer::Utility::VulkanInterface::CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId)
 {
-    return GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(imageInfo, viewInfo, name);
+    GfxVk::Utility::VkImageFactory::GetInstance()->CreateImageView(viewInfo, imageId);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name)
+{
+    return GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(imageInfo, name);
 }
 
 void Renderer::Utility::VulkanInterface::DestroyImage(uint32_t imageId, bool freeImageMemory)
@@ -785,7 +790,6 @@ bool Renderer::Utility::VulkanInterface::IsApplicationSafeForClosure()
 {
     GfxVk::Utility::VkQueueFactory::GetInstance()->WaitForAllQueues();
     vkDeviceWaitIdle(DeviceInfo::GetLogicalDevice());
-
     return true;
 }
 
@@ -1020,7 +1024,7 @@ bool Renderer::Utility::VulkanInterface::IsSampleRateShadingAvailable()
 
 Core::Enums::Samples Renderer::Utility::VulkanInterface::GetMaxUsableSampleCount()
 {
-    ASSERT_MSG_DEBUG(0, "CHECK THIS");
+    //ASSERT_MSG_DEBUG(0, "CHECK THIS");
     return GfxVk::Unwrap::UnWrapSampleCount(GfxVk::Utility::VulkanDeviceInfo::GetMaxSampleCount());
 }
 

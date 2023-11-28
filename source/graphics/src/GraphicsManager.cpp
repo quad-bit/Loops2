@@ -52,11 +52,15 @@ void Renderer::GraphicsManager::Init()
     Core::Settings::m_swapBufferCount = RendererSettings::GetSwapBufferCount();
     Core::Settings::m_maxFramesInFlight = RendererSettings::GetMaxFramesInFlightCount();
 
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
     m_renderGraphManager->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
         Renderer::RendererSettings::GetComputeQueueId(),
         Renderer::RendererSettings::GetTransferQueueId(),
-        Renderer::RendererSettings::GetPresentationQueueId());
+        Renderer::RendererSettings::GetPresentationQueueId(),
+        std::move(pipeline));
+
+    //m_renderGraphManager->AddPipeline(std::move(pipeline));
 }
 
 Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSettings, Core::Utility::RenderData& renderData):
@@ -68,9 +72,6 @@ Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSet
     m_renderingMngrObj = std::make_unique<Renderer::RenderingManager>(m_windowSettings);
 
     m_renderGraphManager = std::make_unique<Renderer::RenderGraph::RenderGraphManager>(m_renderData, m_windowSettings);
-
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
-    m_renderGraphManager->AddPipeline(std::move(pipeline));
 }
 
 void Renderer::GraphicsManager::DeInit()

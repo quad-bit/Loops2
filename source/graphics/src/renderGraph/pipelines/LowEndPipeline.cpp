@@ -2,9 +2,13 @@
 #include "renderGraph/tasks/RenderTask.h"
 #include "renderGraph/tasks/ComputeTask.h"
 #include "renderGraph/tasks/TransferTask.h"
-//#include "renderGraph/Graph.h"
+#include "Settings.h"
 #include "resourceManagement/Resource.h"
 #include "renderGraph/utility/Utils.h"
+
+
+uint32_t g_resourceDistributionCount = 0;
+Core::Wrappers::ImageCreateInfo g_info{};
 
 namespace
 {
@@ -14,7 +18,7 @@ namespace
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2, r3, r4, r5, r6, r7, r8;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, *r2Node,
             *r3Node, * r4Node, * r5Node, * r6Node, * r7Node, * r8Node;
-        ResourceAlias* r1Image, *r2Image, *r3Image, *r4Image;
+        std::vector<ResourceAlias*> r1Image, r2Image, r3Image, r4Image;
 
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> t1, t2, t3, t4;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* t1Node, *t2Node, * t3Node, * t4Node;
@@ -24,15 +28,18 @@ namespace
         Tech0(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
             Technique(graph, name, funcs)
         {
-            // Create resource node
-            Core::Wrappers::ImageCreateInfo info{};
-            info.m_width = 600;
-            info.m_height = 600;
+            /*for (uint32_t i = 0; i < g_resourceDistributionCount; i++)
+            {
+                r1Image.push_back(m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color1_T0_E0_" + std::to_string(i)));
+                r2Image.push_back(m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color2_T0_E0_" + std::to_string(i)));
+                r3Image.push_back(m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color3_T0_E0_" + std::to_string(i)));
+                r4Image.push_back(m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color4_T0_E0_" + std::to_string(i)));
+            }*/
 
-            r1Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color1_T0_E0");
-            r2Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color2_T0_E0");
-            r3Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color3_T0_E0");
-            r4Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color4_T0_E0");
+            r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T0_E0_0", "color1_T0_E0_1", "color1_T0_E0_2" }));
+            r2Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color2_T0_E0_0", "color2_T0_E0_1", "color2_T0_E0_2" }));
+            r3Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color3_T0_E0_0", "color3_T0_E0_1", "color3_T0_E0_2" }));
+            r4Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color4_T0_E0_0", "color4_T0_E0_1", "color4_T0_E0_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T0_E0", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r1Node = m_graph.Push(r1.get());
@@ -124,7 +131,7 @@ namespace
     private:
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2, r3, r4;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, * r2Node, *r3Node, * r4Node;
-        ResourceAlias *r1Image, *r2Image;
+        std::vector<ResourceAlias*> r1Image, r2Image;
 
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> t1, t2, t3;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* t1Node, * t2Node, * t3Node;
@@ -135,12 +142,8 @@ namespace
             Technique(graph, name, funcs)
         {
             // Create resource node
-            Core::Wrappers::ImageCreateInfo info{};
-            info.m_width = 600;
-            info.m_height = 600;
-
-            r1Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color1_T1_E1");
-            r2Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color2_T1_E1");
+            r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T1_E1_0", "color1_T1_E1_1", "color1_T1_E1_2" }));
+            r2Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color2_T1_E1_0", "color2_T1_E1_1", "color2_T1_E1_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r1Node = m_graph.Push(r1.get());
@@ -199,7 +202,7 @@ namespace
     private:
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, * r2Node;
-        ResourceAlias* r1Image;
+        std::vector<ResourceAlias*> r1Image;
 
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> t1;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* t1Node;
@@ -210,11 +213,7 @@ namespace
             Technique(graph, name, funcs)
         {
             // Create resource node
-            Core::Wrappers::ImageCreateInfo info{};
-            info.m_width = 600;
-            info.m_height = 600;
-
-            r1Image = m_callbackUtility.m_resourceCreationCallback.CreateImageFunc(info, "color1");
+            r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T2_E2_0", "color1_T2_E2_1", "color1_T2_E2_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T2_E2", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r1Node = m_graph.Push(r1.get());
@@ -354,8 +353,28 @@ namespace
 Renderer::RenderGraph::Pipelines::LowEndPipeline::LowEndPipeline(Core::Utility::RenderData& renderData, const std::string& name) :
     Renderer::RenderGraph::Pipeline(renderData, name)
 {
+    g_resourceDistributionCount = Core::Settings::m_swapBufferCount;
+
+    Core::Enums::Format format{ Core::Enums::Format::B8G8R8A8_UNORM };
+    Core::Enums::ImageType type{ Core::Enums::ImageType::IMAGE_TYPE_2D };
+    std::vector<Core::Enums::ImageUsage> usages{ Core::Enums::ImageUsage::USAGE_SAMPLED_BIT };
+
+    g_info.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    g_info.m_depth = 1;
+    g_info.m_format = format;
+    g_info.m_height = 1024;
+    g_info.m_imageType = type;
+    g_info.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
+    g_info.m_layers = 1;
+    g_info.m_mips = 1;
+    g_info.m_sampleCount = Renderer::RendererSettings::GetMaxSampleCountAvailable();
+    g_info.m_usages = usages;
+    g_info.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
+    g_info.m_width = 1024;
+
+
     AddEffects(*m_graph.get(), m_effects, m_callbackUtility);
-    m_graph->PrintGraph();
+    //m_graph->PrintGraph();
 }
 
 //void Renderer::RenderGraph::Pipelines::LowEndPipeline::ValidatePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)

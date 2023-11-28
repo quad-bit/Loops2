@@ -95,7 +95,8 @@ namespace Renderer
 
             //void CreateImageView(Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count);
 
-            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name);
+            void CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId);
+            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
             void DestroyImage(uint32_t imageId, bool freeImageMemory);
 
             void CreateRenderPass(

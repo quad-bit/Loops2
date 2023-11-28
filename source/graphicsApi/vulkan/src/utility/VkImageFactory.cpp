@@ -43,6 +43,11 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     VkImage image;
     GfxVk::Utility::ErrorCheck(vkCreateImage(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &image));
 
+    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&image);
+    auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(&req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.size);
+    VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+    GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), image, mem, 0));
+
     VkImageView imageView;
     VkImageViewCreateInfo vkViewInfo = Unwrap::UnWrapImageViewCreateInfo(&viewInfo, image);
     GfxVk::Utility::ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &vkViewInfo, DeviceInfo::GetAllocationCallback(), &imageView));
@@ -52,48 +57,65 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     wrapper.m_imageView = imageView;
     wrapper.m_imageId = GetId();
     wrapper.m_name = name;
-
-    m_imageList.push_back(wrapper);
+    wrapper.m_memId = memId;
+    m_imageList.insert({ wrapper.m_imageId, wrapper });
 
     return wrapper.m_imageId;
 }
 
+uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name)
+{
+    VkImageCreateInfo info = Unwrap::UnWrapImageCreateInfo(&imageInfo);
+    VkImage image;
+    GfxVk::Utility::ErrorCheck(vkCreateImage(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &image));
+
+    ImageWrapper wrapper;
+    wrapper.m_image = image;
+    wrapper.m_imageId = GetId();
+    wrapper.m_name = name;
+    m_imageList.insert({ wrapper.m_imageId, wrapper });
+
+    return wrapper.m_imageId;
+}
+
+void GfxVk::Utility::VkImageFactory::CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId)
+{
+    VkImageView imageView;
+    auto& image = m_imageList[imageId].m_image;
+    VkImageViewCreateInfo vkViewInfo = Unwrap::UnWrapImageViewCreateInfo(&viewInfo, image);
+    GfxVk::Utility::ErrorCheck(vkCreateImageView(DeviceInfo::GetLogicalDevice(), &vkViewInfo, DeviceInfo::GetAllocationCallback(), &imageView));
+    m_imageList[imageId].m_imageView = imageView;
+}
+
 void GfxVk::Utility::VkImageFactory::DestroyImage(uint32_t imageId, bool freeImageMemory)
 {
-    std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
-    it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == imageId; });
-
-    ASSERT_MSG_DEBUG(it != m_imageList.end(), "Image id not found");
-    if ((*it).m_image != VK_NULL_HANDLE)
+    ASSERT_MSG_DEBUG(m_imageList.find(imageId) != m_imageList.end(), "Image id not found");
     {
-        vkDestroyImage(DeviceInfo::GetLogicalDevice(), (*it).m_image, DeviceInfo::GetAllocationCallback());
-        (*it).m_image = VK_NULL_HANDLE;
+        vkDestroyImage(DeviceInfo::GetLogicalDevice(), m_imageList[imageId].m_image, DeviceInfo::GetAllocationCallback());
+        m_imageList[imageId].m_image = VK_NULL_HANDLE;
     }
 
-    if ((*it).m_imageView != VK_NULL_HANDLE)
+    if (m_imageList[imageId].m_imageView != VK_NULL_HANDLE)
     {
-        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), (*it).m_imageView, DeviceInfo::GetAllocationCallback());
-        (*it).m_imageView = VK_NULL_HANDLE;
+        vkDestroyImageView(DeviceInfo::GetLogicalDevice(), m_imageList[imageId].m_imageView, DeviceInfo::GetAllocationCallback());
+        m_imageList[imageId].m_imageView = VK_NULL_HANDLE;
     }
 
-    if (freeImageMemory == true && (*it).m_memId.has_value())
+    if (freeImageMemory == true && m_imageList[imageId].m_memId.has_value())
     {
-        GfxVk::Utility::VulkanMemoryManager::GetSingleton()->FreeMemory((*it).m_memId.value());
+        GfxVk::Utility::VulkanMemoryManager::GetSingleton()->FreeMemory(m_imageList[imageId].m_memId.value());
     }
 
     {
-        m_imageList.erase(it);
+        m_imageList.erase(imageId);
     }
 }
 
 Core::Wrappers::MemoryRequirementInfo GfxVk::Utility::VkImageFactory::GetImageMemoryRequirement(uint32_t id)
 {
-    std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
-    it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == id; });
+    ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
 
-    ASSERT_MSG(it != m_imageList.end(), "Image not found");
-
-    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&(*it).m_image);
+    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&m_imageList[id].m_image);
 
     Core::Wrappers::MemoryRequirementInfo info = {};
     info.alignment = req.alignment;
@@ -106,15 +128,11 @@ Core::Wrappers::MemoryRequirementInfo GfxVk::Utility::VkImageFactory::GetImageMe
 
 void GfxVk::Utility::VkImageFactory::BindImageMemory(uint32_t imageId, uint32_t memId, size_t offset)
 {
-    std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
-    it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == imageId; });
-
-    ASSERT_MSG_DEBUG(it != m_imageList.end(), "Image not found");
-
-    (*it).m_memId = memId;
+    ASSERT_MSG(m_imageList.find(imageId) != m_imageList.end(), "Image not found");
+    m_imageList[imageId].m_memId = memId;
     VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
 
-    GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), (*it).m_image, mem, offset));
+    GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), m_imageList[imageId].m_image, mem, offset));
 }
 
 uint32_t GfxVk::Utility::VkImageFactory::GetId()
@@ -124,19 +142,14 @@ uint32_t GfxVk::Utility::VkImageFactory::GetId()
 
 const VkImageView& GfxVk::Utility::VkImageFactory::GetImageView(uint32_t id)
 {
-    std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
-    it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == id; });
-    ASSERT_MSG_DEBUG(it != m_imageList.end(), "Image not found");
+    ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
 
-    return (*it).m_imageView;
+    return m_imageList[id].m_imageView;
 }
 
 const VkImage& GfxVk::Utility::VkImageFactory::GetImage(uint32_t id)
 {
-    std::vector<GfxVk::Utility::ImageWrapper>::iterator it;
-    it = std::find_if(m_imageList.begin(), m_imageList.end(), [&](GfxVk::Utility::ImageWrapper e) { return e.m_imageId == id; });
+    ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
 
-    ASSERT_MSG_DEBUG(it != m_imageList.end(), "Image not found");
-
-    return (*it).m_image;
+    return m_imageList[id].m_image;
 }

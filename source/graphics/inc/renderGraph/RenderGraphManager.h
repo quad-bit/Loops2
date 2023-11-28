@@ -76,7 +76,11 @@ namespace Renderer
         public:
             RenderGraphManager(const Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings);
             void AddPipeline(std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline);
-            void Init(uint32_t renderQueueId, uint32_t computeQueueId, uint32_t transferQueueId, uint32_t presentationQueueId);
+            void Init(uint32_t renderQueueId,
+                uint32_t computeQueueId,
+                uint32_t transferQueueId,
+                uint32_t presentationQueueId,
+                std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline);
             void DeInit();
             void Update(const Core::Wrappers::FrameInfo& frameInfo);
             void SetupFrame(Core::Wrappers::FrameInfo& frameInfo);

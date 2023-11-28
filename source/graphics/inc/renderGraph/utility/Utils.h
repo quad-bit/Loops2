@@ -39,7 +39,7 @@ namespace Renderer
             struct ConnectionInfo
             {
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
-                ResourceAlias* m_resource;
+                std::vector<ResourceAlias*> m_resource;
                 uint32_t m_resourceParentNodeId;
             };
 
@@ -49,6 +49,7 @@ namespace Renderer
             {
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)> CreateImageFunc;
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)> CreateBufferFunc;
+                std::function<std::vector<Renderer::ResourceManagement::Resource*> (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& name)> CreatePerFrameImageFunc;
             };
 
             struct GraphTraversalCallback
@@ -102,6 +103,13 @@ namespace Renderer
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
                 const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
+
+            std::pair<std::vector<uint32_t>, std::vector<uint32_t>> CreatePerFrameImageResource(
+                const Core::Wrappers::ImageCreateInfo& createInfo,
+                std::vector<std::string> names,
+                uint32_t count);
+
+            void DestroyPerFrameImageResource(const std::vector<uint32_t>& imageIds, std::vector<uint32_t>& memIds);
         }
     }
 }

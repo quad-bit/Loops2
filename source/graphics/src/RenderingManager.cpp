@@ -114,10 +114,10 @@ void Renderer::RenderingManager::CheckForMSAA()
 
         if (Renderer::RendererSettings::m_maxSampleCountAvailable != Core::Enums::Samples::SAMPLE_COUNT_1_BIT)
         {
-            if (VulkanInterfaceAlias::IsSampleRateShadingAvailable())
+            /*if (VulkanInterfaceAlias::IsSampleRateShadingAvailable())
             {
                 Renderer::RendererSettings::m_sampleRateShadingEnabled = true;
-            }
+            }*/
 
             Renderer::RendererSettings::m_multiSamplingAvailable = true;
             if (Renderer::RendererSettings::m_maxSampleCountAvailable < m_desiredSampleCountForMSAA)
@@ -184,7 +184,7 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
         info.m_width = m_windowSettings.m_windowWidth;
         info.m_height = m_windowSettings.m_windowHeight;
         info.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
-        info.m_usages.push_back(Core::Enums::AttachmentUsage::USAGE_COLOR_ATTACHMENT_BIT);
+        info.m_usages.push_back(Core::Enums::ImageUsage::USAGE_COLOR_ATTACHMENT_BIT);
 
         GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
     }
@@ -192,7 +192,7 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     //forwardRenderer = new ForwardRendering<T>();
     //forwardRenderer->Init(apiInterface);
 
-    //CheckForMSAA();
+    CheckForMSAA();
 
     /*CommandBufferManager<T>::GetInstance()->Init(apiInterface);
     MeshFactory::GetInstance()->Init(apiInterface);

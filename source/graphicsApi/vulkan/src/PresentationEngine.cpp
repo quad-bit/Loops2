@@ -41,7 +41,7 @@ void GfxVk::Utility::PresentationEngine::ChangeImageLayout()
 
     vkBeginCommandBuffer(cmdBuffer, &beginInfo);
 
-#if 0
+#if 1
     std::vector<VkImageMemoryBarrier2> list;
     for (auto& image : m_swapChainImageList)
     {
@@ -50,8 +50,8 @@ void GfxVk::Utility::PresentationEngine::ChangeImageLayout()
         imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         imgBarrier.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
         imgBarrier.image = image;
-        imgBarrier.newLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imgBarrier.pNext = nullptr;
         imgBarrier.srcAccessMask = 0;
         imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;

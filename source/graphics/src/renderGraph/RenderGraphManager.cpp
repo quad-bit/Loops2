@@ -267,7 +267,8 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
 void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
     uint32_t computeQueueId,
     uint32_t transferQueueId,
-    uint32_t presentationQueueId)
+    uint32_t presentationQueueId,
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline)
 {
     PLOGD << "RenderGraphManager Init";
 
@@ -279,6 +280,7 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
     m_computeQueueId = computeQueueId;
     m_transferQueueId = transferQueueId;
     m_presentationQueueId = presentationQueueId;
+    
     auto FillCommandBuffer = [&](std::vector<uint32_t>& bufList, uint32_t bufCount, const Core::Enums::QueueType& queueType)
     {
         for (uint32_t i = 0; i < bufCount; i++)
@@ -335,6 +337,8 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
         m_acquireSwapchainFence.push_back(Renderer::Utility::VulkanInterface::CreateFence(true));
     }
 
+    AddPipeline(std::move(pipeline));
+
     for (auto& pipeline : m_pipelines)
     {
         pipeline->CompilePipeline();
@@ -366,6 +370,11 @@ void Renderer::RenderGraph::RenderGraphManager::DeInit()
     PLOGD << "RenderGraphManager DeInit";
 
     m_presentationTask.reset();
+
+    for (auto& pipeline : m_pipelines)
+    {
+        pipeline->DestroyPipeline();
+    }
 
     for (uint32_t i = 0; i < g_fenceDistributionCount; i++)
     {

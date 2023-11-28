@@ -48,7 +48,7 @@ namespace Renderer
 
         protected:
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_inputs;
-            std::vector <Renderer::RenderGraph::Utils::ConnectionInfo> m_outputs;
+            std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_outputs;
             std::string m_name;
             TaskType m_taskType;
 
@@ -235,34 +235,35 @@ namespace Renderer
         {
         protected:
             Renderer::ResourceManagement::ResourceType m_resourceType;
-            std::map<uint32_t, Renderer::RenderGraph::Utils::ResourceMemoryUsage> sourceTaskIdToUsageMap, destTaskIdToUsageMap;
-            ResourceAlias* m_resource;
+            std::map<uint32_t, Renderer::RenderGraph::Utils::ResourceMemoryUsage> m_sourceTaskIdToUsageMap, m_destTaskIdToUsageMap;
+            std::vector<ResourceAlias*> m_resourceList;
+
         public:
-            ResourceNode(ResourceAlias* resource, const std::string& nodeName, const Renderer::ResourceManagement::ResourceType& resourceType, Utils::GraphTraversalCallback& funcs) :
-                RenderGraphNodeBase(Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE, nodeName, funcs), m_resourceType(resourceType), m_resource(resource)
+            ResourceNode(const std::vector<ResourceAlias*>& resource, const std::string& nodeName, const Renderer::ResourceManagement::ResourceType& resourceType, Utils::GraphTraversalCallback& funcs) :
+                RenderGraphNodeBase(Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE, nodeName, funcs), m_resourceType(resourceType), m_resourceList(resource)
             {}
 
             void RegisterAsTaskInput(const uint32_t taskId, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
             {
-                if(sourceTaskIdToUsageMap.find(taskId) != sourceTaskIdToUsageMap.end())
+                if(m_sourceTaskIdToUsageMap.find(taskId) != m_sourceTaskIdToUsageMap.end())
                 {
                     ASSERT_MSG_DEBUG(0, "duplicate edge.");
                 }
-                sourceTaskIdToUsageMap.insert({ taskId, usage });
+                m_sourceTaskIdToUsageMap.insert({ taskId, usage });
             }
 
             void RegisterAsTaskOutput(const uint32_t taskId, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
             {
-                if (destTaskIdToUsageMap.find(taskId) != destTaskIdToUsageMap.end())
+                if (m_destTaskIdToUsageMap.find(taskId) != m_destTaskIdToUsageMap.end())
                 {
                     ASSERT_MSG_DEBUG(0, "duplicate edge.");
                 }
-                destTaskIdToUsageMap.insert({ taskId, usage });
+                m_destTaskIdToUsageMap.insert({ taskId, usage });
             }
 
-            ResourceAlias* GetResource()
+            const std::vector<ResourceAlias*>& GetResource()
             {
-                return m_resource;
+                return m_resourceList;
             }
 
             virtual void Execute() override

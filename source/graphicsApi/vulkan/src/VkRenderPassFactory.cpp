@@ -4,7 +4,7 @@
 #include <CorePrecompiled.h>
 #include <array>
 #include "Settings.h"
-#include "RendererSettings.h"
+//#include "RendererSettings.h"
 
 GfxVk::Renderpass::VkRenderPassFactory* GfxVk::Renderpass::VkRenderPassFactory::instance = nullptr;
 uint32_t GfxVk::Renderpass::VkRenderPassFactory::renderpassIdCounter = 0;
