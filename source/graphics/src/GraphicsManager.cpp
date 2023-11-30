@@ -20,6 +20,7 @@
 #include <utility/VulkanMemoryManager.h>
 #include <VkCommandBufferFactory.h>
 #include <synchronisation/VkSynchroniserFactory.h>
+#include <utility/VkImageFactory.h>
 
 #include <resourceManagement/UniformFactory.h>
 #include <resourceManagement/MeshFactory.h>
@@ -33,6 +34,9 @@ void Renderer::GraphicsManager::Init()
 
     m_renderingMngrObj->Init(m_windowMngrObj->glfwWindow);
 
+    Core::Settings::m_swapBufferCount = RendererSettings::GetSwapBufferCount();
+    Core::Settings::m_maxFramesInFlight = RendererSettings::GetMaxFramesInFlightCount();
+
     // first api level
     GfxVk::Shading::VkDescriptorPoolFactory::GetInstance()->Init();
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->Init();
@@ -43,24 +47,20 @@ void Renderer::GraphicsManager::Init()
         Renderer::RendererSettings::GetComputeQueueId(),
         Renderer::RendererSettings::GetTransferQueueId());
     GfxVk::Sync::VkSynchroniserFactory::GetInstance()->Init();
+    GfxVk::Utility::VkImageFactory::GetInstance()->Init(Core::Settings::m_swapBufferCount);
 
     // next high level wrappers
     Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MeshFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MaterialFactory::GetInstance()->Init();
 
-    Core::Settings::m_swapBufferCount = RendererSettings::GetSwapBufferCount();
-    Core::Settings::m_maxFramesInFlight = RendererSettings::GetMaxFramesInFlightCount();
-
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, "LowEndPipeline");
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, m_windowSettings, "LowEndPipeline");
     m_renderGraphManager->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
         Renderer::RendererSettings::GetComputeQueueId(),
         Renderer::RendererSettings::GetTransferQueueId(),
         Renderer::RendererSettings::GetPresentationQueueId(),
         std::move(pipeline));
-
-    //m_renderGraphManager->AddPipeline(std::move(pipeline));
 }
 
 Renderer::GraphicsManager::GraphicsManager(const Core::WindowSettings& windowSettings, Core::Utility::RenderData& renderData):
@@ -80,12 +80,6 @@ void Renderer::GraphicsManager::DeInit()
 
     m_renderGraphManager->DeInit();
 
-    GfxVk::Sync::VkSynchroniserFactory::GetInstance()->DeInit();
-    delete GfxVk::Sync::VkSynchroniserFactory::GetInstance();
-
-    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DeInit();
-    delete GfxVk::CommandPool::VkCommandBufferFactory::GetInstance();
-
     Renderer::ResourceManagement::MaterialFactory::GetInstance()->DeInit();
     delete Renderer::ResourceManagement::MaterialFactory::GetInstance();
 
@@ -94,6 +88,15 @@ void Renderer::GraphicsManager::DeInit()
 
     Renderer::ResourceManagement::UniformFactory::GetInstance()->DeInit();
     delete Renderer::ResourceManagement::UniformFactory::GetInstance();
+
+    GfxVk::Utility::VkImageFactory::GetInstance()->DeInit();
+    delete GfxVk::Utility::VkImageFactory::GetInstance();
+
+    GfxVk::Sync::VkSynchroniserFactory::GetInstance()->DeInit();
+    delete GfxVk::Sync::VkSynchroniserFactory::GetInstance();
+
+    GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->DeInit();
+    delete GfxVk::CommandPool::VkCommandBufferFactory::GetInstance();
 
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->DeInit();
     delete GfxVk::Utility::VulkanMemoryManager::GetSingleton();

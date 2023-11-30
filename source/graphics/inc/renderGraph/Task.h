@@ -27,15 +27,29 @@ namespace Renderer
         {
             uint32_t m_bufId;
             std::optional<bool> m_shouldStart, m_shouldStop;
+            std::optional<uint32_t> m_previousQueueId;
+        };
+
+        struct TaskQueueInfo
+        {
+            std::optional<uint32_t> m_previousTaskQueueId, m_nextTaskQueueId;
+            uint32_t m_taskQueueId;
         };
 
         struct TaskSubmitInfo
         {
             std::optional<uint32_t> m_waitSemaphoreId, m_signalSemaphoreId;
             std::optional<uint32_t> m_fenceId;
-            std::optional<uint32_t> m_queueId;
             Core::Enums::PipelineType m_pipelineType;
             Core::Enums::QueueType m_queuePurpose;
+        };
+
+        struct TaskImageResourceInfo
+        {
+            // Per frame images
+            std::vector<ResourceAlias*> m_imageResource;
+            std::optional<Core::Enums::ImageLayout> m_previousLayout;
+            Core::Enums::ImageLayout m_expectedLayout;
         };
 
         /// <summary>
@@ -49,11 +63,16 @@ namespace Renderer
         protected:
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_inputs;
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_outputs;
+
+            std::vector<TaskImageResourceInfo> m_taskImageResourceInfoList;
+
             std::string m_name;
             TaskType m_taskType;
 
             std::vector<TaskCommandBufferInfo> m_cmdBufferInfo;
             std::vector<TaskSubmitInfo> m_taskSubmitInfo;
+            TaskQueueInfo m_taskQueueInfo;
+
             uint32_t m_activeCommandBuffer;
 
         protected:
@@ -79,12 +98,12 @@ namespace Renderer
                     info.pipelineStage = Core::Enums::PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT;
                     info.purpose = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose;
                     info.queueType = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_pipelineType;
-                    info.queueId = m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queueId;
+                    info.queueId = m_taskQueueInfo.m_taskQueueId;
                     info.signalSemaphoreCount = 1;
                     info.signalSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_signalSemaphoreId.value();
                     info.waitSemaphoreCount = 1;
                     info.waitSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_waitSemaphoreId.value();
-                        
+
                     if (m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.has_value())
                         VulkanInterfaceAlias::SubmitJob(&info, 1, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.value());
                     else
@@ -117,6 +136,14 @@ namespace Renderer
             void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
             {
                 m_inputs.push_back(info);
+                TaskImageResourceInfo obj{};
+                obj.m_imageResource = info.m_resource;
+
+                if (info.m_imageInfo)
+                {
+                    obj.m_expectedLayout = info.m_imageInfo->m_expectedImageLayout;
+                    obj.m_previousLayout = info.m_imageInfo->m_prevImageLayout;
+                }
             }
 
             void AddOutput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
@@ -124,18 +151,23 @@ namespace Renderer
                 m_outputs.push_back(info);
             }
 
-            void AssignSubmitInfo(const std::vector<TaskSubmitInfo>& submitInfo)
+            void AssignSubmitInfo(const std::vector<TaskSubmitInfo>& submitInfo, std::optional<uint32_t> nextTaskQueueId)
             {
                 for (auto& item : submitInfo)
                     m_taskSubmitInfo.push_back(item);
+
+                m_taskQueueInfo.m_nextTaskQueueId = nextTaskQueueId;
             }
 
-            void AssignCommandBufferInfo(const std::vector<TaskCommandBufferInfo>& info)
+            void AssignCommandBufferInfo(const std::vector<TaskCommandBufferInfo>& info,
+                uint32_t taskQueueId, std::optional<uint32_t> previousTaskQueueId)
             {
                 for (auto& item : info)
                 {
                     m_cmdBufferInfo.push_back(item);
                 }
+                m_taskQueueInfo.m_taskQueueId = taskQueueId;
+                m_taskQueueInfo.m_previousTaskQueueId = previousTaskQueueId;
             }
 
             void CloseTaskCommandBuffer()
@@ -162,41 +194,62 @@ namespace Renderer
             void PrintTaskInfo()
             {
                 std::cout << "task id : " << m_name << "\n";
-                for (auto& item : m_cmdBufferInfo)
-                {
-                    std::cout << "command buffer id : " << item.m_bufId << "\n";
-                    if (item.m_shouldStart.has_value())
-                    {
-                        if (item.m_shouldStart.value())
-                            std::cout << "command should start : " << "true" << "\n";
-                        else
-                            std::cout << "command should start : " << "false" << "\n";
-                    }
+                
+                bool printCommandBufferInfo = false;
+                bool printQueueInfo = false;
+                bool printSubmitInfo = true;
 
-                    if (item.m_shouldStop.has_value())
+                if (printCommandBufferInfo)
+                {
+                    for (auto& item : m_cmdBufferInfo)
                     {
-                        if (item.m_shouldStop.value())
-                            std::cout << "command should stop : " << "true" << "\n";
-                        else
-                            std::cout << "command should stop : " << "false" << "\n";
+                        std::cout << "command buffer id : " << item.m_bufId << "\n";
+                        if (item.m_shouldStart.has_value())
+                        {
+                            if (item.m_shouldStart.value())
+                                std::cout << "command should start : " << "true" << "\n";
+                            else
+                                std::cout << "command should start : " << "false" << "\n";
+                        }
+
+                        if (item.m_shouldStop.has_value())
+                        {
+                            if (item.m_shouldStop.value())
+                                std::cout << "command should stop : " << "true" << "\n";
+                            else
+                                std::cout << "command should stop : " << "false" << "\n";
+                        }
                     }
                 }
 
-                for (auto& item : m_taskSubmitInfo)
+                if (printQueueInfo)
                 {
-                    if (item.m_signalSemaphoreId.has_value())
-                    {
-                        std::cout << "signal " << item.m_signalSemaphoreId.value() << "\n";
-                    }
+                    if (m_taskQueueInfo.m_previousTaskQueueId.has_value())
+                        std::cout << "previous task queue : " << m_taskQueueInfo.m_previousTaskQueueId.value() << "\n";
+                    std::cout << "task queue : " << m_taskQueueInfo.m_taskQueueId << "\n";
+                    if (m_taskQueueInfo.m_nextTaskQueueId.has_value())
+                        std::cout << "next task queue : " << m_taskQueueInfo.m_nextTaskQueueId.value() << "\n";
+                }
 
-                    if (item.m_waitSemaphoreId.has_value())
-                    {
-                        std::cout << "wait " << item.m_waitSemaphoreId.value() << "\n";
-                    }
+                if (printSubmitInfo)
+                {
 
-                    if (item.m_fenceId.has_value())
+                    for (auto& item : m_taskSubmitInfo)
                     {
-                        std::cout << "fence " << item.m_fenceId.value() << "\n";
+                        if (item.m_signalSemaphoreId.has_value())
+                        {
+                            std::cout << "signal " << item.m_signalSemaphoreId.value() << "\n";
+                        }
+
+                        if (item.m_waitSemaphoreId.has_value())
+                        {
+                            std::cout << "wait " << item.m_waitSemaphoreId.value() << "\n";
+                        }
+
+                        if (item.m_fenceId.has_value())
+                        {
+                            std::cout << "fence " << item.m_fenceId.value() << "\n";
+                        }
                     }
                 }
             }

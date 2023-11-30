@@ -173,8 +173,6 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(VkSwapchainCreateInfoKH
 
 void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageCreateInfo info)
 {
-    VkImageUsageFlags usageFlag = VkImageUsageFlagBits::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-
     VkSwapchainCreateInfoKHR swapChainCreateInfo{};
     swapChainCreateInfo.clipped = VK_TRUE; // dont render parts of swapchain image that are out of the frustrum
     swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
@@ -212,6 +210,7 @@ void GfxVk::Utility::PresentationEngine::CreateSwapChain(Core::Wrappers::ImageCr
         createInfo.subresourceRange.layerCount = 1;
         createInfo.subresourceRange.levelCount = 1;
         createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        infoList.push_back(createInfo);
     }
     CreateSwapchainImageViews(infoList);
 

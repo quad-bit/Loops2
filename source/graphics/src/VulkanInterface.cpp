@@ -743,6 +743,11 @@ void Renderer::Utility::VulkanInterface::SubmitJob(const Core::Wrappers::SubmitI
     delete waitStage;
 }
 
+uint32_t Renderer::Utility::VulkanInterface::GetSwapchainImageId(uint32_t swapchainIndex)
+{
+    return GfxVk::Utility::VkImageFactory::GetInstance()->GetSwapchainImage(swapchainIndex);
+}
+
 void Renderer::Utility::VulkanInterface::PresentSwapchainImage(const Core::Wrappers::QueueWrapper * queueWrapper, const Core::Wrappers::PresentInfo * info, const uint32_t & presentQueueId)
 {
     //VkResult presentationResult;

@@ -7,6 +7,7 @@
 #include <memory>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include <renderGraph/utility/Utils.h>
+#include <Settings.h>
 
 #define MAX_GRAPH_VERTICES 50
 
@@ -85,6 +86,36 @@ namespace Renderer
                 return imageList;
             }
 
+            std::vector<ResourceAlias*> GetSwapchainImage()
+            {
+                std::vector<ResourceAlias*> imageList;
+
+                if (m_swapchainList.size() == 0)
+                {
+                    auto imageInfo = Renderer::RenderGraph::Utils::GetSwapchainImages();
+                    for (uint32_t i = 0; i < RendererSettings::GetSwapBufferCount(); i++)
+                    {
+                        std::unique_ptr<ResourceAlias> obj = std::make_unique<ImageResourceAlias>(
+                            imageInfo[i],
+                            "BackBuffer_" + std::to_string(i),
+                            m_windowSettings.m_windowWidth,
+                            m_windowSettings.m_windowHeight,
+                            0, // memory is handled by swapchain
+                            true
+                        );
+                        m_swapchainList.push_back(std::move(obj));
+                    }
+                }
+                
+                for (auto& image : m_swapchainList)
+                {
+                    imageList.push_back(image.get());
+                }
+                return imageList;
+            }
+
+            std::vector<std::unique_ptr<ResourceAlias>> m_swapchainList;
+
         protected:
             /// List of effects included in a pipeline
             std::vector<std::unique_ptr<Effect>> m_effects;
@@ -93,6 +124,7 @@ namespace Renderer
             Core::Utility::RenderData& m_renderData;
             const std::string m_name;
             std::vector<std::unique_ptr<ResourceAlias>> m_imageList, m_bufferList;
+            const Core::WindowSettings& m_windowSettings;
 
             Utils::ResourceCreationCallback m_resourseCreationCallback;
             Utils::GraphTraversalCallback m_graphTraversalCallback;
@@ -106,6 +138,7 @@ namespace Renderer
             Renderer::RenderGraph::Utils::RenderGraphNodeBase* m_currentOrigin;
             void PopulatePath(Renderer::RenderGraph::Utils::RenderGraphNodeBase* node);
 
+
         public:
             virtual ~Pipeline()
             {
@@ -114,14 +147,18 @@ namespace Renderer
             /// <summary>
             /// Declare technique and effect dependencies, populate the graph
             /// </summary>
-            Pipeline(Core::Utility::RenderData& renderData, const std::string& name) :
+            Pipeline(Core::Utility::RenderData& renderData,
+                const Core::WindowSettings& windowSettings,
+                const std::string& name) :
                 m_renderData(renderData),
                 m_name(name),
+                m_windowSettings(windowSettings),
                 m_graph(std::make_unique< Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>>(MAX_GRAPH_VERTICES))
             {
                 m_resourseCreationCallback.CreateImageFunc = std::bind(&Pipeline::CreateImage, this, std::placeholders::_1, std::placeholders::_2);
                 m_resourseCreationCallback.CreateBufferFunc = std::bind(&Pipeline::CreateBuffer, this, std::placeholders::_1, std::placeholders::_2);
                 m_resourseCreationCallback.CreatePerFrameImageFunc = std::bind(&Pipeline::CreatePerFrameImage, this, std::placeholders::_1, std::placeholders::_2);
+                m_resourseCreationCallback.GetSwapchainImagesFunc = std::bind(&Pipeline::GetSwapchainImage, this);
 
                 m_graphTraversalCallback.PipelineCompileCallback = std::bind(&Pipeline::PopulatePath, this, std::placeholders::_1);
 

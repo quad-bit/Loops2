@@ -93,7 +93,8 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
 
     auto ProcessSemaphores = [&waitSemTracker, &signalSemTracker, &GetNewSemaphore, this](
         Renderer::RenderGraph::Task* task,
-        uint32_t queueId)
+        uint32_t nextTaskQueueId,
+        bool shouldSignalPresentationSemaphore = false)
     {
         Core::Enums::PipelineType pipelineType;
         Core::Enums::QueueType queuePurpose;
@@ -120,21 +121,22 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
         }
         // assign the existing wait to task
 
+        std::vector<std::optional<uint32_t>> fenceIds;
         // get a new signal sem
-        /*if (shouldSignalPresentationSemaphore)
+        if (shouldSignalPresentationSemaphore)
         {
             for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
             {
                 signalSemTracker.push_back(m_presentationSemaphore[i]);
+                fenceIds.push_back(m_acquireSwapchainFence[i]);
             }
         }
-        else*/
+        else
         {
             GetNewSemaphore(signalSemTracker);
         }
 
         std::vector<Renderer::RenderGraph::TaskSubmitInfo> list;
-
         // assign the existing signal to task
         for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
         {
@@ -143,11 +145,12 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
             info.m_waitSemaphoreId = waitSemTracker[i];
             info.m_pipelineType = pipelineType;
             info.m_queuePurpose = queuePurpose;
-            info.m_queueId = queueId;
+            if (fenceIds.size() > 0)
+                info.m_fenceId = fenceIds[i].value();
             list.push_back(std::move(info));
         }
 
-        task->AssignSubmitInfo(list);
+        task->AssignSubmitInfo(list, nextTaskQueueId);
 
         // move the signal sem to wait
         waitSemTracker.clear();
@@ -177,16 +180,17 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
                 for (auto& cmdId : cmdBufferTracker)
                     commandBufferList.push_back(Renderer::RenderGraph::TaskCommandBufferInfo{ cmdId.value(), std::nullopt, std::nullopt });
             }
-            task->AssignCommandBufferInfo(commandBufferList);
+            task->AssignCommandBufferInfo(commandBufferList, queueId, std::nullopt);
         }
         else
         {
             // The previous command buffer should stop recording
             prevTask->CloseTaskCommandBuffer();
-            ProcessSemaphores(prevTask, queueIdTracker.value());
-            // queue switch has happened, get a new command buffer, start recording
+            ProcessSemaphores(prevTask, queueId);
+
+            // Queue switch has happened, get a new command buffer, start recording
             GetNewCommandBuffers(commandBufferList, cmdBufferTracker, task->GetTaskType());
-            task->AssignCommandBufferInfo(commandBufferList);
+            task->AssignCommandBufferInfo(commandBufferList, queueId, queueIdTracker);
             queueIdTracker = queueId;
         }
     };
@@ -222,31 +226,30 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
     prevTask->CloseTaskCommandBuffer();
 
     // Last task, make it to signal the presentation semaphore
-    {
-        for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
-        {
-            signalSemTracker.push_back(m_presentationSemaphore[i]);
-        }
+    //{
+    //    for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
+    //    {
+    //        signalSemTracker.push_back(m_presentationSemaphore[i]);
+    //    }
 
-        std::vector<Renderer::RenderGraph::TaskSubmitInfo> list;
+    //    std::vector<Renderer::RenderGraph::TaskSubmitInfo> list;
 
-        // assign the existing signal to task
-        for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
-        {
-            Renderer::RenderGraph::TaskSubmitInfo info = {};
-            info.m_signalSemaphoreId = signalSemTracker[i];
-            info.m_waitSemaphoreId = waitSemTracker[i];
-            info.m_fenceId = m_acquireSwapchainFence[i];
-            info.m_pipelineType = Core::Enums::PipelineType::TRANSFER;
-            info.m_queuePurpose = Core::Enums::QueueType::TRANSFER;
-            info.m_queueId = m_transferQueueId;
-            list.push_back(std::move(info));
-        }
+    //    // assign the existing signal to task
+    //    for (uint32_t i = 0; i < g_semaphoreDistributionCount; i++)
+    //    {
+    //        Renderer::RenderGraph::TaskSubmitInfo info = {};
+    //        info.m_signalSemaphoreId = signalSemTracker[i];
+    //        info.m_waitSemaphoreId = waitSemTracker[i];
+    //        info.m_fenceId = m_acquireSwapchainFence[i];
+    //        info.m_pipelineType = Core::Enums::PipelineType::TRANSFER;
+    //        info.m_queuePurpose = Core::Enums::QueueType::TRANSFER;
+    //        list.push_back(std::move(info));
+    //    }
 
-        ASSERT_MSG_DEBUG(prevTask->GetTaskType() == Renderer::RenderGraph::TaskType::TRANSFER_TASK, "last task has to blit to swapchain");
-        prevTask->AssignSubmitInfo(list);
-    }
-    //ProcessSemaphores(prevTask, true);
+    //    ASSERT_MSG_DEBUG(prevTask->GetTaskType() == Renderer::RenderGraph::TaskType::TRANSFER_TASK, "last task has to blit to swapchain");
+    //    prevTask->AssignSubmitInfo(list, m_presentationQueueId);
+    //}
+    ProcessSemaphores(prevTask, m_presentationQueueId, true);
 
     auto PrintTaskInfo = [&]()
     {
@@ -349,7 +352,8 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
     m_presentationTask = std::make_unique<Renderer::RenderGraph::Tasks::PresentationTask>("Presentation",
         Core::Settings::m_swapBufferCount,
         m_windowSettings.m_windowWidth,
-        m_windowSettings.m_windowHeight);
+        m_windowSettings.m_windowHeight,
+        m_presentationQueueId);
 
     std::vector<Renderer::RenderGraph::TaskSubmitInfo> infoList;
     for (uint32_t i = 0; i < g_fenceDistributionCount; i++)
@@ -357,12 +361,11 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
         Renderer::RenderGraph::TaskSubmitInfo info{};
         info.m_fenceId = m_acquireSwapchainFence[i];
         info.m_pipelineType = Core::Enums::PipelineType::GRAPHICS;
-        info.m_queueId = m_presentationQueueId;
         info.m_queuePurpose = Core::Enums::QueueType::PRESENT;
         info.m_waitSemaphoreId = m_pipelineEndTask->GetTaskSubmitInfo()[i].m_signalSemaphoreId.value();
         infoList.push_back(std::move(info));
     }
-    m_presentationTask->AssignSubmitInfo(infoList);
+    m_presentationTask->AssignSubmitInfo(infoList, std::nullopt);
 }
 
 void Renderer::RenderGraph::RenderGraphManager::DeInit()

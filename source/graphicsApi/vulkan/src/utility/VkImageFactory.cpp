@@ -2,14 +2,26 @@
 #include "utility/VkRenderingUnwrapper.h"
 #include "utility/VulkanUtility.h"
 #include "utility/VulkanMemoryManager.h"
+#include "PresentationEngine.h"
 #include <CorePrecompiled.h>
 
 GfxVk::Utility::VkImageFactory* GfxVk::Utility::VkImageFactory::s_instance = nullptr;
 uint32_t GfxVk::Utility::VkImageFactory::s_imageIdCounter = 0;
 
-void GfxVk::Utility::VkImageFactory::Init()
+void GfxVk::Utility::VkImageFactory::Init(uint32_t swapBufferCount)
 {
     PLOGD << "VkImageFactory init";
+
+    // Create image wrapper for swapchain images
+    for (uint32_t i = 0; i < swapBufferCount; i++)
+    {
+        ImageWrapper obj{};
+        obj.m_image = PresentationEngine::GetInstance()->GetSwapchainImage(i);
+        obj.m_imageId = GetId();
+        obj.m_imageView = PresentationEngine::GetInstance()->GetSwapchainImageView(i);;
+        obj.m_name = "SwapchainImage_" + std::to_string(i);
+        m_swapchainImageList.insert({ obj.m_imageId, obj });
+    }
 }
 
 void GfxVk::Utility::VkImageFactory::DeInit()
@@ -133,6 +145,11 @@ void GfxVk::Utility::VkImageFactory::BindImageMemory(uint32_t imageId, uint32_t 
     VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
 
     GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), m_imageList[imageId].m_image, mem, offset));
+}
+
+const uint32_t& GfxVk::Utility::VkImageFactory::GetSwapchainImage(uint32_t swapchainIndex)
+{
+    return m_swapchainImageList[swapchainIndex].m_imageId;
 }
 
 uint32_t GfxVk::Utility::VkImageFactory::GetId()

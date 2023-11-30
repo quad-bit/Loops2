@@ -31,10 +31,10 @@ namespace GfxVk
 
             uint32_t GetId();
 
-            std::map<uint32_t, ImageWrapper> m_imageList;
+            std::map<uint32_t, ImageWrapper> m_imageList, m_swapchainImageList;
 
         public:
-            void Init();
+            void Init(uint32_t swapBufferCount);
             void DeInit();
             void Update();
             static VkImageFactory* GetInstance();
@@ -49,6 +49,9 @@ namespace GfxVk
             const VkImage& GetImage(uint32_t id);
             Core::Wrappers::MemoryRequirementInfo GetImageMemoryRequirement(uint32_t id);
             void BindImageMemory(uint32_t imageId, uint32_t memId, size_t offset);
+
+            const uint32_t& GetSwapchainImage(uint32_t swapchainIndex);
+
         };
     }
 }

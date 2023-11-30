@@ -701,7 +701,7 @@ inline void Renderer::RenderGraph::Graph<T>::PrintAdjMatrix()
 template<class T>
 inline void Renderer::RenderGraph::Graph<T>::PrintGraph()
 {
-    std::cout << m_printLog;
+    std::cout <<"\n" << m_printLog <<"\n";
 }
 
 namespace

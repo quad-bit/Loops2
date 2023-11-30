@@ -171,7 +171,12 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     VkInstance obj = DeviceInfo::GetVkInstance();
     m_vulkanMngrObj->CreateSurface(window);
 
-    GfxVk::Utility::PresentationEngine::GetInstance()->Init(GfxVk::Utility::VulkanDeviceInfo::GetSurface(), GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(), Renderer::RendererSettings::m_swapBufferCount, Renderer::RendererSettings::m_presentationQueueId);
+    GfxVk::Utility::PresentationEngine::GetInstance()->Init(
+        GfxVk::Utility::VulkanDeviceInfo::GetSurface(),
+        GfxVk::Utility::VulkanDeviceInfo::GetSurfaceFormat(),
+        Renderer::RendererSettings::m_swapBufferCount,
+        Renderer::RendererSettings::m_presentationQueueId);
+
     Renderer::RendererSettings::m_maxFramesInFlight = Renderer::RendererSettings::m_swapBufferCount - 1;
 
     Renderer::RendererSettings::m_bestDepthFormat = Renderer::Utility::VulkanInterface::FindBestDepthFormat();

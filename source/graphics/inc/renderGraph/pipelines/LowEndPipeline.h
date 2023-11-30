@@ -22,7 +22,7 @@ namespace Renderer
 
             public:
                 ~LowEndPipeline() {}
-                LowEndPipeline(Core::Utility::RenderData& renderData, const std::string& name);
+                LowEndPipeline(Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings, const std::string& name);
 
                 /*virtual void CreatePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;
                 virtual void CompilePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;

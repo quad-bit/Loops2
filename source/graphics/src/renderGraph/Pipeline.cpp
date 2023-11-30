@@ -240,7 +240,6 @@ namespace
         std::vector<Renderer::RenderGraph::Utils::RenderGraphNodeBase*> nodeListSorted;
         uint32_t levelCounter = 0;
 
-        //for (auto iter = perLevelTaskInfo.rbegin(); iter != perLevelTaskInfo.rend(); iter++)
         for(int i = totalLevels - 1; i >= 0; i--)
         {
             if (nodeListSorted.empty())
@@ -318,9 +317,10 @@ namespace
                     eraseCounter++;
                 }
 
+                uint32_t shiftCounter = 0;
                 for (auto id : eraseId)
                 {
-                    auto it = std::next(perLevelTaskInfo[i].m_taskList.begin(), id);
+                    auto it = std::next(perLevelTaskInfo[i].m_taskList.begin(), id - shiftCounter++);
                     std::cout << "erasing : " << (*it)->GetNodeName()<<"\n";
                     perLevelTaskInfo[i].m_taskList.erase(it);
                 }

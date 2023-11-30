@@ -36,11 +36,19 @@ namespace Renderer
                 NONE
             };
 
+            struct ImageResourceConnectionInfo
+            {
+                std::vector<Core::Enums::ImageUsage> m_imageUsages;
+                Core::Enums::ImageLayout m_prevImageLayout;
+                Core::Enums::ImageLayout m_expectedImageLayout;
+            };
+
             struct ConnectionInfo
             {
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
                 std::vector<ResourceAlias*> m_resource;
                 uint32_t m_resourceParentNodeId;
+                ImageResourceConnectionInfo* m_imageInfo = nullptr;
             };
 
             class RenderGraphNodeBase;
@@ -50,6 +58,7 @@ namespace Renderer
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)> CreateImageFunc;
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)> CreateBufferFunc;
                 std::function<std::vector<Renderer::ResourceManagement::Resource*> (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& name)> CreatePerFrameImageFunc;
+                std::function<std::vector<Renderer::ResourceManagement::Resource*>()> GetSwapchainImagesFunc;
             };
 
             struct GraphTraversalCallback
@@ -104,10 +113,33 @@ namespace Renderer
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
                 const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
 
+            void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
+                const Renderer::RenderGraph::Utils::ConnectionInfo& connectionInfo);
+
+
+            void AddEdge(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
+                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+                const Core::Enums::ImageLayout expectedImageLayout,
+                const Core::Enums::ImageLayout previousImageLayout);
+
             std::pair<std::vector<uint32_t>, std::vector<uint32_t>> CreatePerFrameImageResource(
                 const Core::Wrappers::ImageCreateInfo& createInfo,
                 std::vector<std::string> names,
                 uint32_t count);
+
+            void AddSwapchainNode(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
+                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+                const Core::Enums::ImageLayout expectedImageLayout
+            );
+
+            std::vector<uint32_t> GetSwapchainImages();
 
             void DestroyPerFrameImageResource(const std::vector<uint32_t>& imageIds, std::vector<uint32_t>& memIds);
         }

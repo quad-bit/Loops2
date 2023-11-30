@@ -136,6 +136,7 @@ namespace Renderer
             void SubmitJob(const Core::Wrappers::QueueWrapper* queueWrapper, const Core::Wrappers::SubmitInfo* info, const uint32_t& submitInfoCount, const uint32_t& fenceId);
             void SubmitJob(const Core::Wrappers::SubmitInfo* info, const uint32_t& submitInfoCount, const std::optional<uint32_t>& fenceId);
 
+            uint32_t GetSwapchainImageId(uint32_t swapchainIndex);
             void PresentSwapchainImage(const Core::Wrappers::QueueWrapper* queueWrapper, const Core::Wrappers::PresentInfo* info, const uint32_t& presentQueueId);
             void PresentSwapchainImage(const Core::Wrappers::PresentInfo& info);
 
