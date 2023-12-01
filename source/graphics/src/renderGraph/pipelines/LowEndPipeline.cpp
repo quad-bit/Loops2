@@ -66,7 +66,7 @@ namespace
             r7Node = m_graph.Push(r7.get());
             m_resourceNodes.push_back(r7Node);
 
-            r8 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r4Image, "r8_T0_E0", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            r8 = std::make_unique<Renderer::RenderGraph::ResourceNode>(backBufferImages, "r8_T0_E0", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r8Node = m_graph.Push(r8.get());
             m_resourceNodes.push_back(r8Node);
 
@@ -156,9 +156,9 @@ namespace
     class Tech1 : public Renderer::RenderGraph::Technique
     {
     private:
-        std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2, r3, r4;
-        Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, * r2Node, *r3Node, * r4Node;
-        std::vector<ResourceAlias*> r1Image, r2Image;
+        std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2, r3, r4, r5;
+        Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, * r2Node, *r3Node, * r4Node, *r5Node;
+        std::vector<ResourceAlias*> r1Image, r2Image, r3Image;
 
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> t1, t2, t3;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* t1Node, * t2Node, * t3Node;
@@ -171,6 +171,7 @@ namespace
             // Create resource node
             r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T1_E1_0", "color1_T1_E1_1", "color1_T1_E1_2" }));
             r2Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color2_T1_E1_0", "color2_T1_E1_1", "color2_T1_E1_2" }));
+            r3Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color3_T1_E1_0", "color3_T1_E1_1", "color3_T1_E1_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r1Node = m_graph.Push(r1.get());
@@ -187,6 +188,10 @@ namespace
             r4 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r2Image, "r4_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r4Node = m_graph.Push(r4.get());
             m_resourceNodes.push_back(r4Node);
+
+            r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r3Image, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            r5Node = m_graph.Push(r5.get());
+            m_resourceNodes.push_back(r5Node);
 
             // Create task node
             task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T1_E1");
@@ -222,6 +227,11 @@ namespace
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
                 Core::Enums::ImageLayout::LAYOUT_GENERAL,
                 Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL);
+
+            Renderer::RenderGraph::Utils::AddEdge(graph, r5Node, t2Node,
+                Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,
+                Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL,
+                Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED);
 
             Renderer::RenderGraph::Utils::AddEdge(graph, t3Node, r4Node);
 
@@ -392,8 +402,8 @@ namespace
 
         Renderer::RenderGraph::Utils::AddEdge(graph, r4_t1_e1, t4_t0_e0,
             Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,
-            Core::Enums::ImageLayout::LAYOUT_GENERAL,
-            Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            Core::Enums::ImageLayout::LAYOUT_GENERAL);
 
         Renderer::RenderGraph::Utils::AddEdge(graph, r4_t0_e0, t3_t1_e1,
             Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,

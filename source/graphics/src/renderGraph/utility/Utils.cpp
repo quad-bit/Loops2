@@ -3,6 +3,116 @@
 
 namespace
 {
+    void FillAtribute(Renderer::RenderGraph::NodeDrawAttribs& attrib,
+        Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node
+    )
+    {
+        Renderer::RenderGraph::Utils::RenderGraphNodeType type = node->GetNodeData()->GetNodeType();
+
+        if (type == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
+        {
+            attrib.nodeColor = "red";
+            attrib.nodeName = node->GetNodeData()->GetNodeName() + ":\n" + ((Renderer::RenderGraph::ResourceNode*)node->GetNodeData())->GetResource()[0]->GetResourceName();
+            attrib.nodeShape = "oval";
+        }
+        else
+        {
+            std::string name = "";
+            Renderer::RenderGraph::TaskType taskType = ((Renderer::RenderGraph::TaskNode*)node->GetNodeData())->GetTask()->GetTaskType();
+            if (taskType == Renderer::RenderGraph::TaskType::RENDER_TASK)
+            {
+                attrib.nodeColor = "green";
+                name = "Graphics:\n";
+            }
+            else if (taskType == Renderer::RenderGraph::TaskType::COMPUTE_TASK)
+            {
+                attrib.nodeColor = "blue";
+                name = "Compute:\n";
+
+            }
+            else if (taskType == Renderer::RenderGraph::TaskType::TRANSFER_TASK)
+            {
+                attrib.nodeColor = "purple";
+                name = "Transfer:\n";
+
+            }
+            else if (taskType == Renderer::RenderGraph::TaskType::DOWNLOAD_TASK)
+            {
+                attrib.nodeColor = "pink";
+                name = "Download:\n";
+            }
+            attrib.nodeName = name + node->GetNodeData()->GetNodeName();
+            attrib.nodeShape = "rectangle";
+        }
+    }
+
+    std::string GetLayout(const Core::Enums::ImageLayout layout)
+    {
+        std::string value;
+        switch (layout)
+        {
+        case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            value = "COLOR_ATTACHMENT";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL:
+            value = "DEPTH_ATTACHMENT";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            value = "DEPTH_STENCIL_ATTACHMENT";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_GENERAL:
+            value = "GENERAL";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED:
+            value = "PREINITIALIZED";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR:
+            value = "PRESENT_SRC_KHR";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            value = "SHADER_READ_ONLY";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
+            value = "TRANSFER_DST";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL:
+            value = "TRANSFER_SRC";
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_UNDEFINED:
+            value = "UNDEFINED";
+            break;
+        default:
+            ASSERT_MSG_DEBUG(0, "invalid");
+            break;
+        }
+        return value;
+    }
+
+    std::string GetUsageValue(Renderer::RenderGraph::Utils::ResourceMemoryUsage usage,
+        Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node)
+    {
+        std::string value;
+        if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
+            node->GetNodeData()->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
+        {
+            switch (usage)
+            {
+            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY:
+                value = "\nREAD\n";
+                break;
+            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE:
+                value = "\nREAD_WRITE\n";
+                break;
+            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY:
+                value = "\nWRITE\n";
+                break;
+            default:
+                ASSERT_MSG_DEBUG(0, "Invalid option");
+            }
+        }
+        return value;
+    }
+
     void CreatePrintGraphInfo(
         Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* srcNode,
@@ -11,117 +121,33 @@ namespace
         Core::Enums::ImageLayout exepectedLayout,
         Core::Enums::ImageLayout previousLayout)
     {
-        auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib,
-            Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node
-            )
-        {
-            Renderer::RenderGraph::Utils::RenderGraphNodeType type = node->GetNodeData()->GetNodeType();
-
-            if (type == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
-            {
-                attrib.nodeColor = "red";
-                attrib.nodeName = node->GetNodeData()->GetNodeName() + ":\n" + ((Renderer::RenderGraph::ResourceNode*)node->GetNodeData())->GetResource()[0]->GetResourceName();
-                attrib.nodeShape = "oval";
-            }
-            else
-            {
-                std::string name = "";
-                Renderer::RenderGraph::TaskType taskType = ((Renderer::RenderGraph::TaskNode*)node->GetNodeData())->GetTask()->GetTaskType();
-                if (taskType == Renderer::RenderGraph::TaskType::RENDER_TASK)
-                {
-                    attrib.nodeColor = "green";
-                    name = "Graphics:\n";
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::COMPUTE_TASK)
-                {
-                    attrib.nodeColor = "blue";
-                    name = "Compute:\n";
-
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::TRANSFER_TASK)
-                {
-                    attrib.nodeColor = "purple";
-                    name = "Transfer:\n";
-
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::DOWNLOAD_TASK)
-                {
-                    attrib.nodeColor = "pink";
-                    name = "Download:\n";
-                }
-                attrib.nodeName = name + node->GetNodeData()->GetNodeName();
-                attrib.nodeShape = "rectangle";
-            }
-        };
-
         Renderer::RenderGraph::NodeDrawAttribs srcAttrib{}, dstAttrib{};
-        fillAttrib(srcAttrib, srcNode);
-        fillAttrib(dstAttrib, destNode);
+        FillAtribute(srcAttrib, srcNode);
+        FillAtribute(dstAttrib, destNode);
 
-        auto GetLayoutValue = [](const Core::Enums::ImageLayout layout) -> std::string
-        {
-            std::string value;
-            switch (layout)
-            {
-            case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-                value = "LAYOUT_COLOR_ATTACHMENT_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL:
-                value = "LAYOUT_DEPTH_ATTACHMENT_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-                value = "LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_GENERAL:
-                value = "LAYOUT_GENERAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED:
-                value = "LAYOUT_PREINITIALIZED";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR:
-                value = "LAYOUT_PRESENT_SRC_KHR";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-                value = "LAYOUT_SHADER_READ_ONLY_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
-                value = "LAYOUT_TRANSFER_DST_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL:
-                value = "LAYOUT_TRANSFER_SRC_OPTIMAL";
-                break;
-            case Core::Enums::ImageLayout::LAYOUT_UNDEFINED:
-                value = "LAYOUT_UNDEFINED";
-                break;
-            default:
-                ASSERT_MSG_DEBUG(0, "invalid");
-                break;
-            }
-            return value;
-        };
+        std::string edgeLabel = GetLayout(previousLayout);
+        edgeLabel += GetUsageValue(usage, srcNode);
 
+        //if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
+        //    srcNode->GetNodeData()->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
+        //{
+        //    switch (usage)
+        //    {
+        //    case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY:
+        //        edgeLabel += "\nREAD\n";
+        //        break;
+        //    case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE:
+        //        edgeLabel += "\nREAD_WRITE\n";
+        //        break;
+        //    case Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY:
+        //        edgeLabel += "\nWRITE\n";
+        //        break;
+        //    default:
+        //        ASSERT_MSG_DEBUG(0, "Invalid option");
+        //    }
+        //}
 
-        std::string edgeLabel = GetLayoutValue(previousLayout);
-
-        if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
-            srcNode->GetNodeData()->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
-        {
-            switch (usage)
-            {
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY:
-                edgeLabel += "\nREAD\n";
-                break;
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE:
-                edgeLabel += "\nREAD_WRITE\n";
-                break;
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY:
-                edgeLabel += "\nWRITE\n";
-                break;
-            default:
-                ASSERT_MSG_DEBUG(0, "Invalid option");
-            }
-        }
-        edgeLabel += GetLayoutValue(exepectedLayout);
+        edgeLabel += GetLayout(exepectedLayout);
         graph.AddToPrintLog(srcAttrib, dstAttrib, edgeLabel);
     }
 
@@ -132,7 +158,7 @@ namespace
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* destNode,
         Renderer::RenderGraph::Utils::ResourceMemoryUsage usage)
     {
-        auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib,
+        /*auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib,
             Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node
             )
         {
@@ -174,14 +200,14 @@ namespace
                 attrib.nodeName = name + node->GetNodeData()->GetNodeName();
                 attrib.nodeShape = "rectangle";
             }
-        };
+        };*/
 
         Renderer::RenderGraph::NodeDrawAttribs srcAttrib{}, dstAttrib{};
-        fillAttrib(srcAttrib, srcNode);
-        fillAttrib(dstAttrib, destNode);
+        FillAtribute(srcAttrib, srcNode);
+        FillAtribute(dstAttrib, destNode);
 
-        std::string edgeLabel = "";
-        if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
+        std::string edgeLabel = GetUsageValue(usage, srcNode);
+        /*if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
             srcNode->GetNodeData()->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
         {
             switch (usage)
@@ -198,7 +224,7 @@ namespace
             default:
                 ASSERT_MSG_DEBUG(0, "Invalid option");
             }
-        }
+        }*/
 
         graph.AddToPrintLog(srcAttrib, dstAttrib, edgeLabel);
     }
