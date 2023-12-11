@@ -237,7 +237,6 @@ namespace Core
             NUM_PASSES = 3,
         };
 
-
         enum class PipelineStage
         {
             TOP_OF_PIPE_BIT = 0x00000001,
@@ -267,6 +266,108 @@ namespace Core
             FRAGMENT_DENSITY_PROCESS_BIT_EXT = 0x00800000,
             COMMAND_PREPROCESS_BIT_NV = 0x00020000,
             FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
+        };
+
+        enum class PipelineStageFlagBits2 : long long
+        {
+            PIPELINE_STAGE_2_NONE = 0ULL,
+            PIPELINE_STAGE_2_NONE_KHR = 0ULL,
+            PIPELINE_STAGE_2_TOP_OF_PIPE_BIT = 0x00000001ULL,
+            PIPELINE_STAGE_2_TOP_OF_PIPE_BIT_KHR = 0x00000001ULL,
+            PIPELINE_STAGE_2_DRAW_INDIRECT_BIT = 0x00000002ULL,
+            PIPELINE_STAGE_2_DRAW_INDIRECT_BIT_KHR = 0x00000002ULL,
+            PIPELINE_STAGE_2_VERTEX_INPUT_BIT = 0x00000004ULL,
+            PIPELINE_STAGE_2_VERTEX_INPUT_BIT_KHR = 0x00000004ULL,
+            PIPELINE_STAGE_2_VERTEX_SHADER_BIT = 0x00000008ULL,
+            PIPELINE_STAGE_2_VERTEX_SHADER_BIT_KHR = 0x00000008ULL,
+            PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT = 0x00000010ULL,
+            PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT_KHR = 0x00000010ULL,
+            PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT = 0x00000020ULL,
+            PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT_KHR = 0x00000020ULL,
+            PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT = 0x00000040ULL,
+            PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT_KHR = 0x00000040ULL,
+            PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT = 0x00000080ULL,
+            PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT_KHR = 0x00000080ULL,
+            PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT = 0x00000100ULL,
+            PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT_KHR = 0x00000100ULL,
+            PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT = 0x00000200ULL,
+            PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT_KHR = 0x00000200ULL,
+            PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT = 0x00000400ULL,
+            PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR = 0x00000400ULL,
+            PIPELINE_STAGE_2_COMPUTE_SHADER_BIT = 0x00000800ULL,
+            PIPELINE_STAGE_2_COMPUTE_SHADER_BIT_KHR = 0x00000800ULL,
+            PIPELINE_STAGE_2_ALL_TRANSFER_BIT = 0x00001000ULL,
+            PIPELINE_STAGE_2_ALL_TRANSFER_BIT_KHR = 0x00001000ULL,
+            PIPELINE_STAGE_2_TRANSFER_BIT = 0x00001000ULL,
+            PIPELINE_STAGE_2_TRANSFER_BIT_KHR = 0x00001000ULL,
+            PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT = 0x00002000ULL,
+            PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT_KHR = 0x00002000ULL,
+            PIPELINE_STAGE_2_HOST_BIT = 0x00004000ULL,
+            PIPELINE_STAGE_2_HOST_BIT_KHR = 0x00004000ULL,
+            PIPELINE_STAGE_2_ALL_GRAPHICS_BIT = 0x00008000ULL,
+            PIPELINE_STAGE_2_ALL_GRAPHICS_BIT_KHR = 0x00008000ULL,
+            PIPELINE_STAGE_2_ALL_COMMANDS_BIT = 0x00010000ULL,
+            PIPELINE_STAGE_2_ALL_COMMANDS_BIT_KHR = 0x00010000ULL,
+            PIPELINE_STAGE_2_COPY_BIT = 0x100000000ULL,
+            PIPELINE_STAGE_2_COPY_BIT_KHR = 0x100000000ULL,
+            PIPELINE_STAGE_2_RESOLVE_BIT = 0x200000000ULL,
+            PIPELINE_STAGE_2_RESOLVE_BIT_KHR = 0x200000000ULL,
+            PIPELINE_STAGE_2_BLIT_BIT = 0x400000000ULL,
+            PIPELINE_STAGE_2_BLIT_BIT_KHR = 0x400000000ULL,
+            PIPELINE_STAGE_2_CLEAR_BIT = 0x800000000ULL,
+            PIPELINE_STAGE_2_CLEAR_BIT_KHR = 0x800000000ULL,
+            PIPELINE_STAGE_2_INDEX_INPUT_BIT = 0x1000000000ULL,
+            PIPELINE_STAGE_2_INDEX_INPUT_BIT_KHR = 0x1000000000ULL,
+            PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT = 0x2000000000ULL,
+            PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT_KHR = 0x2000000000ULL,
+            PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT = 0x4000000000ULL,
+            PIPELINE_STAGE_2_PRE_RASTERIZATION_SHADERS_BIT_KHR = 0x4000000000ULL
+        };
+
+        enum class PipelineAccessFlagBits2 : long long
+        {
+            ACCESS_2_NONE = 0ULL,
+            ACCESS_2_NONE_KHR = 0ULL,
+            ACCESS_2_INDIRECT_COMMAND_READ_BIT = 0x00000001ULL,
+            ACCESS_2_INDIRECT_COMMAND_READ_BIT_KHR = 0x00000001ULL,
+            ACCESS_2_INDEX_READ_BIT = 0x00000002ULL,
+            ACCESS_2_INDEX_READ_BIT_KHR = 0x00000002ULL,
+            ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT = 0x00000004ULL,
+            ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT_KHR = 0x00000004ULL,
+            ACCESS_2_UNIFORM_READ_BIT = 0x00000008ULL,
+            ACCESS_2_UNIFORM_READ_BIT_KHR = 0x00000008ULL,
+            ACCESS_2_INPUT_ATTACHMENT_READ_BIT = 0x00000010ULL,
+            ACCESS_2_INPUT_ATTACHMENT_READ_BIT_KHR = 0x00000010ULL,
+            ACCESS_2_SHADER_READ_BIT = 0x00000020ULL,
+            ACCESS_2_SHADER_READ_BIT_KHR = 0x00000020ULL,
+            ACCESS_2_SHADER_WRITE_BIT = 0x00000040ULL,
+            ACCESS_2_SHADER_WRITE_BIT_KHR = 0x00000040ULL,
+            ACCESS_2_COLOR_ATTACHMENT_READ_BIT = 0x00000080ULL,
+            ACCESS_2_COLOR_ATTACHMENT_READ_BIT_KHR = 0x00000080ULL,
+            ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT = 0x00000100ULL,
+            ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT_KHR = 0x00000100ULL,
+            ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT = 0x00000200ULL,
+            ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT_KHR = 0x00000200ULL,
+            ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT = 0x00000400ULL,
+            ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT_KHR = 0x00000400ULL,
+            ACCESS_2_TRANSFER_READ_BIT = 0x00000800ULL,
+            ACCESS_2_TRANSFER_READ_BIT_KHR = 0x00000800ULL,
+            ACCESS_2_TRANSFER_WRITE_BIT = 0x00001000ULL,
+            ACCESS_2_TRANSFER_WRITE_BIT_KHR = 0x00001000ULL,
+            ACCESS_2_HOST_READ_BIT = 0x00002000ULL,
+            ACCESS_2_HOST_READ_BIT_KHR = 0x00002000ULL,
+            ACCESS_2_HOST_WRITE_BIT = 0x00004000ULL,
+            ACCESS_2_HOST_WRITE_BIT_KHR = 0x00004000ULL,
+            ACCESS_2_MEMORY_READ_BIT = 0x00008000ULL,
+            ACCESS_2_MEMORY_READ_BIT_KHR = 0x00008000ULL,
+            ACCESS_2_MEMORY_WRITE_BIT = 0x00010000ULL,
+            ACCESS_2_MEMORY_WRITE_BIT_KHR = 0x00010000ULL,
+            ACCESS_2_SHADER_SAMPLED_READ_BIT = 0x100000000ULL,
+            ACCESS_2_SHADER_SAMPLED_READ_BIT_KHR = 0x100000000ULL,
+            ACCESS_2_SHADER_STORAGE_READ_BIT = 0x200000000ULL,
+            ACCESS_2_SHADER_STORAGE_READ_BIT_KHR = 0x200000000ULL,
+            ACCESS_2_SHADER_STORAGE_WRITE_BIT = 0x400000000ULL,
+            ACCESS_2_SHADER_STORAGE_WRITE_BIT_KHR = 0x400000000ULL
         };
 
         enum class QueueType
@@ -1114,6 +1215,56 @@ namespace Core
                 }
             };
 
+            struct ImageSubresourceRange
+            {
+                std::vector<Core::Enums::ImageAspectFlag>          m_imageAspect;
+                uint32_t                              m_baseMipLevel;
+                uint32_t                              m_levelCount;
+                uint32_t                              m_baseArrayLayer;
+                uint32_t                              m_layerCount;
+            };
+
+            struct MemoryBarrier2
+            {
+                std::vector<Core::Enums::PipelineStageFlagBits2> m_srcStageMask, m_dstStageMask;
+                std::vector<Core::Enums::PipelineAccessFlagBits2> m_srcAccessMask, m_dstAccessMask;
+            };
+
+            struct ImageBarrier2
+            {
+                std::vector<Core::Enums::PipelineStageFlagBits2> m_srcStageMask, m_dstStageMask;
+                std::vector<Core::Enums::PipelineAccessFlagBits2> m_srcAccessMask, m_dstAccessMask;
+                Core::Enums::ImageLayout   m_oldLayout;
+                Core::Enums::ImageLayout   m_newLayout;
+                uint32_t                   m_srcQueueFamilyIndex;
+                uint32_t                   m_dstQueueFamilyIndex;
+                uint32_t                   m_imageId;
+                ImageSubresourceRange      m_subresourceRange;
+                std::string                m_imageName;
+            };
+
+            struct BufferBarrier2
+            {
+                std::vector<Core::Enums::PipelineStageFlagBits2> m_srcStageMask, m_dstStageMask;
+                std::vector<Core::Enums::PipelineAccessFlagBits2> m_srcAccessMask, m_dstAccessMask;
+                uint32_t                 m_srcQueueFamilyIndex;
+                uint32_t                 m_dstQueueFamilyIndex;
+                uint32_t                 m_bufferId;
+                size_t                   m_offset;
+                size_t                   m_size;
+                std::string              m_bufferName;
+            };
+
+            struct BarrierDependencyInfo
+            {
+                uint32_t                         m_memoryBarrierCount;
+                const MemoryBarrier2*            m_pMemoryBarriers;
+                uint32_t                         m_bufferMemoryBarrierCount;
+                const BufferBarrier2*            m_pBufferMemoryBarriers;
+                uint32_t                         m_imageMemoryBarrierCount;
+                const ImageBarrier2*             m_pImageMemoryBarriers;
+            };
+
 
         #elif (RENDERING_API == DX12)
 
@@ -1124,5 +1275,13 @@ namespace Core
             using T = std::underlying_type_t <Core::Enums::RenderPassTag>;
             return static_cast<Core::Enums::RenderPassTag>(static_cast<T>(lhs) | static_cast<T>(rhs));
         }
+    }
+
+    namespace Utility
+    {
+        std::string ConvertPipelineStageFlagToString(const Core::Enums::PipelineStageFlagBits2& flag);
+        std::string ConvertPipelineAccessFlagToString(const Core::Enums::PipelineAccessFlagBits2& flag);
+        std::string ConvertImageLayoutToString(const Core::Enums::ImageLayout& layout);
+
     }
 }

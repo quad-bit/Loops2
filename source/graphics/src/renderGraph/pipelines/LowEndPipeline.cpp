@@ -94,7 +94,7 @@ namespace
             Renderer::RenderGraph::Utils::AddEdge(graph, r1Node, t1Node,
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,
                 Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED);
+                Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL);
 
             Renderer::RenderGraph::Utils::AddEdge(graph, r2Node, t1Node,
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY,
@@ -185,11 +185,11 @@ namespace
             r3Node = m_graph.Push(r3.get());
             m_resourceNodes.push_back(r3Node);
 
-            r4 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r2Image, "r4_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            r4 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r4_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r4Node = m_graph.Push(r4.get());
             m_resourceNodes.push_back(r4Node);
 
-            r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r3Image, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r2Image, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r5Node = m_graph.Push(r5.get());
             m_resourceNodes.push_back(r5Node);
 
@@ -407,8 +407,8 @@ namespace
 
         Renderer::RenderGraph::Utils::AddEdge(graph, r4_t0_e0, t3_t1_e1,
             Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,
-            Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
         effects.push_back(std::move(eff0));
         effects.push_back(std::move(eff1));

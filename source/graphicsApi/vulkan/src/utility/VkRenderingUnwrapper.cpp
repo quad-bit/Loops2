@@ -556,6 +556,29 @@ VkImageAspectFlags GfxVk::Unwrap::UnwrapAspectMask(Core::Enums::ImageAspectFlag 
     return VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
 }
 
+VkImageAspectFlags GfxVk::Unwrap::UnwrapAspectMask(const std::vector<Core::Enums::ImageAspectFlag>& flags)
+{
+    VkImageAspectFlags vkflag = VkImageAspectFlagBits::VK_IMAGE_ASPECT_NONE;
+    for (auto& flag : flags)
+    {
+        switch (flag)
+        {
+        case Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT:
+            vkflag |= VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
+            break;
+        case Core::Enums::ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT:
+            vkflag |= VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT;
+            break;
+        case Core::Enums::ImageAspectFlag::IMAGE_ASPECT_STENCIL_BIT:
+            vkflag |= VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT;
+            break;
+        default: ASSERT_MSG(0, "Case not implemented");
+        }
+    }
+
+    return vkflag;
+}
+
 VkMemoryRequirements GfxVk::Unwrap::UnwrapMemoryRequirements(Core::Wrappers::MemoryRequirementInfo * info)
 {
     VkMemoryRequirements req = {};
@@ -671,6 +694,56 @@ VkPipelineStageFlags const GfxVk::Unwrap::UnwrapPipelineStageFlags(const Core::E
     return flags;
 }
 
+VkPipelineStageFlags2 const GfxVk::Unwrap::UnwrapPipelineStageFlags2(const Core::Enums::PipelineStageFlagBits2* stages, const uint32_t& count)
+{
+    VkPipelineStageFlags2 flags = 0;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        switch (stages[i])
+        {
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TRANSFER_BIT:
+            flags |= VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT:
+            flags |= VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT:
+            flags |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COMPUTE_SHADER_BIT:
+            flags |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT:
+            flags |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT:
+            flags |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT:
+            flags |= VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE:
+            flags |= VK_PIPELINE_STAGE_2_NONE;
+            break;
+
+        case Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT:
+            flags |= VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+            break;
+
+        default: ASSERT_MSG(0, "Type yet to be handled");
+        }
+    }
+
+    return flags;
+}
+
 VkAccessFlags const GfxVk::Unwrap::UnwrapAccessFlags(const Core::Enums::AccessFlagBits * stages, const uint32_t & count)
 {
     VkAccessFlags flags = 0;
@@ -744,6 +817,74 @@ VkAccessFlags const GfxVk::Unwrap::UnwrapAccessFlags(const Core::Enums::AccessFl
     }
 
     return flags;
+}
+
+VkAccessFlags2 const GfxVk::Unwrap::UnwrapAccessFlags2(const Core::Enums::PipelineAccessFlagBits2* stages, const uint32_t& count)
+{
+    VkAccessFlags2 flags = 0;
+
+    for (uint32_t i = 0; i < count; i++)
+    {
+        switch (stages[i])
+        {
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_COLOR_ATTACHMENT_READ_BIT:
+            flags |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT:
+            flags |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT:
+            flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT:
+            flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_READ_BIT:
+            flags |= VK_ACCESS_2_MEMORY_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_WRITE_BIT:
+            flags |= VK_ACCESS_2_MEMORY_WRITE_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE:
+            flags |= VK_ACCESS_2_NONE;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_READ_BIT:
+            flags |= VK_ACCESS_2_SHADER_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_SAMPLED_READ_BIT:
+            flags |= VK_ACCESS_2_SHADER_SAMPLED_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_WRITE_BIT:
+            flags |= VK_ACCESS_2_SHADER_WRITE_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_READ_BIT:
+            flags |= VK_ACCESS_2_TRANSFER_READ_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_WRITE_BIT:
+            flags |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+            break;
+
+        case Core::Enums::PipelineAccessFlagBits2::ACCESS_2_UNIFORM_READ_BIT:
+            flags |= VK_ACCESS_2_UNIFORM_READ_BIT;
+            break;
+
+        default: ASSERT_MSG(0, "Type not handled");
+        }
+    }
+
+    return flags;
+
 }
 
 VkDependencyFlags const GfxVk::Unwrap::UnwrapDependencyFlags(const Core::Enums::DependencyFlagBits * stages, const uint32_t & count)

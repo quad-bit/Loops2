@@ -38,9 +38,11 @@ namespace Renderer
 
             struct ImageResourceConnectionInfo
             {
-                std::vector<Core::Enums::ImageUsage> m_imageUsages;
                 Core::Enums::ImageLayout m_prevImageLayout;
                 Core::Enums::ImageLayout m_expectedImageLayout;
+                std::optional<Core::Enums::LoadOperation> m_loadOp;
+                std::optional<Core::Enums::StoreOperation> m_storeOp;
+                std::optional<uint32_t> m_colorAttachmentSlot;
             };
 
             struct ConnectionInfo
@@ -48,7 +50,7 @@ namespace Renderer
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
                 std::vector<ResourceAlias*> m_resource;
                 uint32_t m_resourceParentNodeId;
-                ImageResourceConnectionInfo* m_imageInfo = nullptr;
+                std::optional<ImageResourceConnectionInfo> m_imageInfo;
             };
 
             class RenderGraphNodeBase;
@@ -57,7 +59,8 @@ namespace Renderer
             {
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)> CreateImageFunc;
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)> CreateBufferFunc;
-                std::function<std::vector<Renderer::ResourceManagement::Resource*> (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& name)> CreatePerFrameImageFunc;
+                std::function<std::vector<Renderer::ResourceManagement::Resource*>(const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& name)> CreatePerFrameImageFunc;
+                std::function<std::vector<Renderer::ResourceManagement::Resource*>(const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::vector<std::string>& name)> CreatePerFrameBufferFunc;
                 std::function<std::vector<Renderer::ResourceManagement::Resource*>()> GetSwapchainImagesFunc;
             };
 
@@ -110,14 +113,13 @@ namespace Renderer
 
             void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
-                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
-                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode);
+                //const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
 
             void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
                 const Renderer::RenderGraph::Utils::ConnectionInfo& connectionInfo);
-
 
             void AddEdge(
                 Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
@@ -127,8 +129,49 @@ namespace Renderer
                 const Core::Enums::ImageLayout expectedImageLayout,
                 const Core::Enums::ImageLayout previousImageLayout);
 
+            void AddInputAsColorAttachment(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                uint32_t inputSlot);
+
+            void AddInputAsDepthAttachment(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode);
+
+            void AddInputAsShaderResource(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode);
+
+            void AddInputAsTransferData(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                bool isTransferSource);
+
+            void AddTaskOutput(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode
+            );
+
+            void AddTaskBufferInput(
+                Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+                Core::Enums::BufferType bufferType, Core::Enums::BufferUsage bufferUsage
+            );
+
+            // image id and mem id as return value
             std::pair<std::vector<uint32_t>, std::vector<uint32_t>> CreatePerFrameImageResource(
                 const Core::Wrappers::ImageCreateInfo& createInfo,
+                std::vector<std::string> names,
+                uint32_t count);
+
+            std::pair<std::vector<uint32_t>, std::vector<uint32_t>> CreatePerFrameBufferResource(
+                const Core::Wrappers::BufferCreateInfo& createInfo,
                 std::vector<std::string> names,
                 uint32_t count);
 

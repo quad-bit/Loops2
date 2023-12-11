@@ -3,6 +3,7 @@
 #include "VulkanInterface.h"
 #include "renderGraph/Task.h"
 #include "renderGraph/tasks/PresentationTask.h"
+#include "resourceManagement/Resource.h"
 
 uint32_t g_bufferDistributionCount = 0;
 uint32_t g_semaphoreDistributionCount = 0;
@@ -251,23 +252,485 @@ void Renderer::RenderGraph::RenderGraphManager::AssignCommandBuffers()
     //}
     ProcessSemaphores(prevTask, m_presentationQueueId, true);
 
-    auto PrintTaskInfo = [&]()
+
+}
+
+void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
+{
+    // Calculate it for one frame, as same data will apply to all the textures for other frames
+    struct TaskImageInfo
     {
-        for (auto& level : levelInfoList)
+        Renderer::RenderGraph::Task* m_task;
+        Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
+        Core::Enums::ImageLayout m_previous, m_expected;
+    };
+
+    std::map<ResourceAlias*, std::vector<TaskImageInfo>> resourceInfo;
+
+    auto& levelInfoList = m_activePipeline->GetPerLevelTaskInfo();
+
+    for (auto& level : levelInfoList)
+    {
+        auto& taskInfo = level.second;
+        for (auto taskNode : taskInfo.m_taskList)
         {
-            auto& taskInfo = level.second;
-            for (auto taskNode : taskInfo.m_taskList)
+            auto task = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask();
+            auto& inputs = task->GetInputs();
+            
+            for (auto& input : inputs)
             {
-                auto task = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask();
-                task->PrintTaskInfo();
+                auto& resource = input.m_resource[0]; // only frame 0 resource is being used to generate data
+                if (resource->GetResourceType() == Renderer::ResourceManagement::ResourceType::IMAGE)
+                {
+                    TaskImageInfo info{};
+                    info.m_task = task;
+                    //info.m_usage = input.m_usage;
+                    info.m_previous = input.m_imageInfo->m_prevImageLayout;
+                    info.m_expected = input.m_imageInfo->m_expectedImageLayout;
+
+                    if (resourceInfo.find(resource) == resourceInfo.end())
+                    {
+                        resourceInfo.insert({ resource, {info} });
+                    }
+                    else
+                    {
+                        resourceInfo[resource].push_back(info);
+                    }
+                }
+                else
+                    ASSERT_MSG_DEBUG(0, "buffer yet to be done");
+            }
+        }
+    }
+
+    struct PerTaskImageInfo
+    {
+        ResourceAlias* m_resource;
+        Core::Enums::LoadOperation m_load;
+        Core::Enums::StoreOperation m_store;
+        Core::Enums::ImageLayout m_prevLayout;
+        Core::Enums::ImageLayout m_expectedLayout;
+    };
+
+    auto GetLoadOp = [](
+        Core::Enums::ImageLayout previous,
+        Core::Enums::ImageLayout expected) -> Core::Enums::LoadOperation
+    {
+        Core::Enums::LoadOperation load;
+        if (previous == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+        {
+            if (expected == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
+                expected == Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                load = Core::Enums::LoadOperation::LOAD_OP_CLEAR;
+            else
+                load = Core::Enums::LoadOperation::LOAD_OP_DONT_CARE;
+        }
+        else
+        {
+            load = Core::Enums::LoadOperation::LOAD_OP_LOAD;
+        }
+        return load;
+    };
+
+    auto GetStoreOp = [](Core::Enums::ImageLayout previous) -> Core::Enums::StoreOperation
+    {
+        Core::Enums::StoreOperation store;
+
+        return store;
+    };
+
+    std::map<Task*, std::vector<PerTaskImageInfo>> taskImageInfoList;
+    // Info for one frame 
+    auto CollectPerTaskInfo = [&]()
+    {
+        for (auto& item : resourceInfo)
+        {
+            Core::Enums::LoadOperation load = Core::Enums::LoadOperation::LOAD_OP_DONT_CARE;
+            Core::Enums::StoreOperation store = Core::Enums::StoreOperation::STORE_OP_STORE;
+
+            for (uint32_t i = 0; i < item.second.size(); i++)
+            {
+                PerTaskImageInfo perTaskImageInfo{};
+                perTaskImageInfo.m_load = GetLoadOp(item.second[i].m_previous, item.second[i].m_expected);
+                perTaskImageInfo.m_store = i == item.second.size() - 1 ?
+                    Core::Enums::StoreOperation::STORE_OP_DONT_CARE : store;
+                if (item.first->GetResourceName().find("BackBuffer") != std::string::npos)
+                    perTaskImageInfo.m_store = Core::Enums::StoreOperation::STORE_OP_STORE;
+                perTaskImageInfo.m_resource = item.first;
+                perTaskImageInfo.m_prevLayout = item.second[i].m_previous;
+                perTaskImageInfo.m_expectedLayout = item.second[i].m_expected;
+
+                if (taskImageInfoList.find(item.second[i].m_task) == taskImageInfoList.end())
+                {
+                    taskImageInfoList.insert({ item.second[i].m_task, std::vector<PerTaskImageInfo>{perTaskImageInfo} });
+                }
+                else
+                {
+                    taskImageInfoList[item.second[i].m_task].push_back(perTaskImageInfo);
+                }
+            }
+        }
+    };
+    CollectPerTaskInfo();
+
+    auto isPartOfCollection = [](ResourceAlias* res,
+        Renderer::RenderGraph::Utils::ConnectionInfo& connectionInfo) -> bool
+    {
+        auto& list = connectionInfo.m_resource;
+        auto it = std::find_if(list.begin(), list.end(), [&](ResourceAlias* e)
+        {return res->GetResourceName() == e->GetResourceName(); });
+
+        if (it != list.end())
+            return true;
+        return false;
+    };
+
+    auto GetSrcAccessMask = [](Core::Enums::ImageLayout previousLayout) -> Core::Enums::PipelineAccessFlagBits2
+    {
+        Core::Enums::PipelineAccessFlagBits2 flag;
+        switch (previousLayout)
+        {
+            case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+                break;
+            case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+                flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+                break;
+            case Core::Enums::ImageLayout::LAYOUT_GENERAL:
+                flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_WRITE_BIT;
+                break;
+            case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR: // previous present, just layout change
+            case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL: // previous present, just layout change, only read
+                flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+                break;
+            case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
+                flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_WRITE_BIT;
+                break;
+            default:
+                ASSERT_MSG_DEBUG(0, "invalid case");
+        }
+        return flag;
+    };
+
+    auto GetDstAccessMask = [](Core::Enums::ImageLayout expectedLayout) -> Core::Enums::PipelineAccessFlagBits2
+    {
+        Core::Enums::PipelineAccessFlagBits2 flag;
+        switch (expectedLayout)
+        {
+        case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_GENERAL:
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_READ_BIT;
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR:
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_SHADER_READ_BIT;
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL: // doubtful case
+            flag = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_READ_BIT;
+            break;
+        default:
+            ASSERT_MSG_DEBUG(0, "invalid case");
+        }
+        return flag;
+    };
+
+
+    auto GetStageMask = [](Core::Enums::ImageLayout layout) ->std::vector < Core::Enums::PipelineStageFlagBits2>
+    {
+        std::vector<Core::Enums::PipelineStageFlagBits2> flags;
+        switch (layout)
+        {
+        case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_GENERAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_VERTEX_SHADER_BIT);
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_ALL_TRANSFER_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR:
+        case Core::Enums::ImageLayout::LAYOUT_UNDEFINED:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+            break;
+        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL:
+            flags.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_ALL_TRANSFER_BIT);
+            break;
+        default:
+            ASSERT_MSG_DEBUG(0, "invalid case");
+        }
+
+        return flags;
+    };
+
+    auto CollectImageBarrier = [&taskImageInfoList, &isPartOfCollection,
+        &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask](
+            std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>& barrierInfoForFrames,
+            std::vector<PerTaskImageInfo>& perTaskImageInfo,
+            std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& taskInputList,
+            const bool& isFlushRequiredThroughBarrier)
+    {
+        for (auto& imageInfo : perTaskImageInfo)
+        {
+            // Get the collection to which the image belongs, get the remaining image ids
+            for (auto& taskInput : taskInputList)
+            {
+                if (taskInput.m_resource[0]->GetResourceType() != Renderer::ResourceManagement::ResourceType::IMAGE)
+                    continue;
+
+                bool check = isPartOfCollection(imageInfo.m_resource, taskInput);
+
+                if (check)
+                {
+                    // Create barrier/render pass info
+                    uint32_t frameCount = 0;
+                    for (auto& taskRes : taskInput.m_resource)
+                    {
+                        auto imageId = taskRes->GetPhysicalResourceId();
+
+                        // Barrier case
+                        if (imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
+                            imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
+                            imageInfo.m_expectedLayout == imageInfo.m_prevLayout)
+                        {
+                            Core::Wrappers::ImageBarrier2 barrier{};
+                            barrier.m_dstQueueFamilyIndex = 0;
+                            barrier.m_imageId = imageId;
+                            barrier.m_newLayout = imageInfo.m_expectedLayout;
+                            barrier.m_oldLayout = imageInfo.m_prevLayout;
+                            barrier.m_srcQueueFamilyIndex = 0;
+                            barrier.m_subresourceRange.m_baseArrayLayer = 0;
+                            barrier.m_subresourceRange.m_baseMipLevel = 0;
+                            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+                            barrier.m_subresourceRange.m_layerCount = 1;
+                            barrier.m_subresourceRange.m_levelCount = 1;
+                            barrier.m_imageName = taskRes->GetResourceName();
+
+                            if (isFlushRequiredThroughBarrier == false)
+                            {
+                                barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+                                barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                                barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+                                barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                            }
+                            else
+                            {
+                                // No write needs to be flushed only layout transition required
+                                if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
+                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
+                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
+                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
+                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+                                {
+                                    barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+                                    barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                                }
+                                else
+                                {
+                                    barrier.m_srcAccessMask.push_back(GetSrcAccessMask(imageInfo.m_prevLayout));
+                                    barrier.m_srcStageMask = GetStageMask(imageInfo.m_prevLayout);
+                                }
+
+                                // No write needs to be flushed only layout transition required
+                                if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
+                                {
+                                    barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                                    barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+                                }
+                                else
+                                {
+                                    barrier.m_dstAccessMask.push_back(GetDstAccessMask(imageInfo.m_expectedLayout));
+                                    barrier.m_dstStageMask = GetStageMask(imageInfo.m_expectedLayout);
+                                }
+                            }
+
+                            barrierInfoForFrames[frameCount++].m_imageBarriers.push_back(barrier);
+                        }
+                    }
+                }
             }
         }
     };
 
-    PrintTaskInfo();
+    auto CollectBufferBarrier = [](
+        std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>& barrierInfoForFrames,
+        std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& taskInputList,
+        const bool& isFlushRequiredThroughBarrier)
+    {
+
+    };
+
+    // for all frames
+    auto PopulateTaskInfo = [&taskImageInfoList, &isPartOfCollection,
+    &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectImageBarrier]()
+    {
+        for (auto& item : taskImageInfoList)
+        {
+            auto& task = item.first;
+            auto taskInputList = task->GetInputs();
+
+            bool isFlushRequiredThroughBarrier = true;
+            if(task->GetCommandBufferInfo()[0].m_shouldStart.has_value())
+                isFlushRequiredThroughBarrier = !task->GetCommandBufferInfo()[0].m_shouldStart.value();
+
+            std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo> barrierInfoForFrames(g_bufferDistributionCount);
+
+            CollectImageBarrier(barrierInfoForFrames, item.second,
+                taskInputList, isFlushRequiredThroughBarrier);
+
+            //for (auto& imageInfo : item.second)
+            //{
+            //    // Get the collection to which the image belongs, get the remaining image ids
+            //    for (auto& taskInput : taskInputList)
+            //    {
+            //        bool check = isPartOfCollection(imageInfo.m_resource, taskInput);
+
+            //        if (check)
+            //        {
+            //            // Create barrier/render pass info
+            //            uint32_t frameCount = 0;
+            //            for (auto& taskRes : taskInput.m_resource)
+            //            {
+            //                auto imageId = taskRes->GetPhysicalResourceId();
+
+            //                // Barrier case
+            //                if (imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
+            //                    imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
+            //                    imageInfo.m_expectedLayout == imageInfo.m_prevLayout)
+            //                {
+            //                    Core::Wrappers::ImageBarrier2 barrier{};
+            //                    barrier.m_dstQueueFamilyIndex = 0;
+            //                    barrier.m_imageId = imageId;
+            //                    barrier.m_newLayout = imageInfo.m_expectedLayout;
+            //                    barrier.m_oldLayout = imageInfo.m_prevLayout;
+            //                    barrier.m_srcQueueFamilyIndex = 0;
+            //                    barrier.m_subresourceRange.m_baseArrayLayer = 0;
+            //                    barrier.m_subresourceRange.m_baseMipLevel = 0;
+            //                    barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+            //                    barrier.m_subresourceRange.m_layerCount = 1;
+            //                    barrier.m_subresourceRange.m_levelCount = 1;
+            //                    barrier.m_imageName = taskRes->GetResourceName();
+
+            //                    if (isFlushRequiredThroughBarrier == false)
+            //                    {
+            //                        barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+            //                        barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            //                        barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+            //                        barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            //                    }
+            //                    else
+            //                    {
+            //                        // No write needs to be flushed only layout transition required
+            //                        if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
+            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
+            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
+            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
+            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+            //                        {
+            //                            barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+            //                            barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            //                        }
+            //                        else
+            //                        {
+            //                            barrier.m_srcAccessMask.push_back(GetSrcAccessMask(imageInfo.m_prevLayout));
+            //                            barrier.m_srcStageMask = GetStageMask(imageInfo.m_prevLayout);
+            //                        }
+
+            //                        // No write needs to be flushed only layout transition required
+            //                        if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
+            //                        {
+            //                            barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            //                            barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+            //                        }
+            //                        else
+            //                        {
+            //                            barrier.m_dstAccessMask.push_back(GetDstAccessMask(imageInfo.m_expectedLayout));
+            //                            barrier.m_dstStageMask = GetStageMask(imageInfo.m_expectedLayout);
+            //                        }
+            //                    }
+
+            //                    barrierInfoForFrames[frameCount++].m_imageBarriers.push_back(barrier);
+            //                }
+            //            }
+            //            break;
+            //        }
+            //    }
+            //}
+
+            task->AssignBarrierInfo(barrierInfoForFrames);
+        }
+    };
+
+    PopulateTaskInfo();
+
+    auto PrintImageInfo = [&]()
+    {
+        for (auto& item : resourceInfo)
+        {
+            std::cout << "\nImage : " << item.first->GetResourceName() << "\n";
+            for (auto& info : item.second)
+            {
+                std::cout <<"  " << info.m_task->GetTaskName() << "  ";
+            }
+        }
+    };
+
+    auto PrintTaskInfo = [&]()
+    {
+        auto GetLoadValue = [](Core::Enums::LoadOperation load) -> std::string
+        {
+            std::string value = "";
+            if (load == Core::Enums::LoadOperation::LOAD_OP_CLEAR)
+            {
+                value = "LOAD_OP_CLEAR";
+            }
+            else if (load == Core::Enums::LoadOperation::LOAD_OP_DONT_CARE)
+            {
+                value = "LOAD_OP_DONT_CARE";
+            }
+            else
+                value = "LOAD_OP_LOAD";
+            return value;
+        };
+
+        for (auto& item : taskImageInfoList)
+        {
+            std::cout << "\nTask : " << item.first->GetTaskName();
+            for (auto& res : item.second)
+            {
+                std::cout << "\n    resource : " << res.m_resource->GetResourceName();
+                std::cout << "\n        load : " << GetLoadValue(res.m_load);
+                if (res.m_store == Core::Enums::StoreOperation::STORE_OP_STORE)
+                    std::cout << "\n        store : " << "STORE_OP_STORE";
+                else
+                    std::cout << "\n        store : " << "STORE_OP_DONT_CARE";
+            }
+            std::cout << "\n=========";
+        }
+    };
+
+    //PrintImageInfo();
+    //PrintTaskInfo();
 }
 
-void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
+void Renderer::RenderGraph::RenderGraphManager::Init(
+    uint32_t renderQueueId,
     uint32_t computeQueueId,
     uint32_t transferQueueId,
     uint32_t presentationQueueId,
@@ -348,6 +811,22 @@ void Renderer::RenderGraph::RenderGraphManager::Init(uint32_t renderQueueId,
     }
 
     AssignCommandBuffers();
+    AssignResourceInfo();
+
+    auto PrintTaskInfo = [&]()
+    {
+        for (auto& level : m_activePipeline->GetPerLevelTaskInfo())
+        {
+            auto& taskInfo = level.second;
+            for (auto taskNode : taskInfo.m_taskList)
+            {
+                auto task = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask();
+                task->PrintTaskInfo();
+            }
+        }
+    };
+
+    PrintTaskInfo();
 
     m_presentationTask = std::make_unique<Renderer::RenderGraph::Tasks::PresentationTask>("Presentation",
         Core::Settings::m_swapBufferCount,

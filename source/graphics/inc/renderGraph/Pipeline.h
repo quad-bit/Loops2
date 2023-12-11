@@ -86,6 +86,31 @@ namespace Renderer
                 return imageList;
             }
 
+            std::vector<ResourceAlias*> CreatePerFrameBuffer(
+                const Core::Wrappers::BufferCreateInfo& bufferCreateInfo,
+                const std::vector<std::string>& names)
+            {
+                auto bufferInfo = Renderer::RenderGraph::Utils::CreatePerFrameBufferResource(
+                    bufferCreateInfo, names, names.size()
+                );
+
+                std::vector<ResourceAlias*> imageList;
+                for (uint32_t i = 0; i < names.size(); i++)
+                {
+                    std::unique_ptr<ResourceAlias> obj = std::make_unique<ImageResourceAlias>(
+                        imageInfo.first[i],
+                        names[i],
+                        imageCreateInfo.m_width,
+                        imageCreateInfo.m_height,
+                        imageInfo.second[0], // as the memory is shared for the images per frame
+                        true
+                    );
+                    imageList.push_back(obj.get());
+                    m_imageList.push_back(std::move(obj));
+                }
+                return imageList;
+            }
+
             std::vector<ResourceAlias*> GetSwapchainImage()
             {
                 std::vector<ResourceAlias*> imageList;

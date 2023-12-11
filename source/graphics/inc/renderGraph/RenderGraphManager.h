@@ -63,6 +63,7 @@ namespace Renderer
             std::map<uint32_t, CommandBufferWrapper> m_idToCmdWrapperList;
 
             void AssignCommandBuffers();
+            void AssignResourceInfo();
 
             std::vector<PerFrameCommandBufferInfo> m_perFrameInfo;
             std::vector<PerFrameSemaphoreInfo> m_perFrameSemaphoreInfo;

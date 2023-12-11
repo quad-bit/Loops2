@@ -46,48 +46,7 @@ namespace
         }
     }
 
-    std::string GetLayout(const Core::Enums::ImageLayout layout)
-    {
-        std::string value;
-        switch (layout)
-        {
-        case Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
-            value = "COLOR_ATTACHMENT";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL:
-            value = "DEPTH_ATTACHMENT";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL:
-            value = "DEPTH_STENCIL_ATTACHMENT";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_GENERAL:
-            value = "GENERAL";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED:
-            value = "PREINITIALIZED";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR:
-            value = "PRESENT_SRC_KHR";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL:
-            value = "SHADER_READ_ONLY";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL:
-            value = "TRANSFER_DST";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL:
-            value = "TRANSFER_SRC";
-            break;
-        case Core::Enums::ImageLayout::LAYOUT_UNDEFINED:
-            value = "UNDEFINED";
-            break;
-        default:
-            ASSERT_MSG_DEBUG(0, "invalid");
-            break;
-        }
-        return value;
-    }
-
+    
     std::string GetUsageValue(Renderer::RenderGraph::Utils::ResourceMemoryUsage usage,
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node)
     {
@@ -125,7 +84,7 @@ namespace
         FillAtribute(srcAttrib, srcNode);
         FillAtribute(dstAttrib, destNode);
 
-        std::string edgeLabel = GetLayout(previousLayout);
+        std::string edgeLabel = Core::Utility::ConvertImageLayoutToString(previousLayout);
         edgeLabel += GetUsageValue(usage, srcNode);
 
         //if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
@@ -147,7 +106,7 @@ namespace
         //    }
         //}
 
-        edgeLabel += GetLayout(exepectedLayout);
+        edgeLabel += Core::Utility::ConvertImageLayoutToString(exepectedLayout);
         graph.AddToPrintLog(srcAttrib, dstAttrib, edgeLabel);
     }
 
@@ -158,74 +117,11 @@ namespace
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* destNode,
         Renderer::RenderGraph::Utils::ResourceMemoryUsage usage)
     {
-        /*auto fillAttrib = [](Renderer::RenderGraph::NodeDrawAttribs& attrib,
-            Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node
-            )
-        {
-            Renderer::RenderGraph::Utils::RenderGraphNodeType type = node->GetNodeData()->GetNodeType();
-            std::string name = node->GetNodeData()->GetNodeName();
-
-            if (type == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
-            {
-                attrib.nodeColor = "red";
-                attrib.nodeName = node->GetNodeData()->GetNodeName() + ":\n" + ((Renderer::RenderGraph::ResourceNode*)node->GetNodeData())->GetResource()[0]->GetResourceName();
-                attrib.nodeShape = "oval";
-            }
-            else
-            {
-                std::string name = "";
-                Renderer::RenderGraph::TaskType taskType = ((Renderer::RenderGraph::TaskNode*)node->GetNodeData())->GetTask()->GetTaskType();
-                if (taskType == Renderer::RenderGraph::TaskType::RENDER_TASK)
-                {
-                    attrib.nodeColor = "green";
-                    name = "Graphics:\n";
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::COMPUTE_TASK)
-                {
-                    attrib.nodeColor = "blue";
-                    name = "Compute:\n";
-
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::TRANSFER_TASK)
-                {
-                    attrib.nodeColor = "purple";
-                    name = "Transfer:\n";
-
-                }
-                else if (taskType == Renderer::RenderGraph::TaskType::DOWNLOAD_TASK)
-                {
-                    attrib.nodeColor = "pink";
-                    name = "Download:\n";
-                }
-                attrib.nodeName = name + node->GetNodeData()->GetNodeName();
-                attrib.nodeShape = "rectangle";
-            }
-        };*/
-
         Renderer::RenderGraph::NodeDrawAttribs srcAttrib{}, dstAttrib{};
         FillAtribute(srcAttrib, srcNode);
         FillAtribute(dstAttrib, destNode);
 
         std::string edgeLabel = GetUsageValue(usage, srcNode);
-        /*if (usage != Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE &&
-            srcNode->GetNodeData()->GetNodeType() == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
-        {
-            switch (usage)
-            {
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY:
-                edgeLabel = "R";
-                break;
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE:
-                edgeLabel = "RW";
-                break;
-            case Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY:
-                edgeLabel = "W";
-                break;
-            default:
-                ASSERT_MSG_DEBUG(0, "Invalid option");
-            }
-        }*/
-
         graph.AddToPrintLog(srcAttrib, dstAttrib, edgeLabel);
     }
 };
@@ -233,26 +129,20 @@ namespace
 void Renderer::RenderGraph::Utils::AddEdge(
     Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
-    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
-    const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage)
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode
+    )
 {
-    CreatePrintGraphInfo(graph, srcNode, destNode, usage);
+    //ASSERT_MSG_DEBUG(0, "not used");
 
-    if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
-        destNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
-    {
-        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(destNode->GetNodeData())->GetTask();
-        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(srcNode->GetNodeData())->GetResource();
+    CreatePrintGraphInfo(graph, srcNode, destNode, Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE);
 
-        task->AddInput(ConnectionInfo{ usage, resource, srcNode->GetNodeId() });
-    }
-    else if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
+    if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
         destNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE)
     {
         auto task = static_cast<Renderer::RenderGraph::TaskNode*>(srcNode->GetNodeData())->GetTask();
         auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(destNode->GetNodeData())->GetResource();
 
-        task->AddOutput(ConnectionInfo{ usage, resource, destNode->GetNodeId() });
+        task->AddOutput(ConnectionInfo{ ResourceMemoryUsage::NONE, resource, destNode->GetNodeId() });
     }
 
     graph.AttachDirectedEdge(srcNode, destNode);
@@ -305,7 +195,7 @@ void Renderer::RenderGraph::Utils::AddEdge(
         imageInfo.m_prevImageLayout = previousImageLayout;
         imageInfo.m_expectedImageLayout = expectedImageLayout;
 
-        task->AddInput(ConnectionInfo{ usage, resource, srcNode->GetNodeId(), &imageInfo});
+        task->AddInput(ConnectionInfo{ usage, resource, srcNode->GetNodeId(), imageInfo});
     }
     else if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
         destNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE)
@@ -313,10 +203,149 @@ void Renderer::RenderGraph::Utils::AddEdge(
         auto task = static_cast<Renderer::RenderGraph::TaskNode*>(srcNode->GetNodeData())->GetTask();
         auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(destNode->GetNodeData())->GetResource();
 
-        task->AddOutput(ConnectionInfo{ usage, resource, destNode->GetNodeId() });
+        ImageResourceConnectionInfo imageInfo{};
+        task->AddOutput(ConnectionInfo{ usage, resource, destNode->GetNodeId(), imageInfo });
     }
 
     graph.AttachDirectedEdge(srcNode, destNode);
+}
+
+void Renderer::RenderGraph::Utils::AddInputAsColorAttachment(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+    uint32_t inputSlot)
+{
+    if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
+        taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
+
+        auto taskType = task->GetTaskType();
+        ASSERT_MSG_DEBUG(taskType == TaskType::RENDER_TASK, "invalid usage");
+
+        ImageResourceConnectionInfo imageInfo{};
+        imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        imageInfo.m_colorAttachmentSlot = inputSlot;
+
+        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+    }
+    else
+        ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
+
+    graph.AttachDirectedEdge(resourceNode, taskNode);
+}
+
+void Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode
+)
+{
+    if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
+        taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
+
+        auto taskType = task->GetTaskType();
+        ASSERT_MSG_DEBUG(taskType == TaskType::RENDER_TASK, "invalid usage");
+
+        ImageResourceConnectionInfo imageInfo{};
+        imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+    }
+    else
+        ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
+
+    graph.AttachDirectedEdge(resourceNode, taskNode);
+}
+
+void Renderer::RenderGraph::Utils::AddInputAsShaderResource(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode
+    )
+{
+    if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
+        taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
+
+        auto taskType = task->GetTaskType();
+
+        ImageResourceConnectionInfo imageInfo{};
+        if (taskType == TaskType::RENDER_TASK)
+        {
+            imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
+        else if (taskType == TaskType::COMPUTE_TASK)
+        {
+            imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_GENERAL;
+        }
+        else
+        {
+            ASSERT_MSG_DEBUG(0, "invalid usage");
+        }
+
+        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+    }
+    else
+        ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
+
+    graph.AttachDirectedEdge(resourceNode, taskNode);
+}
+
+void Renderer::RenderGraph::Utils::AddTaskOutput(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode)
+{
+    if (taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
+        resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
+        task->AddOutput(ConnectionInfo{});
+    }
+
+    graph.AttachDirectedEdge(taskNode, resourceNode);
+}
+
+void Renderer::RenderGraph::Utils::AddInputAsTransferData(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+    bool isTransferSource)
+{
+    if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
+        taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
+    {
+        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
+
+        auto taskType = task->GetTaskType();
+        ASSERT_MSG_DEBUG(taskType == TaskType::TRANSFER_TASK, "invalid usage");
+
+        ImageResourceConnectionInfo imageInfo{};
+        if (isTransferSource)
+        {
+            imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL;
+        }
+        else
+        {
+            imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL;
+        }
+
+        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+    }
+    else
+        ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
+
+    graph.AttachDirectedEdge(resourceNode, taskNode);
 }
 
 std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::Utils::CreatePerFrameImageResource(
@@ -385,6 +414,14 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::U
     return std::make_pair(imageIds, memIds);
 }
 
+std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::Utils::CreatePerFrameBufferResource(
+    const Core::Wrappers::BufferCreateInfo& createInfo,
+    std::vector<std::string> names,
+    uint32_t count)
+{
+
+}
+
 void Renderer::RenderGraph::Utils::AddSwapchainNode(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph, Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, const Core::Enums::ImageLayout expectedImageLayout)
 {
 
@@ -408,4 +445,12 @@ void Renderer::RenderGraph::Utils::DestroyPerFrameImageResource(const std::vecto
     }
 
     VulkanInterfaceAlias::FreeMemory(memIds.data(), memIds.size());
+}
+
+void Renderer::RenderGraph::Utils::AddTaskBufferInput(
+    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
+    Core::Enums::BufferType bufferType, Core::Enums::BufferUsage bufferUsage)
+{
 }

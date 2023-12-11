@@ -41,10 +41,13 @@ namespace GfxVk
         VkComponentSwizzle UnWrapSwizzle(Core::Enums::ComponentSwizzle obj);
         VkImageViewType UnwrapImageViewType(Core::Enums::ImageViewType type);
         VkImageAspectFlags UnwrapAspectMask(Core::Enums::ImageAspectFlag flag);
+        VkImageAspectFlags UnwrapAspectMask(const std::vector<Core::Enums::ImageAspectFlag>& flags);
         VkMemoryRequirements UnwrapMemoryRequirements(Core::Wrappers::MemoryRequirementInfo* info);
         VkMemoryPropertyFlags UnwrapMemoryProperty(const Core::Enums::MemoryType* memType);
         VkPipelineStageFlags const UnwrapPipelineStageFlags(const Core::Enums::PipelineStage* stages, const uint32_t& count);
+        VkPipelineStageFlags2 const UnwrapPipelineStageFlags2(const Core::Enums::PipelineStageFlagBits2* stages, const uint32_t& count);
         VkAccessFlags const UnwrapAccessFlags(const Core::Enums::AccessFlagBits* stages, const uint32_t& count);
+        VkAccessFlags2 const UnwrapAccessFlags2(const Core::Enums::PipelineAccessFlagBits2* stages, const uint32_t& count);
         VkDependencyFlags const UnwrapDependencyFlags(const Core::Enums::DependencyFlagBits* stages, const uint32_t& count);
         VkBufferCreateInfo* const UnwrapBufferCreateInfo(const Core::Wrappers::BufferCreateInfo* info, const uint32_t& count);
         VkBufferUsageFlags const UnwrapBufferUsage(const std::vector<Core::Enums::BufferUsage>& usage);

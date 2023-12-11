@@ -26,11 +26,12 @@ namespace Renderer
             uint32_t m_memId;
             ResourceType m_resourceType;
             std::string m_name;
+            bool m_isOccupyingSharedMemory;
 
         public:
             Resource() = delete;
-            Resource(const ResourceType& resourceType, const std::string& name) :
-                m_resourceType(resourceType), m_name(name)
+            Resource(const ResourceType& resourceType, const std::string& name, bool isOccupyingSharedMemory) :
+                m_resourceType(resourceType), m_name(name), m_isOccupyingSharedMemory(isOccupyingSharedMemory)
             {}
             virtual ~Resource()
             {
@@ -56,6 +57,11 @@ namespace Renderer
             {
                 return m_name;
             }
+
+            ResourceType GetResourceType()
+            {
+                return m_resourceType;
+            }
         };
 
         class ImageResource final : public Resource
@@ -63,7 +69,6 @@ namespace Renderer
         private:
             Core::Enums::ImageLayout m_oldLayout, m_newLayout;
             size_t m_width, m_height;
-            bool m_isOccupyingSharedMemory;
         public:
 
             // The image is created externally and the id have been assigned
@@ -74,19 +79,19 @@ namespace Renderer
                 const size_t& height,
                 uint32_t memId,
                 bool isMemoryShared): 
-                Resource(ResourceType::IMAGE, name),
+                Resource(ResourceType::IMAGE, name, isMemoryShared),
                 m_width(width),
-                m_height(height),
-                m_isOccupyingSharedMemory(isMemoryShared)
+                m_height(height)
             {
                 m_physicalResourceId = id;
                 m_memId = memId;
             }
 
+            /*
             ImageResource(const size_t& width, const size_t& height, const std::string& name) :
                 Resource(ResourceType::IMAGE, name), m_width(width), m_height(height)
             {
-                /*Core::Enums::Format format{ Core::Enums::Format::B8G8R8A8_UNORM };
+                Core::Enums::Format format{ Core::Enums::Format::B8G8R8A8_UNORM };
                 Core::Enums::ImageType type{ Core::Enums::ImageType::IMAGE_TYPE_2D };
                 std::vector<Core::Enums::ImageUsage> usages{ Core::Enums::ImageUsage::USAGE_SAMPLED_BIT };
 
@@ -104,9 +109,9 @@ namespace Renderer
                 createInfo.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
                 createInfo.m_width = width;
 
-                m_imageId = VulkanInterfaceAlias::CreateImage(createInfo, name);*/
+                m_imageId = VulkanInterfaceAlias::CreateImage(createInfo, name);
             }
-
+            */
             ~ImageResource()
             {
                 //if(!m_isOccupyingSharedMemory)
@@ -118,11 +123,32 @@ namespace Renderer
         {
         private:
             size_t m_dataSize, m_dataSizeAligned;
+            size_t m_offset;
+            Core::Enums::BufferType m_bufferType;
+            Core::Enums::BufferUsage m_bufferUsage;
 
         public:
-            BufferResource(const size_t& dataSize, const std::string& name) :
+            /*BufferResource(const size_t& dataSize, const std::string& name) :
                 Resource(ResourceType::BUFFER, name), m_dataSize(dataSize)
             {}
+            */
+            // The buffer is created externally and the id have been assigned
+            BufferResource(
+                uint32_t id,
+                std::string name,
+                const size_t& dataSize,
+                const size_t& offset,
+                const Core::Enums::BufferType& bufferType,
+                const Core::Enums::BufferUsage& bufferUsage,
+                uint32_t memId,
+                bool isMemoryShared) :
+                Resource(ResourceType::BUFFER, name, isMemoryShared),
+                m_dataSize(dataSize), m_offset(offset),
+                m_bufferType(bufferType), m_bufferUsage(bufferUsage)
+            {
+                m_physicalResourceId = id;
+                m_memId = memId;
+            }
         };
     }
 }

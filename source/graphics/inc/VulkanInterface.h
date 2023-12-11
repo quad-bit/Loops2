@@ -184,6 +184,12 @@ namespace Renderer
             Core::Enums::Samples GetMaxUsableSampleCount();
 
             uint32_t CreateSampler(const Core::Wrappers::SamplerCreateInfo& info);
+
+            uint32_t CreateBarrier(
+                const std::vector<Core::Wrappers::ImageBarrier2>& imageBarriers,
+                const std::vector<Core::Wrappers::BufferBarrier2>& bufferBarriers,
+                const std::vector<Core::Wrappers::MemoryBarrier2>& memoryBarriers
+                );
         }
     }
 }

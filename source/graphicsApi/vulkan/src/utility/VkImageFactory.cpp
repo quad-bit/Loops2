@@ -166,7 +166,18 @@ const VkImageView& GfxVk::Utility::VkImageFactory::GetImageView(uint32_t id)
 
 const VkImage& GfxVk::Utility::VkImageFactory::GetImage(uint32_t id)
 {
-    ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
+    // reserved for swapchain images
+    if (id < (uint32_t)m_swapchainImageList.size())
+    {
+        ASSERT_MSG(m_swapchainImageList.find(id) != m_swapchainImageList.end(), "Image not found");
+        return m_swapchainImageList[id].m_image;
+    }
+    else
+    {
+        ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
+        return m_imageList[id].m_image;
+    }
 
-    return m_imageList[id].m_image;
+    ASSERT_MSG(0, "Image not found");
+    return m_swapchainImageList[0].m_image;;
 }

@@ -165,6 +165,56 @@ namespace
         return dependencies;
     }
 
+    VkImageMemoryBarrier2 UnwrapImageMemoryBarrier2(const Core::Wrappers::ImageBarrier2& barrier)
+    {
+        VkImageMemoryBarrier2 vkBarrier{};
+        vkBarrier.dstAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_dstAccessMask.data(), barrier.m_dstAccessMask.size());
+        vkBarrier.dstQueueFamilyIndex = barrier.m_dstQueueFamilyIndex;
+        vkBarrier.dstStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_dstStageMask.data(), barrier.m_dstStageMask.size());
+        vkBarrier.image = GfxVk::Utility::VkImageFactory::GetInstance()->GetImage(barrier.m_imageId);
+        vkBarrier.newLayout = GfxVk::Unwrap::UnWrapImageLayout(barrier.m_newLayout);
+        vkBarrier.oldLayout = GfxVk::Unwrap::UnWrapImageLayout(barrier.m_oldLayout);
+        vkBarrier.pNext = nullptr;
+        vkBarrier.srcAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_srcAccessMask.data(), barrier.m_srcAccessMask.size());
+        vkBarrier.srcQueueFamilyIndex = barrier.m_srcQueueFamilyIndex;
+        vkBarrier.srcStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_srcStageMask.data(), barrier.m_srcStageMask.size());
+        vkBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
+        vkBarrier.subresourceRange.aspectMask = GfxVk::Unwrap::UnwrapAspectMask(barrier.m_subresourceRange.m_imageAspect);
+
+        return vkBarrier;
+    }
+
+    VkBufferMemoryBarrier2 UnwrapBufferMemoryBarrier2(const Core::Wrappers::BufferBarrier2& barrier)
+    {
+        VkBufferMemoryBarrier2 vkBarrier{};
+        vkBarrier.dstAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_dstAccessMask.data(), barrier.m_dstAccessMask.size());
+        vkBarrier.dstQueueFamilyIndex = barrier.m_dstQueueFamilyIndex;
+        vkBarrier.dstStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_dstStageMask.data(), barrier.m_dstStageMask.size());
+        vkBarrier.pNext = nullptr;
+        vkBarrier.srcAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_srcAccessMask.data(), barrier.m_srcAccessMask.size());
+        vkBarrier.srcQueueFamilyIndex = barrier.m_srcQueueFamilyIndex;
+        vkBarrier.srcStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_srcStageMask.data(), barrier.m_srcStageMask.size());
+        vkBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
+        vkBarrier.buffer = *GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer( barrier.m_bufferId );
+        vkBarrier.offset = barrier.m_offset;
+        vkBarrier.size = barrier.m_size;
+
+        return vkBarrier;
+    }
+
+    VkMemoryBarrier2 UnwrapMemoryBarrier2(const Core::Wrappers::MemoryBarrier2& barrier)
+    {
+        VkMemoryBarrier2 vkBarrier{};
+        vkBarrier.dstAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_dstAccessMask.data(), barrier.m_dstAccessMask.size());
+        vkBarrier.dstStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_dstStageMask.data(), barrier.m_dstStageMask.size());
+        vkBarrier.pNext = nullptr;
+        vkBarrier.srcAccessMask = GfxVk::Unwrap::UnwrapAccessFlags2(barrier.m_srcAccessMask.data(), barrier.m_srcAccessMask.size());
+        vkBarrier.srcStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_srcStageMask.data(), barrier.m_srcStageMask.size());
+        vkBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2;
+
+        return vkBarrier;
+    }
+
     VkCommandBufferUsageFlagBits UnwrapCommandBufferUsage(const Core::Enums::CommandBufferUsage* info)
     {
         switch (*info)
@@ -1036,6 +1086,35 @@ Core::Enums::Samples Renderer::Utility::VulkanInterface::GetMaxUsableSampleCount
 uint32_t Renderer::Utility::VulkanInterface::CreateSampler(const Core::Wrappers::SamplerCreateInfo & info)
 {
     return GfxVk::Shading::VkSamplerFactory::GetInstance()->CreateSampler(info);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::CreateBarrier(
+    const std::vector<Core::Wrappers::ImageBarrier2>& imageBarriers, 
+    const std::vector<Core::Wrappers::BufferBarrier2>& bufferBarriers, 
+    const std::vector<Core::Wrappers::MemoryBarrier2>& memoryBarriers)
+{
+    std::vector<VkImageMemoryBarrier2> vkImageBarriers;
+    std::vector<VkBufferMemoryBarrier2> vkBufferBarriers;
+    std::vector<VkMemoryBarrier2> vkMemoryBarriers;
+
+    for (auto& barrier : imageBarriers)
+    {
+        vkImageBarriers.push_back(UnwrapImageMemoryBarrier2(barrier));
+    }
+
+    for (auto& barrier : bufferBarriers)
+    {
+        vkBufferBarriers.push_back(UnwrapBufferMemoryBarrier2(barrier));
+    }
+
+    for (auto& barrier : memoryBarriers)
+    {
+        vkMemoryBarriers.push_back(UnwrapMemoryBarrier2(barrier));
+    }
+
+    return GfxVk::Sync::VkSynchroniserFactory::GetInstance()->CreateBarrier(
+        vkImageBarriers, vkBufferBarriers, vkMemoryBarriers
+    );
 }
 
 uint32_t Renderer::Utility::VulkanInterface::CreateCommandPool(Core::Enums::PipelineType * pipelineType, Core::Enums::CommandPoolProperty * prop)

@@ -52,6 +52,15 @@ namespace Renderer
             Core::Enums::ImageLayout m_expectedLayout;
         };
 
+        struct PerFrameTaskBarrierInfo
+        {
+            uint32_t m_barrierHandle;
+            Core::Wrappers::BarrierDependencyInfo m_dependencyInfo;
+            std::vector<Core::Wrappers::ImageBarrier2> m_imageBarriers;
+            std::vector<Core::Wrappers::BufferBarrier2> m_bufferBarriers;
+            std::vector<Core::Wrappers::MemoryBarrier2> m_memoryBarriers;
+        };
+
         /// <summary>
         /// Any cmd can be encapsulated into a task node. The standard types will be RenderTask, ComputeTask, DownloadTask
         /// and BlitTask
@@ -74,6 +83,10 @@ namespace Renderer
             TaskQueueInfo m_taskQueueInfo;
 
             uint32_t m_activeCommandBuffer;
+
+            // one for each swap buffer ( image count = swapbufferCount ),
+            // one PerFrameTaskBarrierInfo for all the resources in one frame
+            std::vector<PerFrameTaskBarrierInfo> m_taskBarrierInfo;
 
         protected:
             void StartTask(const Core::Wrappers::FrameInfo& frameInfo, const Core::Enums::QueueType queueType)
@@ -133,6 +146,11 @@ namespace Renderer
                 return m_taskType;
             }
 
+            const std::vector<Renderer::RenderGraph::TaskCommandBufferInfo>& GetCommandBufferInfo()
+            {
+                return m_cmdBufferInfo;
+            }
+
             void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
             {
                 m_inputs.push_back(info);
@@ -151,7 +169,8 @@ namespace Renderer
                 m_outputs.push_back(info);
             }
 
-            void AssignSubmitInfo(const std::vector<TaskSubmitInfo>& submitInfo, std::optional<uint32_t> nextTaskQueueId)
+            void AssignSubmitInfo(const std::vector<TaskSubmitInfo>& submitInfo,
+                std::optional<uint32_t> nextTaskQueueId)
             {
                 for (auto& item : submitInfo)
                     m_taskSubmitInfo.push_back(item);
@@ -159,7 +178,8 @@ namespace Renderer
                 m_taskQueueInfo.m_nextTaskQueueId = nextTaskQueueId;
             }
 
-            void AssignCommandBufferInfo(const std::vector<TaskCommandBufferInfo>& info,
+            void AssignCommandBufferInfo(
+                const std::vector<TaskCommandBufferInfo>& info,
                 uint32_t taskQueueId, std::optional<uint32_t> previousTaskQueueId)
             {
                 for (auto& item : info)
@@ -168,6 +188,18 @@ namespace Renderer
                 }
                 m_taskQueueInfo.m_taskQueueId = taskQueueId;
                 m_taskQueueInfo.m_previousTaskQueueId = previousTaskQueueId;
+            }
+
+            void AssignBarrierInfo(const std::vector<PerFrameTaskBarrierInfo>& barrierInfo)
+            {
+                m_taskBarrierInfo = barrierInfo;
+                for (auto& barrier : m_taskBarrierInfo)
+                {
+                    barrier.m_barrierHandle = VulkanInterfaceAlias::CreateBarrier(
+                        barrier.m_imageBarriers,
+                        barrier.m_bufferBarriers,
+                        barrier.m_memoryBarriers);
+                }
             }
 
             void CloseTaskCommandBuffer()
@@ -193,11 +225,12 @@ namespace Renderer
 
             void PrintTaskInfo()
             {
-                std::cout << "task id : " << m_name << "\n";
+                std::cout << "\n\ntask id : " << m_name << "\n";
                 
                 bool printCommandBufferInfo = false;
                 bool printQueueInfo = false;
-                bool printSubmitInfo = true;
+                bool printSubmitInfo = false;
+                bool printBarrierInfo = true;
 
                 if (printCommandBufferInfo)
                 {
@@ -233,7 +266,6 @@ namespace Renderer
 
                 if (printSubmitInfo)
                 {
-
                     for (auto& item : m_taskSubmitInfo)
                     {
                         if (item.m_signalSemaphoreId.has_value())
@@ -252,6 +284,24 @@ namespace Renderer
                         }
                     }
                 }
+
+                if (printBarrierInfo)
+                {
+                    for (auto& info : m_taskBarrierInfo)
+                    {
+                        for (auto& imageBarrierInfo : info.m_imageBarriers)
+                        {
+                            std::cout << "\n  Image : " << imageBarrierInfo.m_imageName;
+                            std::cout << "\n    SrcStage : " << Core::Utility::ConvertPipelineStageFlagToString(imageBarrierInfo.m_srcStageMask[0]);
+                            std::cout << "    SrcAccess : " << Core::Utility::ConvertPipelineAccessFlagToString(imageBarrierInfo.m_srcAccessMask[0]);
+                            std::cout << "\n    DstStage : " << Core::Utility::ConvertPipelineStageFlagToString(imageBarrierInfo.m_dstStageMask[0]);
+                            std::cout << "    DstAccess : " << Core::Utility::ConvertPipelineAccessFlagToString(imageBarrierInfo.m_dstAccessMask[0]);
+                            std::cout << "\n    previous layout : " << Core::Utility::ConvertImageLayoutToString(imageBarrierInfo.m_oldLayout);
+                            std::cout << "    expected layout : " << Core::Utility::ConvertImageLayoutToString(imageBarrierInfo.m_newLayout);
+                        }
+                    }
+                }
+                std::cout << "\n=============\n";
             }
 
             const std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& GetInputs()
