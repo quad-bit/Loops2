@@ -48,19 +48,20 @@ namespace Renderer
         private:
             ResourceAlias* CreateImage(const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)
             {
-                std::unique_ptr<ResourceAlias> obj = std::make_unique<ImageResourceAlias>(
+                /*std::unique_ptr<ResourceAlias> obj = std::make_unique<ImageResourceAlias>(
                     imageCreateInfo.m_width,
                     imageCreateInfo.m_height,
                     name);
                 m_imageList.push_back(std::move(obj));
-                return m_imageList[m_imageList.size() - 1].get();
+                return m_imageList[m_imageList.size() - 1].get();*/
+                ASSERT_MSG_DEBUG(0, "Not getting used");
+                return nullptr;
             }
 
             ResourceAlias* CreateBuffer(const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)
             {
-                std::unique_ptr<ResourceAlias> obj = std::make_unique<BufferResourceAlias>(bufferCreateInfo.size, name);
-                m_bufferList.push_back(std::move(obj));
-                return m_bufferList[m_bufferList.size() - 1].get();
+                ASSERT_MSG_DEBUG(0, "Not getting used");
+                return nullptr;
             }
 
             std::vector<ResourceAlias*> CreatePerFrameImage(const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& names)
@@ -87,34 +88,38 @@ namespace Renderer
             }
 
             std::vector<ResourceAlias*> CreatePerFrameBuffer(
-                const Core::Wrappers::BufferCreateInfo& bufferCreateInfo,
+                Core::Wrappers::BufferCreateInfo& bufferCreateInfo,
                 const std::vector<std::string>& names)
             {
-                auto bufferInfo = Renderer::RenderGraph::Utils::CreatePerFrameBufferResource(
-                    bufferCreateInfo, names, names.size()
-                );
 
-                std::vector<ResourceAlias*> imageList;
+                auto dataSizeAligned = VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(bufferCreateInfo.size);
+                auto unaligneDataSize = bufferCreateInfo.size;
+                bufferCreateInfo.size = dataSizeAligned;
+                auto bufferInfo = Renderer::RenderGraph::Utils::CreatePerFrameBufferResource(
+                    bufferCreateInfo, names, names.size());
+
+                std::vector<ResourceAlias*> bufferList;
                 for (uint32_t i = 0; i < names.size(); i++)
                 {
-                    std::unique_ptr<ResourceAlias> obj = std::make_unique<ImageResourceAlias>(
-                        imageInfo.first[i],
+                    std::unique_ptr<ResourceAlias> obj = std::make_unique<BufferResourceAlias>(
+                        bufferInfo.first[i],
                         names[i],
-                        imageCreateInfo.m_width,
-                        imageCreateInfo.m_height,
-                        imageInfo.second[0], // as the memory is shared for the images per frame
+                        unaligneDataSize,
+                        dataSizeAligned,
+                        dataSizeAligned * i,
+                        bufferCreateInfo.usage,
+                        bufferInfo.second[0],
                         true
                     );
-                    imageList.push_back(obj.get());
-                    m_imageList.push_back(std::move(obj));
+                    bufferList.push_back(obj.get());
+                    m_bufferList.push_back(std::move(obj));
                 }
-                return imageList;
+                return bufferList;
             }
 
             std::vector<ResourceAlias*> GetSwapchainImage()
             {
                 std::vector<ResourceAlias*> imageList;
-
                 if (m_swapchainList.size() == 0)
                 {
                     auto imageInfo = Renderer::RenderGraph::Utils::GetSwapchainImages();
@@ -184,6 +189,7 @@ namespace Renderer
                 m_resourseCreationCallback.CreateBufferFunc = std::bind(&Pipeline::CreateBuffer, this, std::placeholders::_1, std::placeholders::_2);
                 m_resourseCreationCallback.CreatePerFrameImageFunc = std::bind(&Pipeline::CreatePerFrameImage, this, std::placeholders::_1, std::placeholders::_2);
                 m_resourseCreationCallback.GetSwapchainImagesFunc = std::bind(&Pipeline::GetSwapchainImage, this);
+                m_resourseCreationCallback.CreatePerFrameBufferFunc = std::bind(&Pipeline::CreatePerFrameBuffer, this, std::placeholders::_1, std::placeholders::_2);
 
                 m_graphTraversalCallback.PipelineCompileCallback = std::bind(&Pipeline::PopulatePath, this, std::placeholders::_1);
 
@@ -208,10 +214,6 @@ namespace Renderer
                     effect.reset();
                 m_effects.clear();
 
-                for (auto& buffer : m_bufferList)
-                    buffer.reset();
-                m_bufferList.clear();
-
                 std::vector<uint32_t> imageIds, memIds;
                 for (auto& image : m_imageList)
                 {
@@ -224,8 +226,20 @@ namespace Renderer
                 }
 
                 Renderer::RenderGraph::Utils::DestroyPerFrameImageResource(imageIds, memIds);
-
                 m_imageList.clear();
+
+                std::vector<uint32_t> bufferIds, bufMemIds;
+                for (auto& buf : m_bufferList)
+                {
+                    bufferIds.push_back(buf->GetPhysicalResourceId());
+
+                    auto id = buf->GetResourceMemoryId();
+                    auto it = std::find(bufMemIds.begin(), bufMemIds.end(), id);
+                    if (it == bufMemIds.end())
+                        bufMemIds.push_back(id);
+                }
+                Renderer::RenderGraph::Utils::DestroyPerFrameBufferResource(bufferIds, bufMemIds);
+                m_bufferList.clear();
             }
 
             const std::map<uint32_t, PerLevelTaskInfo>& GetPerLevelTaskInfo();

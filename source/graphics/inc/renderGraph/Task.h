@@ -73,8 +73,6 @@ namespace Renderer
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_inputs;
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo> m_outputs;
 
-            std::vector<TaskImageResourceInfo> m_taskImageResourceInfoList;
-
             std::string m_name;
             TaskType m_taskType;
 
@@ -154,7 +152,7 @@ namespace Renderer
             void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
             {
                 m_inputs.push_back(info);
-                TaskImageResourceInfo obj{};
+                /*TaskImageResourceInfo obj{};
                 obj.m_imageResource = info.m_resource;
 
                 if (info.m_imageInfo)
@@ -162,6 +160,10 @@ namespace Renderer
                     obj.m_expectedLayout = info.m_imageInfo->m_expectedImageLayout;
                     obj.m_previousLayout = info.m_imageInfo->m_prevImageLayout;
                 }
+                if (info.m_bufInfo)
+                {
+
+                }*/
             }
 
             void AddOutput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)

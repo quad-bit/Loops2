@@ -909,6 +909,13 @@ void Renderer::Utility::VulkanInterface::CreateBuffers(Core::Wrappers::BufferCre
     GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffers(count, info, out_buffIds, out_bufferMemRequirements);
 }
 
+std::pair<uint32_t, std::optional<uint32_t>> Renderer::Utility::VulkanInterface::CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory)
+{
+    VkBufferCreateInfo* vkInfo = GfxVk::Unwrap::UnwrapBufferCreateInfo(&info, 1);
+    auto value = GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffer(*vkInfo, allocateMemory);
+    return value;
+}
+
 size_t Renderer::Utility::VulkanInterface::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
     return GfxVk::Shading::VkBufferFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(dataSize);
@@ -917,6 +924,11 @@ size_t Renderer::Utility::VulkanInterface::GetMemoryAlignedDataSizeForBuffer(con
 uint32_t * Renderer::Utility::VulkanInterface::AllocateBufferMemory(uint32_t * bufferId, const uint32_t & bufCount)
 {
     return GfxVk::Shading::VkBufferFactory::GetInstance()->AllocateBufferMemory(bufferId, bufCount);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::AllocateBufferSharedMemory(uint32_t* bufferId, uint32_t bufCount)
+{
+    return GfxVk::Shading::VkBufferFactory::GetInstance()->AllocateSharedBufferMemory(bufferId, bufCount);
 }
 
 void Renderer::Utility::VulkanInterface::CopyBufferDataToMemory(const uint32_t & bufId, const VkDeviceSize & dataSize, const VkDeviceSize & memAlignedSize, void * data, VkDeviceSize memoryOffset, bool keepMemoryMounted)

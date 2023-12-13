@@ -269,6 +269,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
 
     auto& levelInfoList = m_activePipeline->GetPerLevelTaskInfo();
 
+    // map a single resource to all the tasks where it is an input
     for (auto& level : levelInfoList)
     {
         auto& taskInfo = level.second;
@@ -297,8 +298,6 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                         resourceInfo[resource].push_back(info);
                     }
                 }
-                else
-                    ASSERT_MSG_DEBUG(0, "buffer yet to be done");
             }
         }
     }
@@ -570,15 +569,118 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
 
     auto CollectBufferBarrier = [](
         std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>& barrierInfoForFrames,
-        std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& taskInputList,
-        const bool& isFlushRequiredThroughBarrier)
+        std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& taskInputList)
     {
+        for (auto& taskInput : taskInputList)
+        {
+            // skip barrier if its being written by host || not a buffer resource
+            if (taskInput.m_resource[0]->GetResourceType() != Renderer::ResourceManagement::ResourceType::BUFFER ||
+                (taskInput.m_bufInfo.value().prevShader.has_value() == false && taskInput.m_bufInfo.value().previousUsage.has_value() == false))
+                continue;
 
+            Core::Enums::PipelineStageFlagBits2 srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE;
+            Core::Enums::PipelineStageFlagBits2 dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE;
+            Core::Enums::PipelineAccessFlagBits2 srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+            Core::Enums::PipelineAccessFlagBits2 dstAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+
+            // get shader stage src stage
+            if (taskInput.m_bufInfo.value().prevShader.has_value())
+            {
+                if (taskInput.m_bufInfo.value().prevShader.value() == Core::Enums::ShaderType::COMPUTE)
+                {
+                    srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().prevShader.value() == Core::Enums::ShaderType::FRAGMENT)
+                {
+                    srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().prevShader.value() == Core::Enums::ShaderType::VERTEX)
+                {
+                    srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+                }
+                srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_WRITE_BIT;
+            }
+            else if(taskInput.m_bufInfo.value().previousUsage.has_value())
+            {
+                if (taskInput.m_bufInfo.value().previousUsage.value() == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_DST_BIT)
+                {
+                    srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
+                    srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_WRITE_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().previousUsage.value() == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_SRC_BIT)
+                {
+                    srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+                    srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+                }
+            }
+            else
+            {
+                srcStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+                srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+            }
+
+            ASSERT_MSG_DEBUG(srcStage != Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE," invalid ");
+
+            if (taskInput.m_bufInfo.value().expectedShader.has_value())
+            {
+                if (taskInput.m_bufInfo.value().expectedShader.value() == Core::Enums::ShaderType::COMPUTE)
+                {
+                    dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().expectedShader.value() == Core::Enums::ShaderType::FRAGMENT)
+                {
+                    dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().expectedShader.value() == Core::Enums::ShaderType::VERTEX)
+                {
+                    dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
+                }
+                dstAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_READ_BIT;
+            }
+            else 
+            {
+                if (taskInput.m_bufInfo.value().expectedUsage == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_DST_BIT)
+                {
+                    dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_ALL_TRANSFER_BIT;
+                    dstAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_TRANSFER_READ_BIT;
+                }
+                else if (taskInput.m_bufInfo.value().expectedUsage == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_SRC_BIT)
+                {
+                    dstStage = Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+                    dstAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
+                }
+            }
+
+            ASSERT_MSG_DEBUG(dstStage != Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE, " invalid ");
+
+            // Create barrier
+            uint32_t frameCount = 0;
+            for (auto& taskRes : taskInput.m_resource)
+            {
+                auto bufferId = taskRes->GetPhysicalResourceId();
+                auto bufResource = (BufferResourceAlias*)taskRes;
+
+                // Barrier case
+                Core::Wrappers::BufferBarrier2 barrier{};
+                barrier.m_dstQueueFamilyIndex = 0;
+                barrier.m_srcQueueFamilyIndex = 0;
+                barrier.m_bufferName = taskRes->GetResourceName();
+                barrier.m_bufferId = bufResource->GetPhysicalResourceId();
+                barrier.m_dstAccessMask = std::vector<Core::Enums::PipelineAccessFlagBits2>{ dstAccess };
+                barrier.m_dstStageMask = std::vector<Core::Enums::PipelineStageFlagBits2>{ dstStage };
+                barrier.m_offset = bufResource->GetDataOffset();
+                barrier.m_size = bufResource->GetAlignedDataSize();
+                barrier.m_srcAccessMask = std::vector<Core::Enums::PipelineAccessFlagBits2>{ srcAccess };
+                barrier.m_srcStageMask = std::vector<Core::Enums::PipelineStageFlagBits2>{ srcStage };
+
+                barrierInfoForFrames[frameCount++].m_bufferBarriers.push_back(barrier);
+            }
+        }
     };
 
     // for all frames
     auto PopulateTaskInfo = [&taskImageInfoList, &isPartOfCollection,
-    &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectImageBarrier]()
+    &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectImageBarrier, &CollectBufferBarrier]()
     {
         for (auto& item : taskImageInfoList)
         {
@@ -593,6 +695,9 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
 
             CollectImageBarrier(barrierInfoForFrames, item.second,
                 taskInputList, isFlushRequiredThroughBarrier);
+
+            if(isFlushRequiredThroughBarrier)
+                CollectBufferBarrier(barrierInfoForFrames, taskInputList);
 
             //for (auto& imageInfo : item.second)
             //{

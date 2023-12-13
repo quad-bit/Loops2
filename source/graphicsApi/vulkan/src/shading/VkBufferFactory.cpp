@@ -107,7 +107,7 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & buffe
         GfxVk::Utility::ErrorCheck(vkCreateBuffer(DeviceInfo::GetLogicalDevice(), &bufferCreateInfo, DeviceInfo::GetAllocationCallback(), bufWrapper.buffer));
 
         vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), *bufWrapper.buffer, &bufWrapper.bufMemReq);
-        
+
         ids[i] = bufWrapper.id;
         bufferWrapperList.push_back(bufWrapper);
         idToBufferMap.insert(std::pair<uint32_t, VkBuffer *>({bufWrapper.id, bufWrapper.buffer}));
@@ -127,7 +127,7 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & buffe
         bufWrapper.bufferType = info[i].usage;
         
         GfxVk::Utility::ErrorCheck(vkCreateBuffer(DeviceInfo::GetLogicalDevice(), &info[i], DeviceInfo::GetAllocationCallback(), bufWrapper.buffer));
-
+        vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), *bufWrapper.buffer, &bufWrapper.bufMemReq);
         ids[i] = bufWrapper.id;
         bufferWrapperList.push_back(bufWrapper);
         idToBufferMap.insert(std::pair<uint32_t, VkBuffer *>({ bufWrapper.id, bufWrapper.buffer }));
@@ -140,7 +140,6 @@ uint32_t * GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & buffe
 void GfxVk::Shading::VkBufferFactory::CreateBuffers(const uint32_t & bufferCount, Core::Wrappers::BufferCreateInfo * info, uint32_t * out_buffIds, size_t * out_bufferMemRequirementSize)
 {
     VkBufferCreateInfo * vkInfo = Unwrap::UnwrapBufferCreateInfo(info, bufferCount);
-
     uint32_t * ids = CreateBuffers(bufferCount, vkInfo);
 
     for (uint32_t i = 0; i < bufferCount; i++)
@@ -179,6 +178,14 @@ uint32_t * GfxVk::Shading::VkBufferFactory::AllocateBufferMemory(uint32_t * buff
     return ids;
 }
 
+std::pair<uint32_t, std::optional<uint32_t>> GfxVk::Shading::VkBufferFactory::CreateBuffer(VkBufferCreateInfo& info, bool allocateMemory)
+{
+    ASSERT_MSG_DEBUG(allocateMemory == false, "allocation yet to be done");
+
+    uint32_t* ids = CreateBuffers(1, &info);
+    return std::pair(ids[0], std::nullopt);
+}
+
 // TODO : Needs to be tested
 uint32_t GfxVk::Shading::VkBufferFactory::AllocateSharedBufferMemory(uint32_t * bufferId, const uint32_t & bufCount)
 {
@@ -188,7 +195,7 @@ uint32_t GfxVk::Shading::VkBufferFactory::AllocateSharedBufferMemory(uint32_t * 
 
     VkDeviceSize allocationSize = 0;
     VkMemoryRequirements req = {};
-    VkMemoryPropertyFlags userReq = {};
+    VkMemoryPropertyFlags userReq{ VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
     
     std::vector<GfxVk::Shading::VkBufferWrapper>::iterator it;
     for (uint32_t i = 0; i < bufCount; i++)
@@ -202,7 +209,7 @@ uint32_t GfxVk::Shading::VkBufferFactory::AllocateSharedBufferMemory(uint32_t * 
         if (i == 0)
         {
             req = it->bufMemReq;
-            userReq = it->memFlags;
+            //userReq = it->memFlags;
         }
         else
         {
@@ -255,17 +262,14 @@ void GfxVk::Shading::VkBufferFactory::DestroyBuffer(uint32_t id)
     std::vector<GfxVk::Shading::VkBufferWrapper>::iterator it;
     it = std::find_if(bufferWrapperList.begin(), bufferWrapperList.end(), [&](GfxVk::Shading::VkBufferWrapper e) { return e.id == id; });
 
-    if (it == bufferWrapperList.end())
-        return;
+    ASSERT_MSG_DEBUG(it != bufferWrapperList.end(), "buf not found");
     /*if (it->isBufferSharingMemory == false)
     {
         vkFreeMemory(DeviceInfo::GetLogicalDevice(), *it->bufferMemory, DeviceInfo::GetAllocationCallback());
         delete it->bufferMemory;
     }*/
     vkDestroyBuffer(DeviceInfo::GetLogicalDevice(), *it->buffer, DeviceInfo::GetAllocationCallback());
-
     delete it->buffer;
-
     bufferWrapperList.erase(it);
 }
 
@@ -281,7 +285,7 @@ VkBuffer * GfxVk::Shading::VkBufferFactory::GetBuffer(const uint32_t & id)
 
 size_t GfxVk::Shading::VkBufferFactory::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
-    size_t alignedDataSize;
+    size_t alignedDataSize = dataSize;
 
     VkDeviceSize minUniformAlignment = physicalDeviceProps.limits.minUniformBufferOffsetAlignment;
     if (minUniformAlignment)

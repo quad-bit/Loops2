@@ -11,9 +11,19 @@ namespace
 
         if (type == Renderer::RenderGraph::Utils::RenderGraphNodeType::RESOURCE_NODE)
         {
-            attrib.nodeColor = "red";
+            Renderer::ResourceManagement::ResourceType resourceType = ((Renderer::RenderGraph::ResourceNode*)node->GetNodeData())->GetResource()[0]->GetResourceType();
+            if (resourceType == Renderer::ResourceManagement::ResourceType::IMAGE)
+            {
+                attrib.nodeColor = "red";
+                attrib.nodeShape = "oval";
+            }
+            else
+            {
+                attrib.nodeColor = "orange";
+                attrib.nodeShape = "circle";
+            }
+
             attrib.nodeName = node->GetNodeData()->GetNodeName() + ":\n" + ((Renderer::RenderGraph::ResourceNode*)node->GetNodeData())->GetResource()[0]->GetResourceName();
-            attrib.nodeShape = "oval";
         }
         else
         {
@@ -109,7 +119,6 @@ namespace
         edgeLabel += Core::Utility::ConvertImageLayoutToString(exepectedLayout);
         graph.AddToPrintLog(srcAttrib, dstAttrib, edgeLabel);
     }
-
 
     void CreatePrintGraphInfo(
         Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
@@ -419,7 +428,15 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::U
     std::vector<std::string> names,
     uint32_t count)
 {
+    std::vector<uint32_t> bufferIds;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        auto value = VulkanInterfaceAlias::CreateBuffer(createInfo, false);
+        bufferIds.push_back(value.first);
+    }
 
+    uint32_t memId = VulkanInterfaceAlias::AllocateBufferSharedMemory(bufferIds.data(), bufferIds.size());
+    return std::pair(bufferIds, std::vector<uint32_t>{memId});
 }
 
 void Renderer::RenderGraph::Utils::AddSwapchainNode(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph, Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, const Core::Enums::ImageLayout expectedImageLayout)
@@ -447,10 +464,16 @@ void Renderer::RenderGraph::Utils::DestroyPerFrameImageResource(const std::vecto
     VulkanInterfaceAlias::FreeMemory(memIds.data(), memIds.size());
 }
 
+void Renderer::RenderGraph::Utils::DestroyPerFrameBufferResource(const std::vector<uint32_t>& bufferIds, std::vector<uint32_t>& memIds)
+{
+    VulkanInterfaceAlias::DestroyBuffer((uint32_t*)bufferIds.data(), bufferIds.size());
+    VulkanInterfaceAlias::FreeMemory(memIds.data(), memIds.size());
+}
+
 void Renderer::RenderGraph::Utils::AddTaskBufferInput(
     Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
-    Core::Enums::BufferType bufferType, Core::Enums::BufferUsage bufferUsage)
+    std::vector<Core::Enums::BufferType> bufferType)
 {
 }

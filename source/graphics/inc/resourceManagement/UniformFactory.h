@@ -56,7 +56,10 @@ namespace Renderer
 
             void UploadDataToBuffers(const uint32_t& bufId, const size_t& dataSize, const size_t& memAlignedSize, void* data, const size_t& memoryOffset, bool keepMemoryMounted);
             size_t GetMemoryAlignedDataSizeForBuffer(const size_t& dataSize);
+
+            //Not getting used, BufferCreateInfo
             void AllocateUniformBuffer(Core::Wrappers::BufferCreateInfo* info, const uint32_t& numBuffers, uint32_t* out_buffIds, size_t* out_bufferMemRequirements);
+
             void CreateSetLayout(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
 
             // should not be in Uniform Factory, need to create a sampler factory

@@ -147,9 +147,11 @@ namespace Renderer
             //deprecated
             uint32_t* CreateBuffers(Core::Wrappers::BufferInfo* info, const uint32_t& count);
             void CreateBuffers(Core::Wrappers::BufferCreateInfo* info, const uint32_t& count, uint32_t* out_buffIds, size_t* out_bufferMemRequirements);
+            std::pair<uint32_t, std::optional<uint32_t>> CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory);
 
             size_t GetMemoryAlignedDataSizeForBuffer(const size_t& dataSize);
             uint32_t* AllocateBufferMemory(uint32_t* bufferId, const uint32_t& bufCount);
+            uint32_t AllocateBufferSharedMemory(uint32_t* bufferId, uint32_t bufCount);
             //deprecated
             uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq, const size_t& allocationSize);
             uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq, const uint32_t& numUserReq, const size_t& allocationSize);

@@ -388,6 +388,7 @@ namespace Core
             COMPUTE
         };
 
+        // Needs to be removed
         enum class BufferType
         {
             TRANSFER_SRC_BIT = 0x00000001,

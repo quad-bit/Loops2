@@ -53,6 +53,8 @@ namespace GfxVk
             uint32_t* CreateBuffers(const uint32_t& bufferCount, VkBufferCreateInfo* info);
             void CreateBuffers(const uint32_t& bufferCount, Core::Wrappers::BufferCreateInfo* info, uint32_t* out_buffIds, size_t* out_bufferMemRequirements);
 
+            std::pair<uint32_t, std::optional<uint32_t>> CreateBuffer(VkBufferCreateInfo& info, bool allocateMemory);
+
             uint32_t* AllocateBufferMemory(uint32_t* bufferId, const uint32_t& bufCount);
             uint32_t AllocateSharedBufferMemory(uint32_t* bufferId, const uint32_t& bufCount);
             // deprecated.

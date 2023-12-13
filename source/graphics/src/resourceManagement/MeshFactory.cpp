@@ -278,7 +278,8 @@ void Renderer::ResourceManagement::MeshFactory::DestroyMesh(const uint32_t & mes
     ASSERT_MSG_DEBUG(it != meshToVertWrapperMap.end(), "Core::ECS::Components::Mesh not found");
 
     VulkanInterfaceAlias::DestroyBuffer((it)->first->vertexBuffersIds, (it)->first->vertexBufferCount);
-    VulkanInterfaceAlias::DestroyBuffer(&(it)->first->indexBufferId, 1);
+    if((it)->first->indexCount > 0)
+        VulkanInterfaceAlias::DestroyBuffer(&(it)->first->indexBufferId, 1);
     VulkanInterfaceAlias::FreeMemory(it->first->memoryIds, it->first->memoryCount);
 
     delete[] it->first->vertexBuffersIds;

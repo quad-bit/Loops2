@@ -45,12 +45,20 @@ namespace Renderer
                 std::optional<uint32_t> m_colorAttachmentSlot;
             };
 
+            struct BufferResourceConnectionInfo
+            {
+                std::optional < Core::Enums::BufferUsage > previousUsage; // if not set then host write
+                Core::Enums::BufferUsage expectedUsage;
+                std::optional<Core::Enums::ShaderType> prevShader, expectedShader; // if not set then usage will be in transfer command
+            };
+
             struct ConnectionInfo
             {
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage m_usage;
                 std::vector<ResourceAlias*> m_resource;
                 uint32_t m_resourceParentNodeId;
                 std::optional<ImageResourceConnectionInfo> m_imageInfo;
+                std::optional<BufferResourceConnectionInfo> m_bufInfo;
             };
 
             class RenderGraphNodeBase;
@@ -60,7 +68,7 @@ namespace Renderer
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::string& name)> CreateImageFunc;
                 std::function<Renderer::ResourceManagement::Resource* (const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::string& name)> CreateBufferFunc;
                 std::function<std::vector<Renderer::ResourceManagement::Resource*>(const Core::Wrappers::ImageCreateInfo& imageCreateInfo, const std::vector<std::string>& name)> CreatePerFrameImageFunc;
-                std::function<std::vector<Renderer::ResourceManagement::Resource*>(const Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::vector<std::string>& name)> CreatePerFrameBufferFunc;
+                std::function<std::vector<Renderer::ResourceManagement::Resource*>(Core::Wrappers::BufferCreateInfo& bufferCreateInfo, const std::vector<std::string>& name)> CreatePerFrameBufferFunc;
                 std::function<std::vector<Renderer::ResourceManagement::Resource*>()> GetSwapchainImagesFunc;
             };
 
@@ -161,7 +169,7 @@ namespace Renderer
                 Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
-                Core::Enums::BufferType bufferType, Core::Enums::BufferUsage bufferUsage
+                std::vector<Core::Enums::BufferType> bufferType
             );
 
             // image id and mem id as return value
@@ -185,6 +193,7 @@ namespace Renderer
             std::vector<uint32_t> GetSwapchainImages();
 
             void DestroyPerFrameImageResource(const std::vector<uint32_t>& imageIds, std::vector<uint32_t>& memIds);
+            void DestroyPerFrameBufferResource(const std::vector<uint32_t>& bufferIds, std::vector<uint32_t>& memIds);
         }
     }
 }

@@ -159,6 +159,7 @@ namespace
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> r1, r2, r3, r4, r5;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* r1Node, * r2Node, *r3Node, * r4Node, *r5Node;
         std::vector<ResourceAlias*> r1Image, r2Image, r3Image;
+        std::vector<ResourceAlias*> r1Buffer;
 
         std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> t1, t2, t3;
         Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* t1Node, * t2Node, * t3Node;
@@ -172,6 +173,11 @@ namespace
             r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T1_E1_0", "color1_T1_E1_1", "color1_T1_E1_2" }));
             r2Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color2_T1_E1_0", "color2_T1_E1_1", "color2_T1_E1_2" }));
             r3Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color3_T1_E1_0", "color3_T1_E1_1", "color3_T1_E1_2" }));
+
+            Core::Wrappers::BufferCreateInfo info{};
+            info.size = 100;
+            info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT, Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_SRC_BIT };
+            r1Buffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "buffer1_T1_E1_0", "buffer1_T1_E1_1", "buffer1_T1_E1_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
             r1Node = m_graph.Push(r1.get());
@@ -189,7 +195,11 @@ namespace
             r4Node = m_graph.Push(r4.get());
             m_resourceNodes.push_back(r4Node);
 
-            r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r2Image, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            /*r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r2Image, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+            r5Node = m_graph.Push(r5.get());
+            m_resourceNodes.push_back(r5Node);*/
+
+            r5 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Buffer, "r5_T1_E1", Renderer::ResourceManagement::ResourceType::BUFFER, m_callbackUtility.m_graphTraversalCallback);
             r5Node = m_graph.Push(r5.get());
             m_resourceNodes.push_back(r5Node);
 
@@ -228,10 +238,21 @@ namespace
                 Core::Enums::ImageLayout::LAYOUT_GENERAL,
                 Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL);
 
-            Renderer::RenderGraph::Utils::AddEdge(graph, r5Node, t2Node,
+            /*Renderer::RenderGraph::Utils::AddEdge(graph, r5Node, t2Node,
                 Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY,
                 Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL,
-                Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED);
+                Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED);*/
+
+            Renderer::RenderGraph::Utils::BufferResourceConnectionInfo bufInfo{};
+            bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+            Renderer::RenderGraph::Utils::ConnectionInfo connection{};
+            connection.m_bufInfo = bufInfo;
+            connection.m_resource = r1Buffer;
+            connection.m_resourceParentNodeId = r5Node->GetNodeId();
+            connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
+            Renderer::RenderGraph::Utils::AddEdge(graph, r5Node, t2Node,
+                connection);
 
             Renderer::RenderGraph::Utils::AddEdge(graph, t3Node, r4Node);
 

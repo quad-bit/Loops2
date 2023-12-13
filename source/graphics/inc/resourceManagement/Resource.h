@@ -124,8 +124,8 @@ namespace Renderer
         private:
             size_t m_dataSize, m_dataSizeAligned;
             size_t m_offset;
-            Core::Enums::BufferType m_bufferType;
-            Core::Enums::BufferUsage m_bufferUsage;
+            //Core::Enums::BufferType m_bufferType;
+            std::vector<Core::Enums::BufferUsage> m_bufferUsage;
 
         public:
             /*BufferResource(const size_t& dataSize, const std::string& name) :
@@ -137,17 +137,35 @@ namespace Renderer
                 uint32_t id,
                 std::string name,
                 const size_t& dataSize,
+                const size_t& dataSizeAligned,
                 const size_t& offset,
-                const Core::Enums::BufferType& bufferType,
-                const Core::Enums::BufferUsage& bufferUsage,
+                const std::vector< Core::Enums::BufferUsage>& bufferUsage,
                 uint32_t memId,
                 bool isMemoryShared) :
                 Resource(ResourceType::BUFFER, name, isMemoryShared),
-                m_dataSize(dataSize), m_offset(offset),
-                m_bufferType(bufferType), m_bufferUsage(bufferUsage)
+                m_dataSize(dataSize),
+                m_dataSizeAligned(dataSizeAligned),
+                m_offset(offset),
+                m_bufferUsage(bufferUsage)
             {
                 m_physicalResourceId = id;
                 m_memId = memId;
+                
+            }
+
+            const size_t GetDataSize()
+            {
+                return m_dataSize;
+            }
+
+            const size_t GetAlignedDataSize()
+            {
+                return m_dataSize;
+            }
+
+            const size_t GetDataOffset()
+            {
+                return m_dataSize;
             }
         };
     }
