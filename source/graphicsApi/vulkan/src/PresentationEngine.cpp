@@ -40,7 +40,6 @@ void GfxVk::Utility::PresentationEngine::ChangeImageLayout()
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     vkBeginCommandBuffer(cmdBuffer, &beginInfo);
-
 #if 1
     std::vector<VkImageMemoryBarrier2> list;
     for (auto& image : m_swapChainImageList)

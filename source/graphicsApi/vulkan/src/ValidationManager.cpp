@@ -14,6 +14,7 @@ void GfxVk::Utility::ValidationManager::AddRequiredPlatformInstanceExtensions(st
         instance_extensions->push_back(instance_extensions_buffer[i]);
     }
 
+
 #elif VK_USE_PLATFORM_WIN32_KHR
     instance_extensions->push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif VK_USE_PLATFORM_XCB_KHR
@@ -131,7 +132,9 @@ void GfxVk::Utility::ValidationManager::DeinitDebug()
 void GfxVk::Utility::ValidationManager::SetupLayersAndExtensions()
 {
     instanceExtensionNameList.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+    instanceExtensionNameList.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
     deviceExtensionNameList.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
+    deviceExtensionNameList.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
+    
     AddRequiredPlatformInstanceExtensions(&instanceExtensionNameList);
 }

@@ -56,10 +56,15 @@ void GfxVk::Utility::VulkanManager::CreateLogicalDevice()
     if(DeviceInfo::m_physicalDeviceFeatures.sampleRateShading)
         DeviceInfo::m_enabledPhysicalDeviceFeatures.sampleRateShading = VK_TRUE;
 
+    VkPhysicalDeviceDynamicRenderingFeatures dynamic_rendering_feature{};
+    dynamic_rendering_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    dynamic_rendering_feature.dynamicRendering = VK_TRUE;
+
     VkPhysicalDeviceSynchronization2Features sync2 = {};
     sync2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
     sync2.synchronization2 = VK_TRUE;
-
+    sync2.pNext = &dynamic_rendering_feature;
+    
     VkPhysicalDeviceFeatures2 physicalFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
     physicalFeatures2.pNext = &sync2;
     vkGetPhysicalDeviceFeatures2(DeviceInfo::GetPhysicalDevice(), &physicalFeatures2);

@@ -121,11 +121,6 @@ namespace Renderer
 
             void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
-                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode);
-                //const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage = ResourceMemoryUsage::NONE);
-
-            void AddEdge(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
-                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode,
                 const Renderer::RenderGraph::Utils::ConnectionInfo& connectionInfo);
 
@@ -141,6 +136,8 @@ namespace Renderer
                 Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+                const Core::Enums::ImageLayout previousImageLayout,
                 uint32_t inputSlot);
 
             void AddInputAsDepthAttachment(

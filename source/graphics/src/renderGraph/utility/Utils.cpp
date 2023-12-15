@@ -135,14 +135,12 @@ namespace
     }
 };
 
-void Renderer::RenderGraph::Utils::AddEdge(
+void Renderer::RenderGraph::Utils::AddTaskOutput(
     Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* srcNode,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode
     )
 {
-    //ASSERT_MSG_DEBUG(0, "not used");
-
     CreatePrintGraphInfo(graph, srcNode, destNode, Renderer::RenderGraph::Utils::ResourceMemoryUsage::NONE);
 
     if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
@@ -153,7 +151,10 @@ void Renderer::RenderGraph::Utils::AddEdge(
 
         task->AddOutput(ConnectionInfo{ ResourceMemoryUsage::NONE, resource, destNode->GetNodeId() });
     }
-
+    else
+    {
+        ASSERT_MSG_DEBUG(0, "Meant for output node");
+    }
     graph.AttachDirectedEdge(srcNode, destNode);
 }
 
@@ -192,6 +193,10 @@ void Renderer::RenderGraph::Utils::AddEdge(
     const Core::Enums::ImageLayout expectedImageLayout,
     const Core::Enums::ImageLayout previousImageLayout)
 {
+    ASSERT_MSG_DEBUG(expectedImageLayout != Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, "Use dedicated function");
+    ASSERT_MSG_DEBUG(expectedImageLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL, "Use dedicated function");
+    ASSERT_MSG_DEBUG(expectedImageLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, "Use dedicated function");
+
     CreatePrintGraphInfo(graph, srcNode, destNode, usage, expectedImageLayout, previousImageLayout);
 
     if (srcNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
@@ -223,6 +228,8 @@ void Renderer::RenderGraph::Utils::AddInputAsColorAttachment(
     Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+    const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+    const Core::Enums::ImageLayout previousImageLayout,
     uint32_t inputSlot)
 {
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
@@ -236,12 +243,13 @@ void Renderer::RenderGraph::Utils::AddInputAsColorAttachment(
 
         ImageResourceConnectionInfo imageInfo{};
         imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        imageInfo.m_prevImageLayout = previousImageLayout;
         imageInfo.m_colorAttachmentSlot = inputSlot;
 
-        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+        task->AddInput(ConnectionInfo{ usage, resource, resourceNode->GetNodeId(), imageInfo, std::nullopt });
     }
     else
-        ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
+        ASSERT_MSG_DEBUG(0, "Meant for only input");
 
     graph.AttachDirectedEdge(resourceNode, taskNode);
 }
@@ -306,22 +314,6 @@ void Renderer::RenderGraph::Utils::AddInputAsShaderResource(
         ASSERT_MSG_DEBUG(0, "resource/task node mismatch");
 
     graph.AttachDirectedEdge(resourceNode, taskNode);
-}
-
-void Renderer::RenderGraph::Utils::AddTaskOutput(
-    Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
-    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
-    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode)
-{
-    if (taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE &&
-        resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE)
-    {
-        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
-        auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(resourceNode->GetNodeData())->GetResource();
-        task->AddOutput(ConnectionInfo{});
-    }
-
-    graph.AttachDirectedEdge(taskNode, resourceNode);
 }
 
 void Renderer::RenderGraph::Utils::AddInputAsTransferData(
