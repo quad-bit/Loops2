@@ -504,9 +504,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                         auto imageId = taskRes->GetPhysicalResourceId();
 
                         // Barrier case
-                        if (imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
-                            imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
-                            imageInfo.m_expectedLayout == imageInfo.m_prevLayout)
+                        if (imageInfo.m_expectedLayout != imageInfo.m_prevLayout)
                         {
                             Core::Wrappers::ImageBarrier2 barrier{};
                             barrier.m_dstQueueFamilyIndex = 0;

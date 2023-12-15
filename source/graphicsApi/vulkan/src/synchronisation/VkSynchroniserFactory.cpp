@@ -115,26 +115,26 @@ uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateBarrier(
     const std::vector<VkBufferMemoryBarrier2>& bufferBarriers,
     const std::vector<VkMemoryBarrier2>& memoryBarriers)
 {
-    VkDependencyInfo info{};
-    info.pNext = nullptr;
-    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-    info.bufferMemoryBarrierCount = (uint32_t)bufferBarriers.size();
-    info.pBufferMemoryBarriers = bufferBarriers.data();
-    info.imageMemoryBarrierCount = (uint32_t)imageBarriers.size();;
-    info.pImageMemoryBarriers = imageBarriers.data();
-    info.memoryBarrierCount = (uint32_t)memoryBarriers.size();;
-    info.pMemoryBarriers = memoryBarriers.data();
-    info.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
     DependencyWrapper dependency{};
     dependency.m_id = GetBarrierId();
     dependency.m_bufferBarriers = bufferBarriers;
-    dependency.m_dependencyInfo = info;
     dependency.m_imageBarriers = imageBarriers;
     dependency.m_memoryBarriers = memoryBarriers;
     auto id = dependency.m_id;
-
     m_dependencyList.insert({ id, std::move(dependency) });
+
+    VkDependencyInfo info{};
+    info.pNext = nullptr;
+    info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    info.bufferMemoryBarrierCount = (uint32_t)m_dependencyList[id].m_bufferBarriers.size();
+    info.pBufferMemoryBarriers = m_dependencyList[id].m_bufferBarriers.data();
+    info.imageMemoryBarrierCount = (uint32_t)m_dependencyList[id].m_imageBarriers.size();;
+    info.pImageMemoryBarriers = m_dependencyList[id].m_imageBarriers.data();
+    info.memoryBarrierCount = (uint32_t)m_dependencyList[id].m_memoryBarriers.size();;
+    info.pMemoryBarriers = m_dependencyList[id].m_memoryBarriers.data();
+    info.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+    m_dependencyList[id].m_dependencyInfo = info;
 
     return id;
 }
