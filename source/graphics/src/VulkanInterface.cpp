@@ -180,6 +180,10 @@ namespace
         vkBarrier.srcStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_srcStageMask.data(), barrier.m_srcStageMask.size());
         vkBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
         vkBarrier.subresourceRange.aspectMask = GfxVk::Unwrap::UnwrapAspectMask(barrier.m_subresourceRange.m_imageAspect);
+        vkBarrier.subresourceRange.baseArrayLayer = barrier.m_subresourceRange.m_baseArrayLayer;
+        vkBarrier.subresourceRange.baseMipLevel = barrier.m_subresourceRange.m_baseMipLevel;
+        vkBarrier.subresourceRange.layerCount = barrier.m_subresourceRange.m_layerCount;
+        vkBarrier.subresourceRange.levelCount = barrier.m_subresourceRange.m_levelCount;
 
         return vkBarrier;
     }
@@ -1127,6 +1131,11 @@ uint32_t Renderer::Utility::VulkanInterface::CreateBarrier(
     return GfxVk::Sync::VkSynchroniserFactory::GetInstance()->CreateBarrier(
         vkImageBarriers, vkBufferBarriers, vkMemoryBarriers
     );
+}
+
+uint32_t Renderer::Utility::VulkanInterface::CreateRenderingInfo(const Core::Wrappers::RenderingInfo& renderingInfo)
+{
+    return GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->CreateRenderingInfo(renderingInfo);
 }
 
 uint32_t Renderer::Utility::VulkanInterface::CreateCommandPool(Core::Enums::PipelineType * pipelineType, Core::Enums::CommandPoolProperty * prop)

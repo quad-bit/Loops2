@@ -21,6 +21,11 @@ namespace GfxVk
         void BindIndexBuffers(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::IndexBufferBindingInfo& info);
         void DrawIndex(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::IndexedDrawInfo& info);
         void Draw(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DrawArrayInfo& info);
+
+        void SetPipelineBarrier(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t barrierId);
+
+        void BeginRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t renderingInfoId);
+        void EndRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo);
     }
 }
 

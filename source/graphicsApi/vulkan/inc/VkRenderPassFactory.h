@@ -2,6 +2,9 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 #include <array>
+#include <map>
+#include "utility/VkRenderingUnwrapper.h"
+
 
 namespace Core
 {
@@ -28,6 +31,14 @@ namespace GfxVk
             uint32_t clearValueCount;
         };
 
+        struct RenderingInfoWrapper
+        {
+            uint32_t m_id;
+            VkRenderingInfo m_renderingInfo;
+            std::vector<VkRenderingAttachmentInfo> m_colorAttachmentInfo;
+            std::optional<VkRenderingAttachmentInfo> m_depthAttachmentInfo;
+        };
+
         class VkRenderPassFactory
         {
         private:
@@ -41,6 +52,7 @@ namespace GfxVk
             std::vector<VkAttachmentReference> refs;
             uint32_t refCounter;
             std::vector<RenderpassWrapper*> renderpassList;
+            std::map<uint32_t, RenderingInfoWrapper> m_renderingInfoList;
 
             uint32_t GetId();
 
@@ -73,6 +85,9 @@ namespace GfxVk
             VkRenderPass* GetRenderPass(const uint32_t& id);
             VkClearValue* GetClearValue(const uint32_t& renderpassId);
             uint32_t GetClearValueCount(const uint32_t& renderpassId);
+
+            uint32_t CreateRenderingInfo(const Core::Wrappers::RenderingInfo& renderingInfo);
+            const VkRenderingInfo& GetRenderingInfo(uint32_t infoId) const;
         };
     }
 }

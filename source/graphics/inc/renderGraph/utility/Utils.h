@@ -43,6 +43,7 @@ namespace Renderer
                 std::optional<Core::Enums::LoadOperation> m_loadOp;
                 std::optional<Core::Enums::StoreOperation> m_storeOp;
                 std::optional<uint32_t> m_colorAttachmentSlot;
+                
             };
 
             struct BufferResourceConnectionInfo

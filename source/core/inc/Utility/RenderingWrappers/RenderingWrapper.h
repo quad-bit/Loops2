@@ -824,6 +824,23 @@ namespace Core
                 uint32_t  memoryTypeBits;
             };
 
+            struct RenderingAttachmentInfo
+            {
+                uint32_t m_imageId;
+                Core::Enums::LoadOperation m_loadOp;
+                Core::Enums::StoreOperation m_storeOp;
+                Core::Enums::ImageLayout m_imageLayout;
+                std::optional<std::array<float, 4>> m_clearColorValues;
+                std::optional<std::array<float, 2>> m_clearDepthStencilValues;
+            };
+
+            struct RenderingInfo
+            {
+                std::vector<RenderingAttachmentInfo> m_colorAttachmentInfo;
+                std::optional<RenderingAttachmentInfo> m_depthAttachmentInfo;
+                Core::Wrappers::Rect2D m_renderArea;
+            };
+
             struct RenderPassAttachmentInfo
             {
                 RenderPassAttachmentInfo()
@@ -1205,12 +1222,12 @@ namespace Core
                 CommandBufferInfo(uint32_t bufId, std::variant<uint32_t, Core::Enums::QueueType> poolIdOrPoolType) :
                     m_bufId(bufId), m_poolIdOrPoolType(poolIdOrPoolType) {}
 
-                const std::variant<uint32_t, Core::Enums::QueueType>& GetPool()
+                std::variant<uint32_t, Core::Enums::QueueType> GetPool() const
                 {
                     return m_poolIdOrPoolType;
                 }
 
-                const uint32_t& GetBufferId()
+                uint32_t GetBufferId() const
                 {
                     return m_bufId;
                 }

@@ -148,7 +148,6 @@ void Renderer::RenderGraph::Utils::AddTaskOutput(
     {
         auto task = static_cast<Renderer::RenderGraph::TaskNode*>(srcNode->GetNodeData())->GetTask();
         auto resource = static_cast<Renderer::RenderGraph::ResourceNode*>(destNode->GetNodeData())->GetResource();
-
         task->AddOutput(ConnectionInfo{ ResourceMemoryUsage::NONE, resource, destNode->GetNodeId() });
     }
     else

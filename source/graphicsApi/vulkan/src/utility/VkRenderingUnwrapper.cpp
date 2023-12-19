@@ -266,6 +266,9 @@ VkImageUsageFlagBits GfxVk::Unwrap::UnwrapUsage(Core::Enums::ImageUsage usage)
     case Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
+    case Core::Enums::ImageUsage::USAGE_TRANSFER_SRC_BIT:
+        return VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
     case Core::Enums::ImageUsage::USAGE_SAMPLED_BIT:
         return VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT;
 

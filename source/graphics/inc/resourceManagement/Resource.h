@@ -69,6 +69,8 @@ namespace Renderer
         private:
             Core::Enums::ImageLayout m_oldLayout, m_newLayout;
             size_t m_width, m_height;
+            std::optional<std::array<float, 4>> m_clearColorValues;
+            std::optional<std::array<float, 2>> m_clearDepthStencilValues;
         public:
 
             // The image is created externally and the id have been assigned
@@ -85,8 +87,39 @@ namespace Renderer
             {
                 m_physicalResourceId = id;
                 m_memId = memId;
+                m_clearColorValues = std::array<float, 4>{0.7f, 0.2f, 0.5f, 1.0f};
+                m_clearDepthStencilValues = std::array<float, 2>{1.0f, 0u};
             }
 
+            void SetClearColorValue(std::array<float, 4> clearColor)
+            {
+                m_clearColorValues = clearColor;
+            }
+
+            void SetClearDepthValue(std::array<float, 2> clearDepthStencil)
+            {
+                m_clearDepthStencilValues = clearDepthStencil;
+            }
+
+            std::array<float, 4>& GetClearColorValue()
+            {
+                return m_clearColorValues.value();
+            }
+
+            std::array<float, 2>& GetClearDepthValue()
+            {
+                return m_clearDepthStencilValues.value();
+            }
+
+            uint32_t GetWidth()
+            {
+                return m_width;
+            }
+
+            uint32_t GetHeight()
+            {
+                return m_height;
+            }
             /*
             ImageResource(const size_t& width, const size_t& height, const std::string& name) :
                 Resource(ResourceType::IMAGE, name), m_width(width), m_height(height)

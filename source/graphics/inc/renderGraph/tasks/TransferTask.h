@@ -23,7 +23,7 @@ namespace Renderer
 
                     StartTask(frameInfo, queueType);
                     //PLOGD << m_name;
-                    EndTask(frameInfo);
+                    EndTask(frameInfo, queueType);
                 }
             };
         }

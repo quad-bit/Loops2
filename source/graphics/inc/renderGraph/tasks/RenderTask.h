@@ -11,10 +11,22 @@ namespace Renderer
         {
             class RenderTask : public Task
             {
+            private:
+                std::vector<uint32_t> m_renderingInfoId;
+                std::vector<Core::Wrappers::RenderingInfo> m_renderingInfo;
+                Core::Wrappers::Rect2D m_renderArea;
+
             public:
-                RenderTask(const std::string& name) :
-                    Task(name, TaskType::RENDER_TASK)
+                RenderTask(const std::string& name, const Core::Wrappers::Rect2D& renderArea) :
+                    Task(name, TaskType::RENDER_TASK), m_renderArea(renderArea)
                 {}
+
+                void AssignRenderingInfo(std::vector<Core::Wrappers::RenderingInfo>& renderingInfo)
+                {
+                    m_renderingInfo = renderingInfo;
+                    for(auto& info : renderingInfo)
+                        m_renderingInfoId.push_back(VulkanInterfaceAlias::CreateRenderingInfo(info));
+                }
 
                 void Execute(const Core::Wrappers::FrameInfo& frameInfo) override
                 {
@@ -23,7 +35,16 @@ namespace Renderer
 
                     StartTask(frameInfo, queueType);
                     //PLOGD << m_name;
-                    EndTask(frameInfo);
+                    Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
+                    Renderer::CommandReader::BeginRendering(info, m_renderingInfoId[frameInfo.m_swapBufferIndex]);
+
+                    Renderer::CommandReader::EndRendering(info);
+                    EndTask(frameInfo, queueType);
+                }
+
+                Core::Wrappers::Rect2D GetRenderArea()
+                {
+                    return m_renderArea;
                 }
             };
         }

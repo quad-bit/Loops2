@@ -3,6 +3,7 @@
 #include "VulkanInterface.h"
 #include "renderGraph/Task.h"
 #include "renderGraph/tasks/PresentationTask.h"
+#include "renderGraph/tasks/RenderTask.h"
 #include "resourceManagement/Resource.h"
 
 uint32_t g_bufferDistributionCount = 0;
@@ -268,6 +269,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
     std::map<ResourceAlias*, std::vector<TaskImageInfo>> resourceInfo;
 
     auto& levelInfoList = m_activePipeline->GetPerLevelTaskInfo();
+    Renderer::RenderGraph::Task* lastTask = nullptr;
 
     // map a single resource to all the tasks where it is an input
     for (auto& level : levelInfoList)
@@ -276,6 +278,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
         for (auto taskNode : taskInfo.m_taskList)
         {
             auto task = ((Renderer::RenderGraph::TaskNode*)taskNode)->GetTask();
+            lastTask = task;
             auto& inputs = task->GetInputs();
             
             for (auto& input : inputs)
@@ -478,9 +481,73 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
         return flags;
     };
 
-    auto CollectImageBarrier = [&taskImageInfoList, &isPartOfCollection,
-        &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask](
+    auto CollectRenderingData = [](std::vector<Core::Wrappers::RenderingInfo>& renderingInfoPerFrame,
+        const PerTaskImageInfo& imageInfo, const uint32_t& imageId)
+    {
+
+    };
+
+    auto CollectBarrierData = [&GetSrcAccessMask, &GetDstAccessMask, 
+    &GetStageMask](const PerTaskImageInfo& imageInfo, const uint32_t& imageId,
+        bool isFlushRequiredThroughBarrier, const std::string& imageName) -> Core::Wrappers::ImageBarrier2
+    {
+        Core::Wrappers::ImageBarrier2 barrier{};
+        barrier.m_dstQueueFamilyIndex = 0;
+        barrier.m_imageId = imageId;
+        barrier.m_newLayout = imageInfo.m_expectedLayout;
+        barrier.m_oldLayout = imageInfo.m_prevLayout;
+        barrier.m_srcQueueFamilyIndex = 0;
+        barrier.m_subresourceRange.m_baseArrayLayer = 0;
+        barrier.m_subresourceRange.m_baseMipLevel = 0;
+        barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+        barrier.m_subresourceRange.m_layerCount = 1;
+        barrier.m_subresourceRange.m_levelCount = 1;
+        barrier.m_imageName = imageName;
+
+        if (isFlushRequiredThroughBarrier == false)
+        {
+            barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+            barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+            barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+        }
+        else
+        {
+            // No write needs to be flushed only layout transition required
+            if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
+                imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
+                imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
+                imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
+                imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+            {
+                barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+                barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            }
+            else
+            {
+                barrier.m_srcAccessMask.push_back(GetSrcAccessMask(imageInfo.m_prevLayout));
+                barrier.m_srcStageMask = GetStageMask(imageInfo.m_prevLayout);
+            }
+
+            // No write needs to be flushed only layout transition required
+            if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
+            {
+                barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+            }
+            else
+            {
+                barrier.m_dstAccessMask.push_back(GetDstAccessMask(imageInfo.m_expectedLayout));
+                barrier.m_dstStageMask = GetStageMask(imageInfo.m_expectedLayout);
+            }
+        }
+        return barrier;
+    };
+
+    auto CollectTaskImageData = [&taskImageInfoList, &isPartOfCollection,
+        &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectBarrierData](
             std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>& barrierInfoForFrames,
+            std::vector<Core::Wrappers::RenderingInfo>& renderingInfoPerFrame,
             std::vector<PerTaskImageInfo>& perTaskImageInfo,
             std::vector<Renderer::RenderGraph::Utils::ConnectionInfo>& taskInputList,
             const bool& isFlushRequiredThroughBarrier)
@@ -503,67 +570,49 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                     {
                         auto imageId = taskRes->GetPhysicalResourceId();
 
-                        // Barrier case
+                        // Barrier
                         if (imageInfo.m_expectedLayout != imageInfo.m_prevLayout)
                         {
-                            Core::Wrappers::ImageBarrier2 barrier{};
-                            barrier.m_dstQueueFamilyIndex = 0;
-                            barrier.m_imageId = imageId;
-                            barrier.m_newLayout = imageInfo.m_expectedLayout;
-                            barrier.m_oldLayout = imageInfo.m_prevLayout;
-                            barrier.m_srcQueueFamilyIndex = 0;
-                            barrier.m_subresourceRange.m_baseArrayLayer = 0;
-                            barrier.m_subresourceRange.m_baseMipLevel = 0;
-                            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
-                            barrier.m_subresourceRange.m_layerCount = 1;
-                            barrier.m_subresourceRange.m_levelCount = 1;
-                            barrier.m_imageName = taskRes->GetResourceName();
+                            auto barrier = CollectBarrierData(imageInfo, imageId, isFlushRequiredThroughBarrier, taskRes->GetResourceName());
+                            barrierInfoForFrames[frameCount].m_imageBarriers.push_back(barrier);
+                        }
 
-                            if (isFlushRequiredThroughBarrier == false)
+                        // Rendering Info
+                        if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL||
+                            imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL||
+                            imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+                        {
+                            Core::Wrappers::RenderingAttachmentInfo info;
+                            info.m_imageId = imageId;
+                            info.m_imageLayout = imageInfo.m_expectedLayout;
+                            info.m_loadOp = imageInfo.m_load;
+                            info.m_storeOp = imageInfo.m_store;
+                            if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                             {
-                                barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
-                                barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-                                barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-                                barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                                info.m_clearColorValues = ((ImageResourceAlias*)taskRes)->GetClearColorValue();
+                                auto& colorList = renderingInfoPerFrame[frameCount].m_colorAttachmentInfo;
+                                auto colorAttachmentSlot = taskInput.m_imageInfo.value().m_colorAttachmentSlot.value();
+                                
+                                if (colorAttachmentSlot >= colorList.size())
+                                {
+                                    colorList.resize(colorAttachmentSlot + 1);
+                                }
+
+                                colorList[colorAttachmentSlot] = info;
                             }
                             else
                             {
-                                // No write needs to be flushed only layout transition required
-                                if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
-                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
-                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
-                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
-                                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
-                                {
-                                    barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
-                                    barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-                                }
-                                else
-                                {
-                                    barrier.m_srcAccessMask.push_back(GetSrcAccessMask(imageInfo.m_prevLayout));
-                                    barrier.m_srcStageMask = GetStageMask(imageInfo.m_prevLayout);
-                                }
-
-                                // No write needs to be flushed only layout transition required
-                                if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
-                                {
-                                    barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-                                    barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-                                }
-                                else
-                                {
-                                    barrier.m_dstAccessMask.push_back(GetDstAccessMask(imageInfo.m_expectedLayout));
-                                    barrier.m_dstStageMask = GetStageMask(imageInfo.m_expectedLayout);
-                                }
+                                info.m_clearDepthStencilValues = ((ImageResourceAlias*)taskRes)->GetClearDepthValue();
+                                renderingInfoPerFrame[frameCount].m_depthAttachmentInfo = info;
                             }
-
-                            barrierInfoForFrames[frameCount++].m_imageBarriers.push_back(barrier);
                         }
+                        frameCount++;
                     }
                 }
             }
         }
     };
+
 
     auto CollectBufferBarrier = [](
         std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>& barrierInfoForFrames,
@@ -598,7 +647,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                 }
                 srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_WRITE_BIT;
             }
-            else if(taskInput.m_bufInfo.value().previousUsage.has_value())
+            else if (taskInput.m_bufInfo.value().previousUsage.has_value())
             {
                 if (taskInput.m_bufInfo.value().previousUsage.value() == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_DST_BIT)
                 {
@@ -617,7 +666,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                 srcAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE;
             }
 
-            ASSERT_MSG_DEBUG(srcStage != Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE," invalid ");
+            ASSERT_MSG_DEBUG(srcStage != Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_NONE, " invalid ");
 
             if (taskInput.m_bufInfo.value().expectedShader.has_value())
             {
@@ -635,7 +684,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                 }
                 dstAccess = Core::Enums::PipelineAccessFlagBits2::ACCESS_2_MEMORY_READ_BIT;
             }
-            else 
+            else
             {
                 if (taskInput.m_bufInfo.value().expectedUsage == Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_DST_BIT)
                 {
@@ -676,9 +725,75 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
         }
     };
 
+    auto CreatePresentationBarrier = [&GetSrcAccessMask, &GetStageMask](Renderer::RenderGraph::Task* task)
+    {
+        Core::Enums::ImageLayout swapchainPrevLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
+        std::vector<uint32_t> swapchainImageIds;
+
+        std::vector<Core::Wrappers::ImageBarrier2> barriers;
+        std::vector<PerFrameTaskBarrierInfo> perFrameInfo;
+
+        bool swapchainFound = false;
+
+        for (auto& input : task->GetInputs())
+        {
+            // Check if input contains BackBuffer
+            for (auto& res : input.m_resource)
+            {
+                if (res->GetResourceName().find("BackBuffer") != std::string::npos)
+                {
+                    swapchainPrevLayout = input.m_imageInfo.value().m_expectedImageLayout;
+                    swapchainImageIds.push_back(res->GetPhysicalResourceId());
+                    swapchainFound = true;
+                }
+            }
+            if (swapchainFound)
+                break;
+        }
+
+        ASSERT_MSG_DEBUG(swapchainPrevLayout != Core::Enums::ImageLayout::LAYOUT_UNDEFINED, "BackBuffer not Found");
+        perFrameInfo.resize(RendererSettings::GetSwapBufferCount());
+        for (uint32_t i = 0; i < RendererSettings::GetSwapBufferCount(); i++)
+        {
+            Core::Wrappers::ImageBarrier2 barrier{};
+            barrier.m_dstQueueFamilyIndex = 0;
+            barrier.m_imageId = swapchainImageIds[i];
+            barrier.m_oldLayout = swapchainPrevLayout;
+            barrier.m_newLayout = Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR;
+            barrier.m_srcQueueFamilyIndex = 0;
+            barrier.m_subresourceRange.m_baseArrayLayer = 0;
+            barrier.m_subresourceRange.m_baseMipLevel = 0;
+            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+            barrier.m_subresourceRange.m_layerCount = 1;
+            barrier.m_subresourceRange.m_levelCount = 1;
+            barrier.m_imageName = "BackBuffer_" + std::to_string(i);
+            barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+            barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+            {
+                // No write needs to be flushed only layout transition required
+                if (swapchainPrevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
+                    swapchainPrevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
+                    swapchainPrevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
+                    swapchainPrevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
+                    swapchainPrevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+                {
+                    barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+                    barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
+                }
+                else
+                {
+                    barrier.m_srcAccessMask.push_back(GetSrcAccessMask(swapchainPrevLayout));
+                    barrier.m_srcStageMask = GetStageMask(swapchainPrevLayout);
+                }
+            }
+            perFrameInfo[i].m_imageBarriers.push_back(barrier);
+        }
+        task->AssignBarrierInfo(perFrameInfo, true);
+    };
+
     // for all frames
-    auto PopulateTaskInfo = [&taskImageInfoList, &isPartOfCollection,
-    &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectImageBarrier, &CollectBufferBarrier]()
+    auto PopulateTaskInfo = [&taskImageInfoList, &isPartOfCollection, &CreatePresentationBarrier,
+    &GetSrcAccessMask, &GetStageMask, &GetDstAccessMask, &CollectTaskImageData, &CollectBufferBarrier]()
     {
         for (auto& item : taskImageInfoList)
         {
@@ -690,97 +805,25 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                 isFlushRequiredThroughBarrier = !task->GetCommandBufferInfo()[0].m_shouldStart.value();
 
             std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo> barrierInfoForFrames(g_bufferDistributionCount);
-
-            CollectImageBarrier(barrierInfoForFrames, item.second,
+            std::vector<Core::Wrappers::RenderingInfo> renderingInfoForFrames(g_bufferDistributionCount);
+            CollectTaskImageData(barrierInfoForFrames, renderingInfoForFrames, item.second,
                 taskInputList, isFlushRequiredThroughBarrier);
 
             if(isFlushRequiredThroughBarrier)
                 CollectBufferBarrier(barrierInfoForFrames, taskInputList);
 
-            //for (auto& imageInfo : item.second)
-            //{
-            //    // Get the collection to which the image belongs, get the remaining image ids
-            //    for (auto& taskInput : taskInputList)
-            //    {
-            //        bool check = isPartOfCollection(imageInfo.m_resource, taskInput);
-
-            //        if (check)
-            //        {
-            //            // Create barrier/render pass info
-            //            uint32_t frameCount = 0;
-            //            for (auto& taskRes : taskInput.m_resource)
-            //            {
-            //                auto imageId = taskRes->GetPhysicalResourceId();
-
-            //                // Barrier case
-            //                if (imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
-            //                    imageInfo.m_expectedLayout != Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL ||
-            //                    imageInfo.m_expectedLayout == imageInfo.m_prevLayout)
-            //                {
-            //                    Core::Wrappers::ImageBarrier2 barrier{};
-            //                    barrier.m_dstQueueFamilyIndex = 0;
-            //                    barrier.m_imageId = imageId;
-            //                    barrier.m_newLayout = imageInfo.m_expectedLayout;
-            //                    barrier.m_oldLayout = imageInfo.m_prevLayout;
-            //                    barrier.m_srcQueueFamilyIndex = 0;
-            //                    barrier.m_subresourceRange.m_baseArrayLayer = 0;
-            //                    barrier.m_subresourceRange.m_baseMipLevel = 0;
-            //                    barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
-            //                    barrier.m_subresourceRange.m_layerCount = 1;
-            //                    barrier.m_subresourceRange.m_levelCount = 1;
-            //                    barrier.m_imageName = taskRes->GetResourceName();
-
-            //                    if (isFlushRequiredThroughBarrier == false)
-            //                    {
-            //                        barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
-            //                        barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-            //                        barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-            //                        barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-            //                    }
-            //                    else
-            //                    {
-            //                        // No write needs to be flushed only layout transition required
-            //                        if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
-            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL ||
-            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR ||
-            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PREINITIALIZED ||
-            //                            imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
-            //                        {
-            //                            barrier.m_srcStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
-            //                            barrier.m_srcAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-            //                        }
-            //                        else
-            //                        {
-            //                            barrier.m_srcAccessMask.push_back(GetSrcAccessMask(imageInfo.m_prevLayout));
-            //                            barrier.m_srcStageMask = GetStageMask(imageInfo.m_prevLayout);
-            //                        }
-
-            //                        // No write needs to be flushed only layout transition required
-            //                        if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
-            //                        {
-            //                            barrier.m_dstAccessMask.push_back(Core::Enums::PipelineAccessFlagBits2::ACCESS_2_NONE);
-            //                            barrier.m_dstStageMask.push_back(Core::Enums::PipelineStageFlagBits2::PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-            //                        }
-            //                        else
-            //                        {
-            //                            barrier.m_dstAccessMask.push_back(GetDstAccessMask(imageInfo.m_expectedLayout));
-            //                            barrier.m_dstStageMask = GetStageMask(imageInfo.m_expectedLayout);
-            //                        }
-            //                    }
-
-            //                    barrierInfoForFrames[frameCount++].m_imageBarriers.push_back(barrier);
-            //                }
-            //            }
-            //            break;
-            //        }
-            //    }
-            //}
-
             task->AssignBarrierInfo(barrierInfoForFrames);
+            if (task->GetTaskType() == Renderer::RenderGraph::TaskType::RENDER_TASK)
+            {
+                for (auto& info : renderingInfoForFrames)
+                    info.m_renderArea = ((Renderer::RenderGraph::Tasks::RenderTask*)task)->GetRenderArea();
+                ((Renderer::RenderGraph::Tasks::RenderTask*)task)->AssignRenderingInfo(renderingInfoForFrames);
+            }
         }
     };
 
     PopulateTaskInfo();
+    CreatePresentationBarrier(lastTask);
 
     auto PrintImageInfo = [&]()
     {

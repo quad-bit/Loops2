@@ -212,7 +212,7 @@ void GfxVk::CommandPool::VkCommandBufferFactory::DestroyCommandBufferCustomPool(
     (it)->second.m_cmdBufferList.erase(itt);
 }
 
-const VkCommandBuffer& GfxVk::CommandPool::VkCommandBufferFactory::GetCommandBuffer(uint32_t bufferId, uint32_t poolId)
+const VkCommandBuffer& GfxVk::CommandPool::VkCommandBufferFactory::GetCommandBufferFromPool(uint32_t bufferId, uint32_t poolId)
 {
     ASSERT_MSG_DEBUG(m_additionsPoolList.find(poolId) != m_additionsPoolList.end(), "Pool id not found");
     ASSERT_MSG_DEBUG(m_additionsPoolList[poolId].m_cmdBufferList.find(bufferId) != m_additionsPoolList[poolId].m_cmdBufferList.end(), "Buffer id not found");

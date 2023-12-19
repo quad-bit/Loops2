@@ -192,6 +192,7 @@ namespace Renderer
                 const std::vector<Core::Wrappers::BufferBarrier2>& bufferBarriers,
                 const std::vector<Core::Wrappers::MemoryBarrier2>& memoryBarriers
                 );
+            uint32_t CreateRenderingInfo(const Core::Wrappers::RenderingInfo& renderingInfo);
         }
     }
 }

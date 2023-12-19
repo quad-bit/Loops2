@@ -88,6 +88,8 @@ namespace GfxVk
                 const std::vector<VkBufferMemoryBarrier2>& m_bufferBarriers,
                 const std::vector<VkMemoryBarrier2>& m_memoryBarriers
             );
+
+            const VkDependencyInfo& GetDependencyInfo(uint32_t dependencyId) const;
         };
     }
 }

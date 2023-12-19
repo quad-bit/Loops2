@@ -2,21 +2,23 @@
 #include <vulkan/vulkan.h>
 #include "VkCommandBufferFactory.h"
 #include <Platform/Assertion.h>
+#include "synchronisation/VkSynchroniserFactory.h"
+#include "VkRenderPassFactory.h"
 
 namespace
 {
-    const VkCommandBuffer& GetCommandBuffer(Core::Wrappers::CommandBufferInfo& cmdBufInfo)
+    const VkCommandBuffer& GetCommandBuffer(const Core::Wrappers::CommandBufferInfo& cmdBufInfo)
     {
         auto containsPoolId = std::holds_alternative<uint32_t>(cmdBufInfo.GetPool());
         if (containsPoolId)
         {
-            return GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->GetCommandBuffer(cmdBufInfo.GetBufferId(), std::get<uint32_t>(cmdBufInfo.GetPool()));
+            return GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->GetCommandBufferFromPool(cmdBufInfo.GetBufferId(), std::get<uint32_t>(cmdBufInfo.GetPool()));
         }
         else
         {
             Core::Enums::QueueType queueType = std::get<Core::Enums::QueueType>(cmdBufInfo.GetPool());
 
-            VkQueueFlags flag;
+            VkQueueFlagBits flag;
             switch (queueType)
             {
             case Core::Enums::QueueType::RENDER:
@@ -83,4 +85,26 @@ void GfxVk::CommandWriter::DrawIndex(const Core::Wrappers::CommandBufferInfo& cm
 
 void GfxVk::CommandWriter::Draw(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DrawArrayInfo& info)
 {
+}
+
+void GfxVk::CommandWriter::SetPipelineBarrier(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t barrierId)
+{
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    VkDependencyInfo dependencyInfo = GfxVk::Sync::VkSynchroniserFactory::GetInstance()->GetDependencyInfo(barrierId);
+
+    vkCmdPipelineBarrier2(cmBuf, &dependencyInfo);
+}
+
+void GfxVk::CommandWriter::BeginRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t renderingInfoId)
+{
+    VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
+    const VkRenderingInfo& info = GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->GetRenderingInfo(renderingInfoId);
+
+    vkCmdBeginRendering(cmdBuf, &info);
+}
+
+void GfxVk::CommandWriter::EndRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo)
+{
+    VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
+    vkCmdEndRendering(cmdBuf);
 }

@@ -1,6 +1,6 @@
 #include "VkRenderPassFactory.h"
-#include "utility/VkRenderingUnwrapper.h"
 #include "utility/VulkanUtility.h"
+#include "utility/VkImageFactory.h"
 #include <CorePrecompiled.h>
 #include <array>
 #include "Settings.h"
@@ -206,6 +206,68 @@ uint32_t GfxVk::Renderpass::VkRenderPassFactory::GetClearValueCount(const uint32
     ASSERT_MSG_DEBUG(it != renderpassList.end(), "Image id not found");
 
     return (*it)->clearValueCount;
+}
+
+uint32_t GfxVk::Renderpass::VkRenderPassFactory::CreateRenderingInfo(const Core::Wrappers::RenderingInfo& renderingInfo)
+{
+    auto GetAttachmentInfo = [](const Core::Wrappers::RenderingAttachmentInfo& attachmentInfo) -> VkRenderingAttachmentInfo
+    {
+        VkRenderingAttachmentInfo info{};
+        if (attachmentInfo.m_clearDepthStencilValues.has_value())
+        {
+            info.clearValue.depthStencil.depth = attachmentInfo.m_clearDepthStencilValues.value()[0];
+            info.clearValue.depthStencil.stencil = attachmentInfo.m_clearDepthStencilValues.value()[1];
+        }
+        else
+        {
+            info.clearValue.color.float32[0] = attachmentInfo.m_clearColorValues.value()[0];
+            info.clearValue.color.float32[1] = attachmentInfo.m_clearColorValues.value()[1];
+            info.clearValue.color.float32[2] = attachmentInfo.m_clearColorValues.value()[2];
+            info.clearValue.color.float32[3] = attachmentInfo.m_clearColorValues.value()[3];
+        }
+        info.imageLayout = GfxVk::Unwrap::UnWrapImageLayout(attachmentInfo.m_imageLayout);
+        info.imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(attachmentInfo.m_imageId);
+        info.loadOp = GfxVk::Unwrap::UnWrapLoadOp(attachmentInfo.m_loadOp);
+        info.storeOp = GfxVk::Unwrap::UnWrapStoreOp(attachmentInfo.m_storeOp);
+        info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+
+        return info;
+    };
+
+    std::vector<VkRenderingAttachmentInfo> colorAttachments;
+    for (auto& color : renderingInfo.m_colorAttachmentInfo)
+    {
+        colorAttachments.push_back(GetAttachmentInfo(color));
+    }
+    bool hasDepthStencil = renderingInfo.m_depthAttachmentInfo.has_value();
+
+    auto id = GetId();
+    m_renderingInfoList.insert({ id, {} });
+    auto& info = m_renderingInfoList[id];
+    
+    if (hasDepthStencil)
+    {
+        info.m_depthAttachmentInfo = GetAttachmentInfo(renderingInfo.m_depthAttachmentInfo.value());
+        info.m_renderingInfo.pDepthAttachment = &info.m_depthAttachmentInfo.value();
+    }
+    else
+        info.m_renderingInfo.pDepthAttachment = nullptr;
+
+    info.m_colorAttachmentInfo = colorAttachments;
+    info.m_renderingInfo.colorAttachmentCount = info.m_colorAttachmentInfo.size();
+    info.m_renderingInfo.flags = 0;
+    info.m_renderingInfo.layerCount = 1;
+    info.m_renderingInfo.pColorAttachments = info.m_colorAttachmentInfo.data();
+    info.m_renderingInfo.pNext = nullptr;
+    info.m_renderingInfo.renderArea = VkRect2D{ 0, 0, (uint32_t)renderingInfo.m_renderArea.lengthX, (uint32_t)renderingInfo.m_renderArea.lengthY };
+    info.m_renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+
+    return id;
+}
+
+const VkRenderingInfo& GfxVk::Renderpass::VkRenderPassFactory::GetRenderingInfo(uint32_t infoId) const
+{
+    return m_renderingInfoList.at(infoId).m_renderingInfo;
 }
 
 void GfxVk::Renderpass::VkRenderPassFactory::SetClearColor(std::vector<VkClearValue> clearValue, const uint32_t & renderPassId)

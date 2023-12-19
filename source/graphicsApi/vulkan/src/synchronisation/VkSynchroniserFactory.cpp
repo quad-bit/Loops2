@@ -110,6 +110,11 @@ std::vector<VkSemaphore> GfxVk::Sync::VkSynchroniserFactory::GetSemaphore(uint32
     return semaphoreList;
 }
 
+const VkDependencyInfo& GfxVk::Sync::VkSynchroniserFactory::GetDependencyInfo(uint32_t dependencyId) const
+{
+    return m_dependencyList.at(dependencyId).m_dependencyInfo;
+}
+
 uint32_t GfxVk::Sync::VkSynchroniserFactory::CreateBarrier(
     const std::vector<VkImageMemoryBarrier2>& imageBarriers,
     const std::vector<VkBufferMemoryBarrier2>& bufferBarriers,

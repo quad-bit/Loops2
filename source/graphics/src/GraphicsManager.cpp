@@ -21,6 +21,7 @@
 #include <VkCommandBufferFactory.h>
 #include <synchronisation/VkSynchroniserFactory.h>
 #include <utility/VkImageFactory.h>
+#include <VkRenderPassFactory.h>
 
 #include <resourceManagement/UniformFactory.h>
 #include <resourceManagement/MeshFactory.h>
@@ -48,6 +49,7 @@ void Renderer::GraphicsManager::Init()
         Renderer::RendererSettings::GetTransferQueueId());
     GfxVk::Sync::VkSynchroniserFactory::GetInstance()->Init();
     GfxVk::Utility::VkImageFactory::GetInstance()->Init(Core::Settings::m_swapBufferCount);
+    GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
 
     // next high level wrappers
     Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
@@ -88,6 +90,9 @@ void Renderer::GraphicsManager::DeInit()
 
     Renderer::ResourceManagement::UniformFactory::GetInstance()->DeInit();
     delete Renderer::ResourceManagement::UniformFactory::GetInstance();
+
+    GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->DeInit();
+    delete GfxVk::Renderpass::VkRenderPassFactory::GetInstance();
 
     GfxVk::Utility::VkImageFactory::GetInstance()->DeInit();
     delete GfxVk::Utility::VkImageFactory::GetInstance();

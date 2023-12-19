@@ -83,7 +83,7 @@ namespace GfxVk
 
             //VkCommandBuffer* GetCommandBuffer(const uint32_t* ids, const uint32_t& count);
             const VkCommandPool& GetCommandPool(uint32_t poolId);
-            const VkCommandBuffer& GetCommandBuffer(uint32_t bufferId, uint32_t poolId);
+            const VkCommandBuffer& GetCommandBufferFromPool(uint32_t bufferId, uint32_t poolId);
             const VkCommandBuffer& GetCommandBuffer(uint32_t bufferId,const VkQueueFlagBits& queueType);
         };
     }

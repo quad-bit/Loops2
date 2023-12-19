@@ -9,6 +9,7 @@
 #include <resourceManagement/Resource.h>
 #include <renderGraph/utility/Utils.h>
 #include <VulkanInterface.h>
+#include <CommandReader.h>
 
 namespace Renderer
 {
@@ -55,7 +56,7 @@ namespace Renderer
         struct PerFrameTaskBarrierInfo
         {
             uint32_t m_barrierHandle;
-            Core::Wrappers::BarrierDependencyInfo m_dependencyInfo;
+            //Core::Wrappers::BarrierDependencyInfo m_dependencyInfo;
             std::vector<Core::Wrappers::ImageBarrier2> m_imageBarriers;
             std::vector<Core::Wrappers::BufferBarrier2> m_bufferBarriers;
             std::vector<Core::Wrappers::MemoryBarrier2> m_memoryBarriers;
@@ -84,7 +85,8 @@ namespace Renderer
 
             // one for each swap buffer ( image count = swapbufferCount ),
             // one PerFrameTaskBarrierInfo for all the resources in one frame
-            std::vector<PerFrameTaskBarrierInfo> m_taskBarrierInfo;
+            std::vector<std::optional<PerFrameTaskBarrierInfo>> m_taskBarrierInfo;
+            std::optional< std::vector<PerFrameTaskBarrierInfo>> m_presentationBarrierInfo;
 
         protected:
             void StartTask(const Core::Wrappers::FrameInfo& frameInfo, const Core::Enums::QueueType queueType)
@@ -95,10 +97,21 @@ namespace Renderer
                     Core::Enums::CommandBufferUsage usage{ Core::Enums::CommandBufferUsage::USAGE_ONE_TIME_SUBMIT_BIT };
                     VulkanInterfaceAlias::BeginCommandBufferRecording(m_activeCommandBuffer, queueType, usage, std::nullopt);
                 }
+                if(m_taskBarrierInfo.size() > 0 &&  m_taskBarrierInfo[frameInfo.m_swapBufferIndex].has_value())
+                {
+                    Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
+                    Renderer::CommandReader::SetPipelineBarrier(info, m_taskBarrierInfo[frameInfo.m_swapBufferIndex].value().m_barrierHandle);
+                }
             }
 
-            void EndTask(const Core::Wrappers::FrameInfo& frameInfo)
+            void EndTask(const Core::Wrappers::FrameInfo& frameInfo, const Core::Enums::QueueType queueType)
             {
+                if (m_presentationBarrierInfo.has_value())
+                {
+                    Core::Wrappers::CommandBufferInfo info(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, queueType);
+                    Renderer::CommandReader::SetPipelineBarrier(info, m_presentationBarrierInfo.value()[frameInfo.m_swapBufferIndex].m_barrierHandle);
+                }
+
                 if (m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_shouldStop)
                 {
                     VulkanInterfaceAlias::EndCommandBufferRecording(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose);
@@ -152,18 +165,6 @@ namespace Renderer
             void AddInput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
             {
                 m_inputs.push_back(info);
-                /*TaskImageResourceInfo obj{};
-                obj.m_imageResource = info.m_resource;
-
-                if (info.m_imageInfo)
-                {
-                    obj.m_expectedLayout = info.m_imageInfo->m_expectedImageLayout;
-                    obj.m_previousLayout = info.m_imageInfo->m_prevImageLayout;
-                }
-                if (info.m_bufInfo)
-                {
-
-                }*/
             }
 
             void AddOutput(const Renderer::RenderGraph::Utils::ConnectionInfo& info)
@@ -192,15 +193,36 @@ namespace Renderer
                 m_taskQueueInfo.m_previousTaskQueueId = previousTaskQueueId;
             }
 
-            void AssignBarrierInfo(const std::vector<PerFrameTaskBarrierInfo>& barrierInfo)
+            void AssignBarrierInfo(const std::vector<PerFrameTaskBarrierInfo>& barrierInfo, bool isPresentationBarrier = false)
             {
-                m_taskBarrierInfo = barrierInfo;
-                for (auto& barrier : m_taskBarrierInfo)
+                if (barrierInfo.size() > 0)
                 {
-                    barrier.m_barrierHandle = VulkanInterfaceAlias::CreateBarrier(
-                        barrier.m_imageBarriers,
-                        barrier.m_bufferBarriers,
-                        barrier.m_memoryBarriers);
+                    if (barrierInfo[0].m_bufferBarriers.size() > 0 ||
+                        barrierInfo[0].m_imageBarriers.size() > 0 ||
+                        barrierInfo[0].m_memoryBarriers.size() > 0)
+                    {
+                        if(isPresentationBarrier)
+                            m_presentationBarrierInfo = std::vector<Renderer::RenderGraph::PerFrameTaskBarrierInfo>{};
+                        for (auto& barrier : barrierInfo)
+                        {
+                            if (isPresentationBarrier)
+                            {
+                                m_presentationBarrierInfo.value().push_back(barrier);
+                                m_presentationBarrierInfo.value()[m_presentationBarrierInfo.value().size() - 1].m_barrierHandle = VulkanInterfaceAlias::CreateBarrier(
+                                    barrier.m_imageBarriers,
+                                    barrier.m_bufferBarriers,
+                                    barrier.m_memoryBarriers);
+                            }
+                            else
+                            {
+                                m_taskBarrierInfo.push_back(barrier);
+                                m_taskBarrierInfo[m_taskBarrierInfo.size() - 1].value().m_barrierHandle = VulkanInterfaceAlias::CreateBarrier(
+                                    barrier.m_imageBarriers,
+                                    barrier.m_bufferBarriers,
+                                    barrier.m_memoryBarriers);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -291,7 +313,9 @@ namespace Renderer
                 {
                     for (auto& info : m_taskBarrierInfo)
                     {
-                        for (auto& imageBarrierInfo : info.m_imageBarriers)
+                        if (!info.has_value())
+                            break;
+                        for (auto& imageBarrierInfo : info.value().m_imageBarriers)
                         {
                             std::cout << "\n  Image : " << imageBarrierInfo.m_imageName;
                             std::cout << "\n    SrcStage : " << Core::Utility::ConvertPipelineStageFlagToString(imageBarrierInfo.m_srcStageMask[0]);
