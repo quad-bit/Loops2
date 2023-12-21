@@ -78,12 +78,13 @@ inc/utility/VulkanMemoryManager.h
 inc/utility/VulkanSettings.h
 inc/utility/VulkanUtility.h
 inc/utility/VkImageFactory.h
+inc/utility/VkDebugMarkerUtil.h
 
 src/utility/VkRenderingUnwrapper.cpp
 src/utility/VulkanMemoryManager.cpp
 src/utility/VulkanUtility.cpp
 src/utility/VkImageFactory.cpp
-
+src/utility/VkDebugMarkerUtil.cpp
 )
 
 set(TARGET_NAME "gfxVulkan")

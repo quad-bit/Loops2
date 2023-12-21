@@ -3,6 +3,7 @@
 #include "utility/VulkanUtility.h"
 #include "VkQueueFactory.h"
 #include "VkDrawCommandBuffer.h"
+#include <utility/VkDebugMarkerUtil.h>
 
 GfxVk::CommandPool::VkCommandBufferFactory* GfxVk::CommandPool::VkCommandBufferFactory::instance = nullptr;
 uint32_t GfxVk::CommandPool::VkCommandBufferFactory::poolIdCounter = 0, GfxVk::CommandPool::VkCommandBufferFactory::bufferIdCounter = 0;
@@ -180,12 +181,29 @@ uint32_t GfxVk::CommandPool::VkCommandBufferFactory::CreateCommandBuffer(const V
             &info, &bufWrapper.m_cmdBuffer));
 
         auto id = bufWrapper.m_id;
-        wrapper.m_cmdBufferList.insert({ id, std::move(bufWrapper) });
 
+        wrapper.m_cmdBufferList.insert({ id, std::move(bufWrapper) });
         return id;
     };
 
     uint32_t bufferId = CreateBuffer(GetPoolWrapper(queueType));
+
+    std::string name;
+    if (queueType & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT)
+    {
+        name = "GRAPHICS CMD_BUF";
+    }
+    else if (queueType & VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT)
+    {
+        name = "COMPUTE CMD_BUF";
+    }
+    else if (queueType & VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT)
+    {
+        name = "TRANSFER CMD_BUF";
+    }
+    name += "_" + std::to_string(bufferId);
+    GfxVk::DebugMarker::SetObjectName(VK_OBJECT_TYPE_COMMAND_BUFFER, (uint64_t)GetCommandBuffer(bufferId, queueType), name.c_str());
+
     return bufferId;
 }
 

@@ -176,6 +176,7 @@ namespace
             Core::Wrappers::BufferCreateInfo info{};
             info.size = 100;
             info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT, Core::Enums::BufferUsage::BUFFER_USAGE_TRANSFER_SRC_BIT };
+            info.m_name = "buffer_r5_T1_E1";
             r1Buffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "buffer1_T1_E1_0", "buffer1_T1_E1_1", "buffer1_T1_E1_2" }));
 
             r1 = std::make_unique<Renderer::RenderGraph::ResourceNode>(r1Image, "r1_T1_E1", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);

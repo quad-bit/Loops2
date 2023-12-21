@@ -21,12 +21,12 @@ void GfxVk::Utility::VulkanMemoryManager::Init(VkPhysicalDeviceMemoryProperties 
     this->physicalDeviceMemoryPropertiesObj = physicalDeviceMemoryPropertiesObj;
     vulkanLogicalDevice = DeviceInfo::GetLogicalDevice();
 
-    VmaAllocatorCreateInfo allocatorInfo = {};
+    /*VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = DeviceInfo::GetPhysicalDevice();
     allocatorInfo.device = DeviceInfo::GetLogicalDevice();
     allocatorInfo.instance = DeviceInfo::GetVkInstance();
 
-    vmaCreateAllocator(&allocatorInfo, &allocator);
+    vmaCreateAllocator(&allocatorInfo, &allocator);*/
 
     /*VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
     bufferInfo.size = 65536;
@@ -54,7 +54,7 @@ void GfxVk::Utility::VulkanMemoryManager::Init(VkPhysicalDeviceMemoryProperties 
 void GfxVk::Utility::VulkanMemoryManager::DeInit()
 {
     PLOGD << "VulkanMemoryManager Deinit";
-    vmaDestroyAllocator(allocator);
+    //vmaDestroyAllocator(allocator);
     for (uint32_t i = 0; i < memoryWrapperList.size(); i++)
     {
         vkFreeMemory(DeviceInfo::GetLogicalDevice(), *memoryWrapperList[i].memory, DeviceInfo::GetAllocationCallback());

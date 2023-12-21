@@ -4,6 +4,9 @@
 #include <Platform/Assertion.h>
 #include "synchronisation/VkSynchroniserFactory.h"
 #include "VkRenderPassFactory.h"
+#include <utility/VkDebugMarkerUtil.h>
+
+std::vector<float> labelColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 
 namespace
 {
@@ -107,4 +110,22 @@ void GfxVk::CommandWriter::EndRendering(const Core::Wrappers::CommandBufferInfo&
 {
     VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
     vkCmdEndRendering(cmdBuf);
+}
+
+void GfxVk::CommandWriter::CommandBeginLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label)
+{
+    VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
+    GfxVk::DebugMarker::SetCommandBufferBeginLabel(cmdBuf, label.c_str(), labelColor);
+}
+
+void GfxVk::CommandWriter::CommandEndLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo)
+{
+    VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
+    GfxVk::DebugMarker::SetCommandBufferEndLabel(cmdBuf);
+}
+
+void GfxVk::CommandWriter::InsertLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label)
+{
+    VkCommandBuffer cmdBuf = GetCommandBuffer(cmdBufInfo);
+    GfxVk::DebugMarker::InsertLabelInCommandBuffer(cmdBuf, label.c_str(), labelColor);
 }

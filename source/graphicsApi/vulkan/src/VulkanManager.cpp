@@ -44,7 +44,7 @@ void GfxVk::Utility::VulkanManager::CreateInstance()
     createInfoObj.pApplicationInfo = &appInfo;
     createInfoObj.enabledExtensionCount = (uint32_t)m_validationManagerObj->instanceExtensionNameList.size();
     createInfoObj.enabledLayerCount = (uint32_t)m_validationManagerObj->instanceLayerNameList.size();
-    createInfoObj.pNext = nullptr;// &(m_validationManagerObj->VkDebugReportCallbackCreateInfoEXTObj);
+    createInfoObj.pNext = &(m_validationManagerObj->dbg_messenger_create_info);
     createInfoObj.ppEnabledExtensionNames = m_validationManagerObj->instanceExtensionNameList.data();
     createInfoObj.ppEnabledLayerNames = m_validationManagerObj->instanceLayerNameList.data();
 

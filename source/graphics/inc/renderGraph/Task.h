@@ -97,6 +97,12 @@ namespace Renderer
                     Core::Enums::CommandBufferUsage usage{ Core::Enums::CommandBufferUsage::USAGE_ONE_TIME_SUBMIT_BIT };
                     VulkanInterfaceAlias::BeginCommandBufferRecording(m_activeCommandBuffer, queueType, usage, std::nullopt);
                 }
+
+                {
+                    Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
+                    Renderer::CommandReader::CommandBeginLabel(info, GetTaskName());
+                }
+
                 if(m_taskBarrierInfo.size() > 0 &&  m_taskBarrierInfo[frameInfo.m_swapBufferIndex].has_value())
                 {
                     Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
@@ -110,6 +116,11 @@ namespace Renderer
                 {
                     Core::Wrappers::CommandBufferInfo info(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, queueType);
                     Renderer::CommandReader::SetPipelineBarrier(info, m_presentationBarrierInfo.value()[frameInfo.m_swapBufferIndex].m_barrierHandle);
+                }
+
+                {
+                    Core::Wrappers::CommandBufferInfo info(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, queueType);
+                    Renderer::CommandReader::CommandEndLabel(info);
                 }
 
                 if (m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_shouldStop)
@@ -253,8 +264,8 @@ namespace Renderer
                 
                 bool printCommandBufferInfo = false;
                 bool printQueueInfo = false;
-                bool printSubmitInfo = false;
-                bool printBarrierInfo = true;
+                bool printSubmitInfo = true;
+                bool printBarrierInfo = false;
 
                 if (printCommandBufferInfo)
                 {

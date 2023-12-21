@@ -144,7 +144,9 @@ namespace Renderer
             void AddInputAsDepthAttachment(
                 Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
-                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode);
+                Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+                const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+                const Core::Enums::ImageLayout previousImageLayout);
 
             void AddInputAsShaderResource(
                 Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,

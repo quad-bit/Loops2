@@ -123,6 +123,7 @@ set(UTILITY_FILES
     src/Utility/ResourceAllocationHelper.cpp
     src/Utility/Timer.cpp
     src/Utility/Container/BitArray.cpp
+    src/Utility/RenderingWrapper.cpp
 )
 
 # find_package(glm REQUIRED)

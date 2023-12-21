@@ -796,6 +796,7 @@ namespace Core
             {
                 size_t size;
                 std::vector<Core::Enums::BufferUsage> usage;
+                std::optional<std::string> m_name;
             };
 
             struct SamplerCreateInfo
@@ -1300,6 +1301,5 @@ namespace Core
         std::string ConvertPipelineStageFlagToString(const Core::Enums::PipelineStageFlagBits2& flag);
         std::string ConvertPipelineAccessFlagToString(const Core::Enums::PipelineAccessFlagBits2& flag);
         std::string ConvertImageLayoutToString(const Core::Enums::ImageLayout& layout);
-
     }
 }

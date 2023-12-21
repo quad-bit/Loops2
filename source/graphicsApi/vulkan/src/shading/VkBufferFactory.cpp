@@ -5,6 +5,7 @@
 #include <CorePrecompiled.h>
 #include "VulkanManager.h"
 #include "utility/VkRenderingUnwrapper.h"
+#include <utility/VkDebugMarkerUtil.h>
 
 GfxVk::Shading::VkBufferFactory* GfxVk::Shading::VkBufferFactory::instance = nullptr;
 
@@ -178,11 +179,15 @@ uint32_t * GfxVk::Shading::VkBufferFactory::AllocateBufferMemory(uint32_t * buff
     return ids;
 }
 
-std::pair<uint32_t, std::optional<uint32_t>> GfxVk::Shading::VkBufferFactory::CreateBuffer(VkBufferCreateInfo& info, bool allocateMemory)
+std::pair<uint32_t, std::optional<uint32_t>> GfxVk::Shading::VkBufferFactory::CreateBuffer(VkBufferCreateInfo& info, bool allocateMemory, const std::string& name)
 {
     ASSERT_MSG_DEBUG(allocateMemory == false, "allocation yet to be done");
 
     uint32_t* ids = CreateBuffers(1, &info);
+
+    auto buf = GetBuffer(ids[0]);
+    GfxVk::DebugMarker::SetObjectName(VK_OBJECT_TYPE_BUFFER, (uint64_t)(*buf), name.c_str());
+
     return std::pair(ids[0], std::nullopt);
 }
 

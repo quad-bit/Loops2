@@ -231,6 +231,7 @@ void Renderer::RenderGraph::Utils::AddInputAsColorAttachment(
     const Core::Enums::ImageLayout previousImageLayout,
     uint32_t inputSlot)
 {
+    CreatePrintGraphInfo(graph, resourceNode, taskNode, usage, Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, previousImageLayout);
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
         taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
     {
@@ -256,9 +257,14 @@ void Renderer::RenderGraph::Utils::AddInputAsColorAttachment(
 void Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(
     Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* resourceNode,
-    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode
+    Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
+    const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage,
+    const Core::Enums::ImageLayout previousImageLayout
 )
 {
+    ASSERT_MSG_DEBUG(0, "Not getting used");
+
+    CreatePrintGraphInfo(graph, resourceNode, taskNode, usage, Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, previousImageLayout);
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
         taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
     {
@@ -285,6 +291,9 @@ void Renderer::RenderGraph::Utils::AddInputAsShaderResource(
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode
     )
 {
+    ASSERT_MSG_DEBUG(0, "Not getting used");
+
+    //CreatePrintGraphInfo(graph, resourceNode, taskNode, usage, Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, previousImageLayout);
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
         taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
     {
@@ -321,6 +330,8 @@ void Renderer::RenderGraph::Utils::AddInputAsTransferData(
     Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* taskNode,
     bool isTransferSource)
 {
+    ASSERT_MSG_DEBUG(0, "Not getting used");
+
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
         taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
     {
@@ -422,7 +433,7 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::U
     std::vector<uint32_t> bufferIds;
     for (uint32_t i = 0; i < count; i++)
     {
-        auto value = VulkanInterfaceAlias::CreateBuffer(createInfo, false);
+        auto value = VulkanInterfaceAlias::CreateBuffer(createInfo, false, names[i]);
         bufferIds.push_back(value.first);
     }
 

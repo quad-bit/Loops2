@@ -4,6 +4,7 @@
 #include "utility/VulkanMemoryManager.h"
 #include "PresentationEngine.h"
 #include <CorePrecompiled.h>
+#include <utility/VkDebugMarkerUtil.h>
 
 GfxVk::Utility::VkImageFactory* GfxVk::Utility::VkImageFactory::s_instance = nullptr;
 uint32_t GfxVk::Utility::VkImageFactory::s_imageIdCounter = 0;
@@ -72,6 +73,8 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     wrapper.m_memId = memId;
     m_imageList.insert({ wrapper.m_imageId, wrapper });
 
+    GfxVk::DebugMarker::SetObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t)image, name.c_str());
+
     return wrapper.m_imageId;
 }
 
@@ -86,6 +89,8 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     wrapper.m_imageId = GetId();
     wrapper.m_name = name;
     m_imageList.insert({ wrapper.m_imageId, wrapper });
+
+    GfxVk::DebugMarker::SetObjectName(VK_OBJECT_TYPE_IMAGE, (uint64_t)image, name.c_str());
 
     return wrapper.m_imageId;
 }

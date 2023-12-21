@@ -147,7 +147,7 @@ namespace Renderer
             //deprecated
             uint32_t* CreateBuffers(Core::Wrappers::BufferInfo* info, const uint32_t& count);
             void CreateBuffers(Core::Wrappers::BufferCreateInfo* info, const uint32_t& count, uint32_t* out_buffIds, size_t* out_bufferMemRequirements);
-            std::pair<uint32_t, std::optional<uint32_t>> CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory);
+            std::pair<uint32_t, std::optional<uint32_t>> CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory, const std::string& name);
 
             size_t GetMemoryAlignedDataSizeForBuffer(const size_t& dataSize);
             uint32_t* AllocateBufferMemory(uint32_t* bufferId, const uint32_t& bufCount);
@@ -193,6 +193,8 @@ namespace Renderer
                 const std::vector<Core::Wrappers::MemoryBarrier2>& memoryBarriers
                 );
             uint32_t CreateRenderingInfo(const Core::Wrappers::RenderingInfo& renderingInfo);
+
+            
         }
     }
 }

@@ -26,6 +26,10 @@ namespace GfxVk
 
         void BeginRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t renderingInfoId);
         void EndRendering(const Core::Wrappers::CommandBufferInfo& cmdBufInfo);
+
+        void CommandBeginLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label);
+        void CommandEndLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo);
+        void InsertLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label);
     }
 }
 

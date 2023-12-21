@@ -1,5 +1,5 @@
 #include "CorePrecompiled.h"
-#include "RenderingWrapper.h"
+#include "Utility/RenderingWrappers/RenderingWrapper.h"
 
 std::string Core::Utility::ConvertPipelineStageFlagToString(const Core::Enums::PipelineStageFlagBits2& flag)
 {

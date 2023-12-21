@@ -72,3 +72,18 @@ void Renderer::CommandReader::EndRendering(const Core::Wrappers::CommandBufferIn
 {
     GfxVk::CommandWriter::EndRendering(cmdBufInfo);
 }
+
+void Renderer::CommandReader::CommandBeginLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label)
+{
+    GfxVk::CommandWriter::CommandBeginLabel(cmdBufInfo, label);
+}
+
+void Renderer::CommandReader::CommandEndLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo)
+{
+    GfxVk::CommandWriter::CommandEndLabel(cmdBufInfo);
+}
+
+void Renderer::CommandReader::InsertLabel(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const std::string& label)
+{
+    GfxVk::CommandWriter::InsertLabel(cmdBufInfo, label);
+}

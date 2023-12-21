@@ -913,10 +913,10 @@ void Renderer::Utility::VulkanInterface::CreateBuffers(Core::Wrappers::BufferCre
     GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffers(count, info, out_buffIds, out_bufferMemRequirements);
 }
 
-std::pair<uint32_t, std::optional<uint32_t>> Renderer::Utility::VulkanInterface::CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory)
+std::pair<uint32_t, std::optional<uint32_t>> Renderer::Utility::VulkanInterface::CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory, const std::string& name)
 {
     VkBufferCreateInfo* vkInfo = GfxVk::Unwrap::UnwrapBufferCreateInfo(&info, 1);
-    auto value = GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffer(*vkInfo, allocateMemory);
+    auto value = GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffer(*vkInfo, allocateMemory, name);
     return value;
 }
 
