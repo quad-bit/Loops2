@@ -33,6 +33,7 @@ namespace Renderer
         static uint32_t m_maxFramesInFlight;// , m_currentFrameInFlight;
         static uint32_t m_maxFrameRate;
         static Core::Enums::Format m_bestDepthFormat;
+        static Core::Enums::Format m_surfaceFormat;
 
     public:
         friend class RenderingManager;
@@ -51,6 +52,7 @@ namespace Renderer
         //static const uint32_t& GetCurrentFrameIndex();
         static const uint32_t& GetSwapBufferCount();
         static const Core::Enums::Format& GetBestDepthFormat();
+        static const Core::Enums::Format& GetSurfaceFormat();
 
         /*static const Core::Wrappers::QueueWrapper& GetRenderQueueInfo();
         static const Core::Wrappers::QueueWrapper& GetPresentationQueueInfo();

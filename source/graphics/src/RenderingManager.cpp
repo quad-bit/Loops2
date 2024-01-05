@@ -34,6 +34,7 @@ Core::Enums::Samples Renderer::RendererSettings::m_maxSampleCountAvailable;
 uint32_t Renderer::RendererSettings::m_shadowMapWidth, Renderer::RendererSettings::m_shadowMapHeight;
 
 Core::Enums::Format Renderer::RendererSettings::m_bestDepthFormat;
+Core::Enums::Format Renderer::RendererSettings::m_surfaceFormat;
 
 uint32_t Renderer::RendererSettings::m_swapBufferCount;
 uint32_t Renderer::RendererSettings::m_maxFramesInFlight;// , Renderer::RendererSettings::m_currentFrameInFlight;
@@ -180,6 +181,7 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     Renderer::RendererSettings::m_maxFramesInFlight = Renderer::RendererSettings::m_swapBufferCount - 1;
 
     Renderer::RendererSettings::m_bestDepthFormat = Renderer::Utility::VulkanInterface::FindBestDepthFormat();
+    Renderer::RendererSettings::m_surfaceFormat = Renderer::Utility::VulkanInterface::GetWindowSurfaceFormat();
 
     // swapchain / presentation setup
     {
@@ -405,6 +407,11 @@ const uint32_t& Renderer::RendererSettings::GetSwapBufferCount()
 const Core::Enums::Format& Renderer::RendererSettings::GetBestDepthFormat()
 {
     return m_bestDepthFormat;
+}
+
+const Core::Enums::Format& Renderer::RendererSettings::GetSurfaceFormat()
+{
+    return m_surfaceFormat;
 }
 
 //const Core::Wrappers::QueueWrapper& Renderer::RendererSettings::GetRenderQueueInfo()

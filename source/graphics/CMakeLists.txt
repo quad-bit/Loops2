@@ -25,9 +25,14 @@ inc/renderGraph/utility/Utils.h
 inc/renderGraph/Graph.h
 
 inc/renderGraph/effects/Opaque.h
-# inc/renderGraph/pipelines/DepthViewPipeline.h
+inc/renderGraph/effects/DepthPass.h
+
+inc/renderGraph/pipelines/DepthViewPipeline.h
 inc/renderGraph/pipelines/LowEndPipeline.h
+
 inc/renderGraph/techniques/LambertianLit.h
+inc/renderGraph/techniques/DepthTechnique.h
+
 inc/renderGraph/tasks/RenderTask.h
 inc/renderGraph/tasks/ComputeTask.h
 inc/renderGraph/tasks/TransferTask.h
@@ -37,10 +42,15 @@ inc/renderGraph/tasks/PresentationTask.h
 src/renderGraph/RenderGraphManager.cpp
 src/renderGraph/Pipeline.cpp
 src/renderGraph/utility/Utils.cpp
+
 src/renderGraph/effects/Opaque.cpp
-# src/renderGraph/pipelines/DepthViewPipeline.cpp
+src/renderGraph/effects/DepthPass.cpp
+
+src/renderGraph/pipelines/DepthViewPipeline.cpp
 src/renderGraph/pipelines/LowEndPipeline.cpp
+
 src/renderGraph/techniques/LambertianLit.cpp
+src/renderGraph/techniques/DepthTechnique.cpp
 src/renderGraph/tasks/RenderTask.cpp
 src/renderGraph/tasks/ComputeTask.cpp
 src/renderGraph/tasks/TransferTask.cpp

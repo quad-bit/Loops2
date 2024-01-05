@@ -525,9 +525,10 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyVertexInputSta
 {
     for each(auto obj in idToVertexInputMap)
     {
-        delete[] obj.second->pVertexAttributeDescriptions;
-        delete[] obj.second->pVertexBindingDescriptions;
-        delete obj.second;
+        if (obj.first == 0)
+            continue;
+        delete[] obj.second.pVertexAttributeDescriptions;
+        delete[] obj.second.pVertexBindingDescriptions;
     }
 
     idToVertexInputMap.clear();
@@ -535,10 +536,10 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyVertexInputSta
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyInputAssemblyState()
 {
-    for each(auto obj in idToInputAssemblyMap)
+    /*for each(auto obj in idToInputAssemblyMap)
     {
         delete obj.second;
-    }
+    }*/
 
     idToInputAssemblyMap.clear();
 }
@@ -546,24 +547,24 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyInputAssemblyS
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyShaderState()
 {
     //shader stage
-    {
-        std::vector<VkShaderStageWrapper *>::iterator it;
-        for (it = shaderStageWrapperList.begin(); it != shaderStageWrapperList.end(); it++)
-        {
-            delete[](*it)->shaderStageCreateInfo;
-            delete (*it);
-        }
-        shaderStageWrapperList.clear();
-    }
+    //{
+    //    std::vector<VkShaderStageWrapper *>::iterator it;
+    //    for (it = shaderStageWrapperList.begin(); it != shaderStageWrapperList.end(); it++)
+    //    {
+    //        delete[](*it)->shaderStageCreateInfo;
+    //        delete (*it);
+    //    }
+    //    shaderStageWrapperList.clear();
+    //}
 
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyTessellationState()
 {
-    for each(auto obj in idToTessellationMap)
-    {
-        delete obj.second;
-    }
+    //for each(auto obj in idToTessellationMap)
+    //{
+    //    delete obj.second;
+    //}
 
     idToTessellationMap.clear();
 }
@@ -572,12 +573,14 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyViewportState(
 {
     for each(auto obj in idToViewportMap)
     {
-        if (obj.second->pScissors != nullptr)
-            delete[] obj.second->pScissors;
-        if (obj.second->pViewports != nullptr)
-            delete[] obj.second->pViewports;
+        if (obj.first == 0)
+            continue;
+        if (obj.second.pScissors != nullptr)
+            delete[] obj.second.pScissors;
+        if (obj.second.pViewports != nullptr)
+            delete[] obj.second.pViewports;
 
-        delete obj.second;
+        //delete obj.second;
     }
 
     idToViewportMap.clear();
@@ -585,20 +588,20 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyViewportState(
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyRasterisationState()
 {
-    for each(auto obj in idToRasterizationMap)
-    {
-        delete obj.second;
-    }
+    //for each(auto obj in idToRasterizationMap)
+    //{
+    //    delete obj.second;
+    //}
 
     idToRasterizationMap.clear();
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyDepthStencilState()
 {
-    for each(auto obj in idToDepthStencilMap)
-    {
-        delete obj.second;
-    }
+    //for each(auto obj in idToDepthStencilMap)
+    //{
+    //    delete obj.second;
+    //}
 
     idToDepthStencilMap.clear();
 }
@@ -607,9 +610,12 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyColorBlendStat
 {
     for each(auto obj in idToColorBlendMap)
     {
-        if (obj.second->attachmentCount > 0)
-            delete[] obj.second->pAttachments;
-        delete obj.second;
+        if (obj.first == 0)
+            continue;
+
+        if (obj.second.attachmentCount > 0)
+            delete[] obj.second.pAttachments;
+        //delete obj.second;
     }
 
     idToColorBlendMap.clear();
@@ -619,9 +625,12 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyMultiSampleSta
 {
     for each(auto obj in idToMultiSampleMap)
     {
-        if (obj.second->pSampleMask != nullptr)
-            delete obj.second->pSampleMask;
-        delete obj.second;
+        if (obj.first == 0)
+            continue;
+
+        if (obj.second.pSampleMask != nullptr)
+            delete obj.second.pSampleMask;
+        //delete obj.second;
     }
 
     idToMultiSampleMap.clear();
@@ -631,9 +640,12 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyDynamicState()
 {
     for each(auto obj in idToDynamicMap)
     {
-        if (obj.second->dynamicStateCount > 0)
-            delete[] obj.second->pDynamicStates;
-        delete obj.second;
+        if (obj.first == 0)
+            continue;
+
+        if (obj.second.dynamicStateCount > 0)
+            delete[] obj.second.pDynamicStates;
+        //delete obj.second;
     }
 
     idToDynamicMap.clear();
@@ -643,7 +655,7 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyPipelines()
 {
     for each(auto obj in idToPipelineMap)
     {
-        vkDestroyPipeline(DeviceInfo::GetLogicalDevice(), *obj.second, DeviceInfo::GetAllocationCallback());
+        vkDestroyPipeline(DeviceInfo::GetLogicalDevice(), obj.second, DeviceInfo::GetAllocationCallback());
     }
     idToPipelineMap.clear();
 
@@ -652,6 +664,46 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DestroyPipelines()
         delete[] obj;
     }
     tempVectorToBeDeleted.clear();
+}
+
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetStateId(const Core::Enums::PipelineStates& state)
+{
+    auto id = 0;
+    switch (state)
+    {
+    case Core::Enums::PipelineStates::ColorBlendState:
+        id = m_pipelineColorBlendStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::DepthStencilState:
+        id = m_pipelineDepthStencilStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::DynamicState:
+        id = m_pipelineDynamicStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::InputAssemblyState:
+        id = m_pipelineInputAssemblyStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::MultisampleState:
+        id = m_pipelineMultisampleStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::RasterizationState:
+        id = m_pipelineRasterizationStateCreateInfoObjCounter++;
+        break;
+    case Core::Enums::PipelineStates::TessellationState:
+        id = m_pipelineTessellationStateCreateInfoCounter++;
+        break;
+    case Core::Enums::PipelineStates::ViewportState:
+        id = m_pipelineViewportStateCreateInfoObjCounter++;
+        break;
+    default:
+        ASSERT_MSG_DEBUG(0, "state not found");
+    }
+    return id;
+}
+
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetGraphicsPipelineId()
+{
+    return m_graphicsPipelineId++;
 }
 
 //deprecated
@@ -715,14 +767,125 @@ VkVertexInputBindingDescription * GfxVk::VulkanPipeline::VulkanGraphicsPipelineF
     return inputBindingDesc;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::Init()
+void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::Init(const Core::WindowSettings& windowSettings)
 {
     PLOGD << "VulkanGraphicsPipelineFactory init";
 
-    //dynamicStateList.push_back(VK_DYNAMIC_STATE_VIEWPORT);
-    //dynamicStateList.push_back(VK_DYNAMIC_STATE_SCISSOR);
-    
+    m_windowSettings = windowSettings;
+
+    dynamicStateList.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+    dynamicStateList.push_back(VK_DYNAMIC_STATE_SCISSOR);
+
+    CreatePipelineVertexInputState();
+    CreatePipelineInputAssemblyState();
+    CreatePipelineTessellationState();
+    CreatePipelineViewportState();
+    CreatePipelineRasterizationState();
+    CreatePipelineMultiSampleState();
+    CreatePipelineDepthStencilState();
+    CreatePipelineColorBlendState();
+    CreateDynamicState();
     //VulkanGraphicsPipeline::mandatoryStates.push_back(PipelineStates::VertexInputState);
+
+    //TessellationStateCreateInfo
+    //{
+    //    m_pipelineTessellationStateCreateInfo.flags = 0;
+    //    m_pipelineTessellationStateCreateInfo.patchControlPoints = 0;
+    //    m_pipelineTessellationStateCreateInfo.pNext = nullptr;
+    //    m_pipelineTessellationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+    //}
+
+    ////ViewportStateCreateInfo
+    //{
+    //    m_defaultScissor = { 0, 0, m_windowSettings.m_renderWidth, m_windowSettings.m_renderHeight };
+    //    m_defaultViewport = { 0, 0, (float)m_windowSettings.m_renderWidth, (float)m_windowSettings.m_renderHeight, 0.0f, 1.0f };
+
+    //    m_pipelineViewportStateCreateInfoObj.flags = 0;
+    //    m_pipelineViewportStateCreateInfoObj.pNext = nullptr;
+    //    m_pipelineViewportStateCreateInfoObj.pScissors = &m_defaultScissor;
+    //    m_pipelineViewportStateCreateInfoObj.pViewports = &m_defaultViewport;
+    //    m_pipelineViewportStateCreateInfoObj.scissorCount = 1;
+    //    m_pipelineViewportStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    //    m_pipelineViewportStateCreateInfoObj.viewportCount = 1;
+    //}
+
+    ////RasterizationStateCreateInfo 
+    //{
+    //    m_pipelineRasterizationStateCreateInfoObj.cullMode = VK_CULL_MODE_BACK_BIT;
+    //    m_pipelineRasterizationStateCreateInfoObj.depthBiasClamp = 0;
+    //    m_pipelineRasterizationStateCreateInfoObj.depthBiasConstantFactor = 0;
+    //    m_pipelineRasterizationStateCreateInfoObj.depthBiasEnable = VK_FALSE;
+    //    m_pipelineRasterizationStateCreateInfoObj.depthBiasSlopeFactor = 0;
+    //    m_pipelineRasterizationStateCreateInfoObj.depthClampEnable = VK_FALSE;
+    //    m_pipelineRasterizationStateCreateInfoObj.flags = 0;
+    //    m_pipelineRasterizationStateCreateInfoObj.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    //    m_pipelineRasterizationStateCreateInfoObj.lineWidth = 1.0f;
+    //    m_pipelineRasterizationStateCreateInfoObj.pNext = nullptr;
+    //    m_pipelineRasterizationStateCreateInfoObj.polygonMode = VK_POLYGON_MODE_FILL;
+    //    m_pipelineRasterizationStateCreateInfoObj.rasterizerDiscardEnable = VK_FALSE;
+    //    m_pipelineRasterizationStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    //}
+
+    ////MultisampleStateCreateInfo
+    //{
+    //    m_pipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+    //    m_pipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
+    //    m_pipelineMultisampleStateCreateInfo.flags = 0;
+    //    m_pipelineMultisampleStateCreateInfo.minSampleShading = 0.5f;
+    //    m_pipelineMultisampleStateCreateInfo.pNext = nullptr;
+    //    m_pipelineMultisampleStateCreateInfo.pSampleMask = nullptr;
+    //    m_pipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    //    m_pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+    //    m_pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    //}
+
+    ////DepthStencilStateCreateInfo
+    //{
+    //    m_pipelineDepthStencilStateCreateInfo.back.compareMask = 0;
+    //    m_pipelineDepthStencilStateCreateInfo.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    //    m_pipelineDepthStencilStateCreateInfo.back.depthFailOp = VK_STENCIL_OP_KEEP;
+    //    m_pipelineDepthStencilStateCreateInfo.back.failOp = VK_STENCIL_OP_KEEP;
+    //    m_pipelineDepthStencilStateCreateInfo.back.passOp = VK_STENCIL_OP_KEEP;
+    //    m_pipelineDepthStencilStateCreateInfo.back.reference = 0;
+    //    m_pipelineDepthStencilStateCreateInfo.back.writeMask = 0;
+
+    //    m_pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    //    m_pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    //    m_pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+    //    m_pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    //    m_pipelineDepthStencilStateCreateInfo.flags = 0;
+    //    m_pipelineDepthStencilStateCreateInfo.front = m_pipelineDepthStencilStateCreateInfo.back;
+    //    m_pipelineDepthStencilStateCreateInfo.maxDepthBounds = 0.0f;
+    //    m_pipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0;
+    //    m_pipelineDepthStencilStateCreateInfo.pNext = nullptr;
+    //    m_pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+    //    m_pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    //}
+
+    ////ColorBlendStateCreateInfo
+    //{
+    //    m_attachmentsDefault.alphaBlendOp = VK_BLEND_OP_ADD;
+    //    m_attachmentsDefault.blendEnable = VK_FALSE;
+    //    m_attachmentsDefault.colorBlendOp = VK_BLEND_OP_ADD;
+    //    m_attachmentsDefault.colorWriteMask = 0xf;/* VK_COLOR_COMPONENT_R_BIT |
+    //        VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;*/
+    //    m_attachmentsDefault.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    //    m_attachmentsDefault.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    //    m_attachmentsDefault.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    //    m_attachmentsDefault.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+
+    //    m_pipelineColorBlendStateCreateInfoObj.attachmentCount = 1;
+    //    m_pipelineColorBlendStateCreateInfoObj.blendConstants[0] = 1.0f;
+    //    m_pipelineColorBlendStateCreateInfoObj.blendConstants[1] = 1.0f;
+    //    m_pipelineColorBlendStateCreateInfoObj.blendConstants[2] = 1.0f;
+    //    m_pipelineColorBlendStateCreateInfoObj.blendConstants[3] = 1.0f;
+    //    m_pipelineColorBlendStateCreateInfoObj.flags = 0;
+    //    m_pipelineColorBlendStateCreateInfoObj.logicOp = VK_LOGIC_OP_NO_OP;
+    //    m_pipelineColorBlendStateCreateInfoObj.logicOpEnable = VK_FALSE;
+    //    m_pipelineColorBlendStateCreateInfoObj.pAttachments = &m_attachmentsDefault;
+    //    m_pipelineColorBlendStateCreateInfoObj.pNext = nullptr;
+    //    m_pipelineColorBlendStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    //}
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DeInit()
@@ -767,49 +930,55 @@ GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::~VulkanGraphicsPipelineFac
 
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateVertexInputState(const Core::Utility::VertexInputWrapper * vertexInputWrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper)
 {
-    Core::Wrappers::VertexInputState * inputState = vertexInputWrapper->inputState;
+    Core::Wrappers::VertexInputState * inputState = vertexInputWrapper.inputState;
 
-    VkPipelineVertexInputStateCreateInfo * pipelineVertexInputStateCreateInfo = new VkPipelineVertexInputStateCreateInfo;
-    pipelineVertexInputStateCreateInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    pipelineVertexInputStateCreateInfo->pVertexAttributeDescriptions = UnwrapVertexInputAttributeInfo ( inputState->attribInfo, inputState->attribCount);
-    pipelineVertexInputStateCreateInfo->pVertexBindingDescriptions = UnwrapVertexInputBindingInfo(inputState->bindingInfo, inputState->bindingCount);
-    pipelineVertexInputStateCreateInfo->vertexAttributeDescriptionCount = inputState->attribCount;
-    pipelineVertexInputStateCreateInfo->vertexBindingDescriptionCount = inputState->bindingCount;
-    pipelineVertexInputStateCreateInfo->pNext = nullptr;
-    pipelineVertexInputStateCreateInfo->flags = 0;
+    VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
+    pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = UnwrapVertexInputAttributeInfo(inputState->attribInfo, inputState->attribCount);
+    pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = UnwrapVertexInputBindingInfo(inputState->bindingInfo, inputState->bindingCount);
+    pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = inputState->attribCount;
+    pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = inputState->bindingCount;
+    pipelineVertexInputStateCreateInfo.pNext = nullptr;
+    pipelineVertexInputStateCreateInfo.flags = 0;
 
-    idToVertexInputMap.insert( std::pair<uint32_t, VkPipelineVertexInputStateCreateInfo *>(
-    { (vertexInputWrapper)->GetId(), 
-        pipelineVertexInputStateCreateInfo }) );
+    auto id = vertexInputWrapper.GetId();
+    idToVertexInputMap.insert( std::pair<uint32_t, VkPipelineVertexInputStateCreateInfo>(
+    { id, pipelineVertexInputStateCreateInfo }) );
+
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper * inputAssemblyWrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& inputAssemblyWrapper)
 {
-    VkPipelineInputAssemblyStateCreateInfo * pipelineInputAssemblyStateCreateInfo = new VkPipelineInputAssemblyStateCreateInfo;
-    Core::Wrappers::InputAssemblyState * inputAssembly = inputAssemblyWrapper->assemblyState;
-    pipelineInputAssemblyStateCreateInfo->primitiveRestartEnable = inputAssembly->isPrimtiveRestartEnabled;
-    pipelineInputAssemblyStateCreateInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    pipelineInputAssemblyStateCreateInfo->topology = UnwrapPrimitiveInfo(inputAssembly->primitiveType);
-    pipelineInputAssemblyStateCreateInfo->flags = 0;
-    pipelineInputAssemblyStateCreateInfo->pNext = nullptr;
+    VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
+    Core::Wrappers::InputAssemblyState * inputAssembly = inputAssemblyWrapper.assemblyState;
+    pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = inputAssembly->isPrimtiveRestartEnabled;
+    pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    pipelineInputAssemblyStateCreateInfo.topology = UnwrapPrimitiveInfo(inputAssembly->primitiveType);
+    pipelineInputAssemblyStateCreateInfo.flags = 0;
+    pipelineInputAssemblyStateCreateInfo.pNext = nullptr;
 
-    idToInputAssemblyMap.insert(std::pair<uint32_t, VkPipelineInputAssemblyStateCreateInfo *>(
-    { (inputAssemblyWrapper)->GetId(), pipelineInputAssemblyStateCreateInfo }));
+    auto id = inputAssemblyWrapper.GetId();
+    idToInputAssemblyMap.insert(std::pair<uint32_t, VkPipelineInputAssemblyStateCreateInfo>(
+    {id , pipelineInputAssemblyStateCreateInfo }));
+
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateShaderState(const Core::Utility::ShaderStateWrapper * shaderStateWrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper)
 {
-    VkShaderStageWrapper * vkStateWrapper = new VkShaderStageWrapper;
-    vkStateWrapper->shaderCount = shaderStateWrapper->shaderCount;
+    /*VkShaderStageWrapper * vkStateWrapper = new VkShaderStageWrapper;
+    vkStateWrapper->shaderCount = shaderStateWrapper.shaderCount;
 
     vkStateWrapper->shaderStageCreateInfo = new VkPipelineShaderStageCreateInfo[vkStateWrapper->shaderCount];
-    vkStateWrapper->id = shaderStateWrapper->GetId();
+    auto id = shaderStateWrapper.GetId();
+    vkStateWrapper->id = id;
     for (uint32_t i = 0; i < vkStateWrapper->shaderCount; i++)
     {
         VkPipelineShaderStageCreateInfo * vkInfo = &vkStateWrapper->shaderStageCreateInfo[i];
-        uint32_t shaderId = shaderStateWrapper->shader[i].shaderId;
+        uint32_t shaderId = shaderStateWrapper.shader[i].shaderId;
         vkInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vkInfo->pName = "main";
         vkInfo->pNext = nullptr;
@@ -819,145 +988,165 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateShaderState(con
         vkInfo->stage = GfxVk::Shading::VkShaderFactory::GetInstance()->GetShaderStageFlag(shaderId);
     }
 
-    shaderStageWrapperList.push_back(vkStateWrapper);
+    shaderStageWrapperList.push_back(vkStateWrapper);*/
+    ASSERT_MSG_DEBUG(0, "not used");
+    return 0;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateTessellationState(const Core::Utility::TessellationStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper)
 {
-    VkPipelineTessellationStateCreateInfo * info = new VkPipelineTessellationStateCreateInfo;
-    info->flags = 0;
-    info->pNext = nullptr;
-    info->patchControlPoints = wrapper->tessellationState->patchControlPoints;
-    info->sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+    VkPipelineTessellationStateCreateInfo info{};
+    info.flags = 0;
+    info.pNext = nullptr;
+    info.patchControlPoints = wrapper.tessellationState->patchControlPoints;
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 
-    idToTessellationMap.insert(std::pair<uint32_t, VkPipelineTessellationStateCreateInfo *>
-        ({ wrapper->GetId() , info}));
+    auto id = wrapper.GetId();
+    idToTessellationMap.insert(std::pair<uint32_t, VkPipelineTessellationStateCreateInfo>
+        ({ id, info}));
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateViewportState(const Core::Utility::ViewPortStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper)
 {
-    VkPipelineViewportStateCreateInfo * info = new VkPipelineViewportStateCreateInfo;
-    info->flags = 0;
-    info->pNext = nullptr;
-    info->scissorCount = wrapper->viewportState->scissorCount;
-    info->viewportCount = wrapper->viewportState->viewportCount;
-    info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    VkPipelineViewportStateCreateInfo info{};
+    info.flags = 0;
+    info.pNext = nullptr;
+    info.scissorCount = wrapper.viewportState->scissorCount;
+    info.viewportCount = wrapper.viewportState->viewportCount;
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 
-    if (wrapper->viewportState->pScissors == nullptr)
-        info->pScissors = nullptr;
+    if (wrapper.viewportState->pScissors == nullptr)
+        info.pScissors = nullptr;
     else
     {
         ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     }
 
-    if (wrapper->viewportState->pViewports == nullptr)
-        info->pViewports = nullptr;
+    if (wrapper.viewportState->pViewports == nullptr)
+        info.pViewports = nullptr;
     else
     {
         ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     }
     
-    idToViewportMap.insert(std::pair<uint32_t, VkPipelineViewportStateCreateInfo *>({wrapper->GetId(), info}));
+    auto id = wrapper.GetId();
+    idToViewportMap.insert(std::pair<uint32_t, VkPipelineViewportStateCreateInfo>(
+        {id, info}));
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateRasterisationState(const Core::Utility::RasterizationStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper)
 {
-    Core::Wrappers::RasterizationState * info = wrapper->rasterState;
+    Core::Wrappers::RasterizationState * info = wrapper.rasterState;
 
-    VkPipelineRasterizationStateCreateInfo * vkInfo = new VkPipelineRasterizationStateCreateInfo;
-    vkInfo->depthBiasClamp = info->depthBiasClamp;
-    vkInfo->cullMode = UnwrapCullMode(info->cullMode);
-    vkInfo->depthBiasConstantFactor = info->depthBiasConstantFactor;
-    vkInfo->depthBiasEnable = info->depthBiasEnable;
-    vkInfo->depthBiasSlopeFactor = info->depthBiasSlopeFactor;
-    vkInfo->depthClampEnable = info->depthClampEnable;
-    vkInfo->flags = 0;
-    vkInfo->frontFace = UnwrapFrontFace(info->frontFace);
-    vkInfo->lineWidth = info->lineWidth;
-    vkInfo->pNext = nullptr;
-    vkInfo->polygonMode = UnwrapPolygonMode(info->polygonMode);
-    vkInfo->rasterizerDiscardEnable = info->rasterizerDiscardEnable;
-    vkInfo->sType= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    VkPipelineRasterizationStateCreateInfo vkInfo;
+    vkInfo.depthBiasClamp = info->depthBiasClamp;
+    vkInfo.cullMode = UnwrapCullMode(info->cullMode);
+    vkInfo.depthBiasConstantFactor = info->depthBiasConstantFactor;
+    vkInfo.depthBiasEnable = info->depthBiasEnable;
+    vkInfo.depthBiasSlopeFactor = info->depthBiasSlopeFactor;
+    vkInfo.depthClampEnable = info->depthClampEnable;
+    vkInfo.flags = 0;
+    vkInfo.frontFace = UnwrapFrontFace(info->frontFace);
+    vkInfo.lineWidth = info->lineWidth;
+    vkInfo.pNext = nullptr;
+    vkInfo.polygonMode = UnwrapPolygonMode(info->polygonMode);
+    vkInfo.rasterizerDiscardEnable = info->rasterizerDiscardEnable;
+    vkInfo.sType= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 
-    idToRasterizationMap.insert(std::pair<uint32_t, VkPipelineRasterizationStateCreateInfo*>({ wrapper->GetId(), vkInfo }));
+    auto id = wrapper.GetId();
+    idToRasterizationMap.insert(std::pair<uint32_t, VkPipelineRasterizationStateCreateInfo>(
+        { id, vkInfo }));
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper)
 {
-    Core::Wrappers::DepthStencilState * state = wrapper->depthState;
+    Core::Wrappers::DepthStencilState * state = wrapper.depthState;
 
-    VkPipelineDepthStencilStateCreateInfo * info = new VkPipelineDepthStencilStateCreateInfo;
-    info->back = UnwrapStencilOpState( state->back);
-    info->depthBoundsTestEnable = state->depthBoundsTestEnable;
-    info->depthCompareOp = GfxVk::Unwrap::UnwrapCompareOp( state->depthCompareOp);
-    info->depthTestEnable = state->depthTestEnable;
-    info->depthWriteEnable = state->depthWriteEnable;
-    info->flags = 0;
-    info->front = UnwrapStencilOpState(state->front);
-    info->maxDepthBounds = state->maxDepthBounds;
-    info->minDepthBounds = state->minDepthBounds;
-    info->pNext = nullptr;
-    info->stencilTestEnable = state->stencilTestEnable;
-    info->sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    VkPipelineDepthStencilStateCreateInfo info{};
+    info.back = UnwrapStencilOpState( state->back);
+    info.depthBoundsTestEnable = state->depthBoundsTestEnable;
+    info.depthCompareOp = GfxVk::Unwrap::UnwrapCompareOp( state->depthCompareOp);
+    info.depthTestEnable = state->depthTestEnable;
+    info.depthWriteEnable = state->depthWriteEnable;
+    info.flags = 0;
+    info.front = UnwrapStencilOpState(state->front);
+    info.maxDepthBounds = state->maxDepthBounds;
+    info.minDepthBounds = state->minDepthBounds;
+    info.pNext = nullptr;
+    info.stencilTestEnable = state->stencilTestEnable;
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 
-    idToDepthStencilMap.insert(std::pair<uint32_t, VkPipelineDepthStencilStateCreateInfo*>({ wrapper->GetId(), info}));
+    auto id = wrapper.GetId();
+    idToDepthStencilMap.insert(std::pair<uint32_t, VkPipelineDepthStencilStateCreateInfo>(
+        { id, info}));
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper* wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper)
 {
-    Core::Wrappers::ColorBlendState * info = wrapper->colorBlendState;
+    Core::Wrappers::ColorBlendState * info = wrapper.colorBlendState;
     
-    VkPipelineColorBlendStateCreateInfo * vkinfo = new VkPipelineColorBlendStateCreateInfo;
-    vkinfo->attachmentCount = info->attachmentCount;
-    vkinfo->blendConstants[0] = info->blendConstants[0];
-    vkinfo->blendConstants[1] = info->blendConstants[1];
-    vkinfo->blendConstants[2] = info->blendConstants[2];
-    vkinfo->blendConstants[3] = info->blendConstants[3];
-    vkinfo->flags = 0;
-    vkinfo->logicOp = UnwrapLogicOp(info->logicOp);
-    vkinfo->logicOpEnable = info->logicOpEnable;
-    vkinfo->pAttachments = UnwrapColorBlendAttachment(info->pAttachments, info->attachmentCount);
-    vkinfo->pNext = nullptr;
-    vkinfo->sType= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    VkPipelineColorBlendStateCreateInfo vkinfo{};
+    vkinfo.attachmentCount = info->attachmentCount;
+    vkinfo.blendConstants[0] = info->blendConstants[0];
+    vkinfo.blendConstants[1] = info->blendConstants[1];
+    vkinfo.blendConstants[2] = info->blendConstants[2];
+    vkinfo.blendConstants[3] = info->blendConstants[3];
+    vkinfo.flags = 0;
+    vkinfo.logicOp = UnwrapLogicOp(info->logicOp);
+    vkinfo.logicOpEnable = info->logicOpEnable;
+    vkinfo.pAttachments = UnwrapColorBlendAttachment(info->pAttachments, info->attachmentCount);
+    vkinfo.pNext = nullptr;
+    vkinfo.sType= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 
-    idToColorBlendMap.insert(std::pair<uint32_t, VkPipelineColorBlendStateCreateInfo*>({ wrapper->GetId(), vkinfo }));
+    auto id = wrapper.GetId();
+    idToColorBlendMap.insert(std::pair<uint32_t, VkPipelineColorBlendStateCreateInfo>({ id, vkinfo }));
+
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper)
 {
-    Core::Wrappers::MultiSampleState * info = wrapper->multiSampleState;
+    Core::Wrappers::MultiSampleState * info = wrapper.multiSampleState;
 
-    VkPipelineMultisampleStateCreateInfo * vkinfo = new VkPipelineMultisampleStateCreateInfo;
-    vkinfo->alphaToCoverageEnable = info->alphaToCoverageEnable;
-    vkinfo->alphaToOneEnable= info->alphaToOneEnable;
-    vkinfo->flags = 0;
-    vkinfo->minSampleShading = info->minSampleShading;
-    vkinfo->pNext = nullptr;
-    vkinfo->pSampleMask = NULL;
-    vkinfo->rasterizationSamples = GfxVk::Unwrap::UnWrapSampleCount( info->sampleCount);
-    vkinfo->sampleShadingEnable = info->sampleShadingEnable;
-    vkinfo->sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    VkPipelineMultisampleStateCreateInfo vkinfo{};
+    vkinfo.alphaToCoverageEnable = info->alphaToCoverageEnable;
+    vkinfo.alphaToOneEnable= info->alphaToOneEnable;
+    vkinfo.flags = 0;
+    vkinfo.minSampleShading = info->minSampleShading;
+    vkinfo.pNext = nullptr;
+    vkinfo.pSampleMask = NULL;
+    vkinfo.rasterizationSamples = GfxVk::Unwrap::UnWrapSampleCount( info->sampleCount);
+    vkinfo.sampleShadingEnable = info->sampleShadingEnable;
+    vkinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 
-    idToMultiSampleMap.insert(std::pair<uint32_t, VkPipelineMultisampleStateCreateInfo *>({ wrapper->GetId(), vkinfo }));
+    auto id = wrapper.GetId();
+    idToMultiSampleMap.insert(std::pair<uint32_t, VkPipelineMultisampleStateCreateInfo>({ id, vkinfo }));
+    return id;
 }
 
-void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDynamicState(const Core::Utility::DynamicStateWrapper * wrapper)
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper)
 {
-    Core::Wrappers::DynamicStateList * list = wrapper->dynamicStates;
+    Core::Wrappers::DynamicStateList * list = wrapper.dynamicStates;
 
-    VkPipelineDynamicStateCreateInfo * info = new VkPipelineDynamicStateCreateInfo;
-    info->dynamicStateCount = list->dynamicStateCount;
-    info->flags = 0;
-    info->pDynamicStates = UnwrapDynamicList(list->pDynamicStates, list->dynamicStateCount);
-    info->pNext = nullptr;
-    info->sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    VkPipelineDynamicStateCreateInfo info{};
+    info.dynamicStateCount = list->dynamicStateCount;
+    info.flags = 0;
+    info.pDynamicStates = UnwrapDynamicList(list->pDynamicStates, list->dynamicStateCount);
+    info.pNext = nullptr;
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
-    idToDynamicMap.insert(std::pair<uint32_t, VkPipelineDynamicStateCreateInfo *>({ wrapper->GetId(), info }));
+    auto id = wrapper.GetId();
+    idToDynamicMap.insert(std::pair<uint32_t, VkPipelineDynamicStateCreateInfo>({ id, info }));
+    return id;
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(Core::Wrappers::PipelineCreateInfo * info, const uint32_t & pipelineCount, uint32_t * pipelineIds)
 {
-    std::vector<VkGraphicsPipelineCreateInfo> infoList;
+    /*std::vector<VkGraphicsPipelineCreateInfo> infoList;
     infoList.resize(pipelineCount);
     
     VkPipeline * list = new VkPipeline[pipelineCount];
@@ -1013,18 +1202,81 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(Core::
         idToPipelineMap.insert(std::pair<uint32_t, VkPipeline *>({pipelineIds[i], &list[i]}));
     }
 
-    tempVectorToBeDeleted.push_back(list);
+    tempVectorToBeDeleted.push_back(list);*/
+    ASSERT_MSG_DEBUG(0, "not used");
 }
 
-VkPipeline * GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetPipeline(const uint32_t & id) 
+uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info)
 {
-    VkPipeline * pipeline = idToPipelineMap[id];
-    ASSERT_MSG_DEBUG(pipeline != nullptr, "Id not found");
+    auto pipelineLayout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(info.pipelineLayoutId);
+    auto shaderStageInfo = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetShaderStageCreateInfo(info.statesToIdMap.at(Core::Enums::PipelineStates::ShaderStage));
 
-    return pipeline;
+    //VkFormat depthFormat = GfxVk::Unwrap::UnWrapFormat(info.depthFormat);
+    std::vector<VkFormat> colorFormats;
+    for (auto& format : info.colorFormats)
+    {
+        colorFormats.push_back(GfxVk::Unwrap::UnWrapFormat(format));
+    }
+
+    VkPipelineRenderingCreateInfo renderingInfo{};
+    renderingInfo.colorAttachmentCount = (uint32_t)info.colorFormats.size();
+    if(info.depthFormat.has_value())
+        renderingInfo.depthAttachmentFormat = GfxVk::Unwrap::UnWrapFormat(info.depthFormat.value());
+
+    renderingInfo.pColorAttachmentFormats = colorFormats.data();
+    //renderingInfo.stencilAttachmentFormat = (&selectedFormatAndColorSpace.format);
+    //renderingInfo.viewMask = ;
+    renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+
+    VkGraphicsPipelineCreateInfo vkinfo = {};
+    vkinfo.basePipelineHandle = VK_NULL_HANDLE;
+    vkinfo.basePipelineIndex = -1;
+    vkinfo.flags = 0;
+    vkinfo.layout = *pipelineLayout;
+    vkinfo.pColorBlendState = &idToColorBlendMap[info.statesToIdMap.at(Core::Enums::PipelineStates::ColorBlendState)];
+    vkinfo.pDepthStencilState = &idToDepthStencilMap[info.statesToIdMap.at(Core::Enums::PipelineStates::DepthStencilState)];
+    vkinfo.pDynamicState = &idToDynamicMap[info.statesToIdMap.at(Core::Enums::PipelineStates::DynamicState)];
+    vkinfo.pInputAssemblyState = &idToInputAssemblyMap[info.statesToIdMap.at(Core::Enums::PipelineStates::InputAssemblyState)];
+    vkinfo.pMultisampleState = &idToMultiSampleMap[info.statesToIdMap.at(Core::Enums::PipelineStates::MultisampleState)];
+    vkinfo.pNext = &renderingInfo;
+    vkinfo.pRasterizationState = &idToRasterizationMap[info.statesToIdMap.at(Core::Enums::PipelineStates::RasterizationState)];
+    vkinfo.pStages = shaderStageInfo;
+    vkinfo.pTessellationState = &idToTessellationMap[info.statesToIdMap.at(Core::Enums::PipelineStates::TessellationState)];
+    vkinfo.pVertexInputState = &idToVertexInputMap[info.statesToIdMap.at(Core::Enums::PipelineStates::VertexInputState)];
+    vkinfo.pViewportState = &idToViewportMap[info.statesToIdMap.at(Core::Enums::PipelineStates::ViewportState)];
+    vkinfo.renderPass = VK_NULL_HANDLE;
+    vkinfo.stageCount = 2; // TODO: hardcoding for now, fetch it dynamically
+    vkinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    vkinfo.subpass = 0;
+
+    VkPipelineCache cache = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+
+    GfxVk::Utility::ErrorCheck(vkCreateGraphicsPipelines(
+        DeviceInfo::GetLogicalDevice(),
+        cache,
+        1,
+        &vkinfo,
+        DeviceInfo::GetAllocationCallback(),
+        &pipeline));
+
+    auto id = GetGraphicsPipelineId();
+    idToPipelineMap.insert({ id, pipeline});
+
+    return id;
 }
 
-/*
+const VkPipeline& GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetPipeline(const uint32_t & id) 
+{
+    if (idToPipelineMap.find(id) == idToPipelineMap.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Id not found");
+    }
+
+    return idToPipelineMap[id];
+}
+
+
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::InitPipelineCache()
 {
 
@@ -1037,9 +1289,10 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineShaderS
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDynamicState()
 {
-    pipelineDynamicStateCreateInfoObj.dynamicStateCount = (uint32_t)dynamicStateList.size();
-    pipelineDynamicStateCreateInfoObj.pDynamicStates = dynamicStateList.data();
-    pipelineDynamicStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    m_pipelineDynamicStateCreateInfoObj.dynamicStateCount = (uint32_t)dynamicStateList.size();
+    m_pipelineDynamicStateCreateInfoObj.pDynamicStates = dynamicStateList.data();
+    m_pipelineDynamicStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    idToDynamicMap.insert({ GetStateId(Core::Enums::PipelineStates::DynamicState), m_pipelineDynamicStateCreateInfoObj });
 }
 
 
@@ -1051,93 +1304,108 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineVertexI
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineInputAssemblyState()
 {
-    pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
-    pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    m_pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+    m_pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    m_pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    idToInputAssemblyMap.insert({ GetStateId(Core::Enums::PipelineStates::InputAssemblyState), m_pipelineInputAssemblyStateCreateInfo });
+
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineTessellationState()
 {
+    m_pipelineTessellationStateCreateInfo.flags = 0;
+    m_pipelineTessellationStateCreateInfo.patchControlPoints = 0;
+    m_pipelineTessellationStateCreateInfo.pNext = nullptr;
+    m_pipelineTessellationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+
+    idToTessellationMap.insert({ GetStateId(Core::Enums::PipelineStates::TessellationState), m_pipelineTessellationStateCreateInfo });
+
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineRasterizationState()
 {
-    pipelineRasterizationStateCreateInfoObj.cullMode = VK_CULL_MODE_BACK_BIT;
-    pipelineRasterizationStateCreateInfoObj.depthBiasClamp = 0;
-    pipelineRasterizationStateCreateInfoObj.depthBiasConstantFactor = 0;
-    pipelineRasterizationStateCreateInfoObj.depthBiasEnable = VK_FALSE;
-    pipelineRasterizationStateCreateInfoObj.depthBiasSlopeFactor = 0;
-    pipelineRasterizationStateCreateInfoObj.depthClampEnable = VK_FALSE;
-    pipelineRasterizationStateCreateInfoObj.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    pipelineRasterizationStateCreateInfoObj.lineWidth = 1.0f;
-    pipelineRasterizationStateCreateInfoObj.polygonMode = VK_POLYGON_MODE_FILL;
-    pipelineRasterizationStateCreateInfoObj.rasterizerDiscardEnable = VK_FALSE;
-    pipelineRasterizationStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    m_pipelineRasterizationStateCreateInfoObj.cullMode = VK_CULL_MODE_BACK_BIT;
+    m_pipelineRasterizationStateCreateInfoObj.depthBiasClamp = 0;
+    m_pipelineRasterizationStateCreateInfoObj.depthBiasConstantFactor = 0;
+    m_pipelineRasterizationStateCreateInfoObj.depthBiasEnable = VK_FALSE;
+    m_pipelineRasterizationStateCreateInfoObj.depthBiasSlopeFactor = 0;
+    m_pipelineRasterizationStateCreateInfoObj.depthClampEnable = VK_FALSE;
+    m_pipelineRasterizationStateCreateInfoObj.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    m_pipelineRasterizationStateCreateInfoObj.lineWidth = 1.0f;
+    m_pipelineRasterizationStateCreateInfoObj.polygonMode = VK_POLYGON_MODE_FILL;
+    m_pipelineRasterizationStateCreateInfoObj.rasterizerDiscardEnable = VK_FALSE;
+    m_pipelineRasterizationStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+
+    idToRasterizationMap.insert({ GetStateId(Core::Enums::PipelineStates::RasterizationState), m_pipelineRasterizationStateCreateInfoObj});
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineColorBlendState()
 {
-    attachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
-    attachments[0].blendEnable = VK_FALSE;
-    attachments[0].colorBlendOp = VK_BLEND_OP_ADD;
-    attachments[0].colorWriteMask = 0xf;
-    attachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    attachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    attachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    attachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    m_attachmentsDefault.alphaBlendOp = VK_BLEND_OP_ADD;
+    m_attachmentsDefault.blendEnable = VK_FALSE;
+    m_attachmentsDefault.colorBlendOp = VK_BLEND_OP_ADD;
+    m_attachmentsDefault.colorWriteMask = 0xf;
+    m_attachmentsDefault.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    m_attachmentsDefault.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    m_attachmentsDefault.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    m_attachmentsDefault.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
 
-    pipelineColorBlendStateCreateInfoObj.attachmentCount = 1;
-    pipelineColorBlendStateCreateInfoObj.blendConstants[0] = 1.0f;
-    pipelineColorBlendStateCreateInfoObj.blendConstants[1] = 1.0f;
-    pipelineColorBlendStateCreateInfoObj.blendConstants[2] = 1.0f;
-    pipelineColorBlendStateCreateInfoObj.blendConstants[3] = 1.0f;
-    pipelineColorBlendStateCreateInfoObj.logicOp = VK_LOGIC_OP_NO_OP;
-    pipelineColorBlendStateCreateInfoObj.logicOpEnable = VK_FALSE;
-    pipelineColorBlendStateCreateInfoObj.pAttachments = attachments;
-    pipelineColorBlendStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    m_pipelineColorBlendStateCreateInfoObj.attachmentCount = 1;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[0] = 1.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[1] = 1.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[2] = 1.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[3] = 1.0f;
+    m_pipelineColorBlendStateCreateInfoObj.logicOp = VK_LOGIC_OP_NO_OP;
+    m_pipelineColorBlendStateCreateInfoObj.logicOpEnable = VK_FALSE;
+    m_pipelineColorBlendStateCreateInfoObj.pAttachments = &m_attachmentsDefault;
+    m_pipelineColorBlendStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+
+    idToColorBlendMap.insert({ GetStateId(Core::Enums::PipelineStates::ColorBlendState), m_pipelineColorBlendStateCreateInfoObj });
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineViewportState()
 {
-    pipelineViewportStateCreateInfoObj.pScissors = nullptr;
-    pipelineViewportStateCreateInfoObj.pViewports = nullptr;
-    pipelineViewportStateCreateInfoObj.scissorCount = 1;
-    pipelineViewportStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    pipelineViewportStateCreateInfoObj.viewportCount = 1;
+    m_pipelineViewportStateCreateInfoObj.pScissors = nullptr;
+    m_pipelineViewportStateCreateInfoObj.pViewports = nullptr;
+    m_pipelineViewportStateCreateInfoObj.scissorCount = 1;
+    m_pipelineViewportStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    m_pipelineViewportStateCreateInfoObj.viewportCount = 1;
+    idToViewportMap.insert({ GetStateId(Core::Enums::PipelineStates::ViewportState), m_pipelineViewportStateCreateInfoObj });
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineDepthStencilState()
 {
-    pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    pipelineDepthStencilStateCreateInfo.pNext = NULL;
-    pipelineDepthStencilStateCreateInfo.flags = 0;
-    pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
-    pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-    pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
-    pipelineDepthStencilStateCreateInfo.minDepthBounds = 0;
-    pipelineDepthStencilStateCreateInfo.maxDepthBounds = 0;
-    pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
-    pipelineDepthStencilStateCreateInfo.back.failOp = VK_STENCIL_OP_KEEP;
-    pipelineDepthStencilStateCreateInfo.back.passOp = VK_STENCIL_OP_KEEP;
-    pipelineDepthStencilStateCreateInfo.back.compareOp = VK_COMPARE_OP_ALWAYS;
-    pipelineDepthStencilStateCreateInfo.back.compareMask = 0;
-    pipelineDepthStencilStateCreateInfo.back.reference = 0;
-    pipelineDepthStencilStateCreateInfo.back.depthFailOp = VK_STENCIL_OP_KEEP;
-    pipelineDepthStencilStateCreateInfo.back.writeMask = 0;
-    pipelineDepthStencilStateCreateInfo.front = pipelineDepthStencilStateCreateInfo.back;
+    m_pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    m_pipelineDepthStencilStateCreateInfo.pNext = NULL;
+    m_pipelineDepthStencilStateCreateInfo.flags = 0;
+    m_pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+    m_pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    m_pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    m_pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+    m_pipelineDepthStencilStateCreateInfo.minDepthBounds = 0;
+    m_pipelineDepthStencilStateCreateInfo.maxDepthBounds = 0;
+    m_pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+    m_pipelineDepthStencilStateCreateInfo.back.failOp = VK_STENCIL_OP_KEEP;
+    m_pipelineDepthStencilStateCreateInfo.back.passOp = VK_STENCIL_OP_KEEP;
+    m_pipelineDepthStencilStateCreateInfo.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    m_pipelineDepthStencilStateCreateInfo.back.compareMask = 0;
+    m_pipelineDepthStencilStateCreateInfo.back.reference = 0;
+    m_pipelineDepthStencilStateCreateInfo.back.depthFailOp = VK_STENCIL_OP_KEEP;
+    m_pipelineDepthStencilStateCreateInfo.back.writeMask = 0;
+    m_pipelineDepthStencilStateCreateInfo.front = m_pipelineDepthStencilStateCreateInfo.back;
+    idToDepthStencilMap.insert({ GetStateId(Core::Enums::PipelineStates::DepthStencilState), m_pipelineDepthStencilStateCreateInfo });
 }
 
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineMultiSampleState()
 {
-    pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    pipelineMultisampleStateCreateInfo.pNext = NULL;
-    pipelineMultisampleStateCreateInfo.flags = 0;
-    pipelineMultisampleStateCreateInfo.pSampleMask = NULL;
-    pipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
-    pipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
-    pipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    pipelineMultisampleStateCreateInfo.minSampleShading = 0.0;
+    m_pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    m_pipelineMultisampleStateCreateInfo.pNext = NULL;
+    m_pipelineMultisampleStateCreateInfo.flags = 0;
+    m_pipelineMultisampleStateCreateInfo.pSampleMask = NULL;
+    m_pipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+    m_pipelineMultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
+    m_pipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    m_pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+    m_pipelineMultisampleStateCreateInfo.minSampleShading = 0.0;
+    idToMultiSampleMap.insert({ GetStateId(Core::Enums::PipelineStates::MultisampleState), m_pipelineMultisampleStateCreateInfo });
 }
-*/

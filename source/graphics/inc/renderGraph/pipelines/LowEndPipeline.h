@@ -24,8 +24,8 @@ namespace Renderer
                 ~LowEndPipeline() {}
                 LowEndPipeline(Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings, const std::string& name);
 
-                /*virtual void CreatePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;
-                virtual void CompilePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;
+                virtual void CreatePipeline() override;
+                /*virtual void CompilePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;
                 virtual void DestroyPipeline() override;
                 virtual void ExecutePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) override;*/
             };

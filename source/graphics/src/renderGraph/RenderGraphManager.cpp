@@ -590,6 +590,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                             if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                             {
                                 info.m_clearColorValues = ((ImageResourceAlias*)taskRes)->GetClearColorValue();
+                                info.m_imageFormat = ((ImageResourceAlias*)taskRes)->GetImageFormat();
                                 auto& colorList = renderingInfoPerFrame[frameCount].m_colorAttachmentInfo;
                                 auto colorAttachmentSlot = taskInput.m_imageInfo.value().m_colorAttachmentSlot.value();
                                 
@@ -603,6 +604,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                             else
                             {
                                 info.m_clearDepthStencilValues = ((ImageResourceAlias*)taskRes)->GetClearDepthValue();
+                                info.m_imageFormat = ((ImageResourceAlias*)taskRes)->GetImageFormat();
                                 renderingInfoPerFrame[frameCount].m_depthAttachmentInfo = info;
                             }
                         }
@@ -818,6 +820,7 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
                 for (auto& info : renderingInfoForFrames)
                     info.m_renderArea = ((Renderer::RenderGraph::Tasks::RenderTask*)task)->GetRenderArea();
                 ((Renderer::RenderGraph::Tasks::RenderTask*)task)->AssignRenderingInfo(renderingInfoForFrames);
+                ((Renderer::RenderGraph::Tasks::RenderTask*)task)->CreateGraphicsPipeline();
             }
         }
     };
@@ -953,6 +956,11 @@ void Renderer::RenderGraph::RenderGraphManager::Init(
 
     for (auto& pipeline : m_pipelines)
     {
+        pipeline->CreatePipeline();
+    }
+
+    for (auto& pipeline : m_pipelines)
+    {
         pipeline->CompilePipeline();
     }
 
@@ -972,7 +980,7 @@ void Renderer::RenderGraph::RenderGraphManager::Init(
         }
     };
 
-    PrintTaskInfo();
+    //PrintTaskInfo();
 
     m_presentationTask = std::make_unique<Renderer::RenderGraph::Tasks::PresentationTask>("Presentation",
         Core::Settings::m_swapBufferCount,

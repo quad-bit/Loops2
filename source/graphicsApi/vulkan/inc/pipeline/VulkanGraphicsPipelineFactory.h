@@ -4,6 +4,7 @@
 #include <map>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include "utility/PipelineStateWrappers.h"
+#include <Settings.h>
 
 class VulkanGraphicsPipeline;
 class Shader;
@@ -22,11 +23,16 @@ namespace GfxVk
         class VulkanGraphicsPipelineFactory
         {
         private:
-            VulkanGraphicsPipelineFactory() {}
-            VulkanGraphicsPipelineFactory(VulkanGraphicsPipelineFactory const&) {}
+            VulkanGraphicsPipelineFactory(){}
+            VulkanGraphicsPipelineFactory(VulkanGraphicsPipelineFactory const&){}
             VulkanGraphicsPipelineFactory const& operator= (VulkanGraphicsPipelineFactory const&) {}
 
             static VulkanGraphicsPipelineFactory* instance;
+            Core::WindowSettings m_windowSettings;
+
+            VkRect2D m_defaultScissor;
+            VkViewport m_defaultViewport;
+
             /*
                 VkPipelineCache                                     pipelineCacheObj;
                 VkPipelineShaderStageCreateInfo                     pipelineShaderStageCreateInfo = {};
@@ -41,33 +47,54 @@ namespace GfxVk
                 VkPipelineColorBlendAttachmentState                 attachments[1];
                 VkPipelineDynamicStateCreateInfo                    pipelineDynamicStateCreateInfoObj = {};
                 VkGraphicsPipelineCreateInfo                        vulkanGraphicsPipelineCreateInfoObj = {};
+*/
+            void InitPipelineCache();
+            void CreatePipelineShaderStage();
+            void CreatePipelineVertexInputState();
+            void CreatePipelineInputAssemblyState();
+            void CreatePipelineTessellationState();
+            void CreatePipelineViewportState();
+            void CreatePipelineRasterizationState();
+            void CreatePipelineMultiSampleState();
+            void CreatePipelineDepthStencilState();
+            void CreatePipelineColorBlendState();
+            void CreateDynamicState();
 
-                void InitPipelineCache();
-                void CreatePipelineShaderStage();
-                void CreatePipelineVertexInputState();
-                void CreatePipelineInputAssemblyState();
-                void CreatePipelineTessellationState();
-                void CreatePipelineViewportState();
-                void CreatePipelineRasterizationState();
-                void CreatePipelineMultiSampleState();
-                void CreatePipelineDepthStencilState();
-                void CreatePipelineColorBlendState();
-                void CreateDynamicState();
-            */
+            VkPipelineTessellationStateCreateInfo               m_pipelineTessellationStateCreateInfo = {};
+            VkPipelineInputAssemblyStateCreateInfo              m_pipelineInputAssemblyStateCreateInfo = {};
+            VkPipelineViewportStateCreateInfo                   m_pipelineViewportStateCreateInfoObj = {};
+            VkPipelineRasterizationStateCreateInfo              m_pipelineRasterizationStateCreateInfoObj = {};
+            VkPipelineMultisampleStateCreateInfo                m_pipelineMultisampleStateCreateInfo = {};
+            VkPipelineDepthStencilStateCreateInfo               m_pipelineDepthStencilStateCreateInfo = {};
+            VkPipelineColorBlendStateCreateInfo                 m_pipelineColorBlendStateCreateInfoObj = {};
+            VkPipelineColorBlendAttachmentState                 m_attachmentsDefault;
+            VkPipelineDynamicStateCreateInfo                    m_pipelineDynamicStateCreateInfoObj = {};
+
+            uint32_t m_pipelineTessellationStateCreateInfoCounter = 0;
+            uint32_t m_pipelineInputAssemblyStateCreateInfoCounter = 0;
+            uint32_t m_pipelineViewportStateCreateInfoObjCounter = 0;
+            uint32_t m_pipelineRasterizationStateCreateInfoObjCounter = 0;
+            uint32_t m_pipelineMultisampleStateCreateInfoCounter = 0;
+            uint32_t m_pipelineDepthStencilStateCreateInfoCounter = 0;
+            uint32_t m_pipelineColorBlendStateCreateInfoCounter = 0;
+            uint32_t m_pipelineDynamicStateCreateInfoCounter = 0;
+            uint32_t m_graphicsPipelineId = 0;
+            uint32_t GetStateId(const Core::Enums::PipelineStates & state);
+            uint32_t GetGraphicsPipelineId();
 
             std::vector<VulkanGraphicsPipeline*> pipelineList;
-            std::map<uint32_t, VkPipelineVertexInputStateCreateInfo*> idToVertexInputMap;
-            std::map<uint32_t, VkPipelineInputAssemblyStateCreateInfo*> idToInputAssemblyMap;
-            std::vector<VkShaderStageWrapper*> shaderStageWrapperList;
-            std::map<uint32_t, VkPipelineTessellationStateCreateInfo*> idToTessellationMap;
-            std::map<uint32_t, VkPipelineViewportStateCreateInfo*> idToViewportMap;
-            std::map<uint32_t, VkPipelineRasterizationStateCreateInfo*> idToRasterizationMap;
-            std::map<uint32_t, VkPipelineMultisampleStateCreateInfo*> idToMultiSampleMap;
-            std::map<uint32_t, VkPipelineDepthStencilStateCreateInfo*> idToDepthStencilMap;
-            std::map<uint32_t, VkPipelineColorBlendStateCreateInfo*> idToColorBlendMap;
-            std::map<uint32_t, VkPipelineDynamicStateCreateInfo*> idToDynamicMap;
-            std::map<uint32_t, VkGraphicsPipelineCreateInfo*> idToPipelineInfoMap;
-            std::map<uint32_t, VkPipeline*> idToPipelineMap;
+            std::map<uint32_t, VkPipelineVertexInputStateCreateInfo> idToVertexInputMap;
+            std::map<uint32_t, VkPipelineInputAssemblyStateCreateInfo> idToInputAssemblyMap;
+            std::vector<VkShaderStageWrapper> shaderStageWrapperList;
+            std::map<uint32_t, VkPipelineTessellationStateCreateInfo> idToTessellationMap;
+            std::map<uint32_t, VkPipelineViewportStateCreateInfo> idToViewportMap;
+            std::map<uint32_t, VkPipelineRasterizationStateCreateInfo> idToRasterizationMap;
+            std::map<uint32_t, VkPipelineMultisampleStateCreateInfo> idToMultiSampleMap;
+            std::map<uint32_t, VkPipelineDepthStencilStateCreateInfo> idToDepthStencilMap;
+            std::map<uint32_t, VkPipelineColorBlendStateCreateInfo> idToColorBlendMap;
+            std::map<uint32_t, VkPipelineDynamicStateCreateInfo> idToDynamicMap;
+            std::map<uint32_t, VkGraphicsPipelineCreateInfo> idToPipelineInfoMap;
+            std::map<uint32_t, VkPipeline> idToPipelineMap;
 
             std::vector<VkPipeline*> tempVectorToBeDeleted;
 
@@ -104,7 +131,7 @@ namespace GfxVk
             void DestroyPipelines();
 
         public:
-            void Init();
+            void Init(const Core::WindowSettings& windowSettings);
             void DeInit();
             void Update();
             static VulkanGraphicsPipelineFactory* GetInstance();
@@ -112,20 +139,21 @@ namespace GfxVk
 
             std::vector<VkDynamicState> dynamicStateList;
 
-            void CreateVertexInputState(const Core::Utility::VertexInputWrapper* vertexInputWrapper);
-            void CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper* InputAssemblyWrapper);
-            void CreateShaderState(const Core::Utility::ShaderStateWrapper* shaderStateWrapper);
-            void CreateTessellationState(const Core::Utility::TessellationStateWrapper* wrapper);
-            void CreateViewportState(const Core::Utility::ViewPortStateWrapper* wrapper);
-            void CreateRasterisationState(const Core::Utility::RasterizationStateWrapper* wrapper);
-            void CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper* wrapper);
-            void CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper* wrapper);
-            void CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper* wrapper);
-            void CreateDynamicState(const Core::Utility::DynamicStateWrapper* wrapper);
+            uint32_t CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper);
+            uint32_t CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& InputAssemblyWrapper);
+            uint32_t CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper);
+            uint32_t CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper);
+            uint32_t CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper);
+            uint32_t CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper);
+            uint32_t CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper);
+            uint32_t CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper);
+            uint32_t CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper);
+            uint32_t CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper);
 
             void CreatePipeline(Core::Wrappers::PipelineCreateInfo* info, const uint32_t& pipelineCount, uint32_t* pipelineId);
+            uint32_t CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info);
 
-            VkPipeline* GetPipeline(const uint32_t& id);
+            const VkPipeline& GetPipeline(const uint32_t& id);
         };
     }
 }

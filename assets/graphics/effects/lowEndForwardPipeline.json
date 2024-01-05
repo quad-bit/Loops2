@@ -1,7 +1,7 @@
 {
     "Effects": [
-        "low\\depth.json",
-        "low\\shadow.json",
-        "low\\opaque.json"
+        "low\\DepthPass.json",
+        "low\\ShadowPass.json",
+        "low\\OpaquePass.json"
     ]
 }

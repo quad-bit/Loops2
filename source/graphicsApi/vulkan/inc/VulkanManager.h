@@ -52,6 +52,7 @@ namespace GfxVk
             void CreateLogicalDevice();
             void GetPhysicalDevice();
             void GetMaxUsableVKSampleCount();
+            void FindBestDepthFormat();
 
         public:
             ~VulkanManager();

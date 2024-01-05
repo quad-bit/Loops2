@@ -71,6 +71,8 @@ namespace Renderer
             size_t m_width, m_height;
             std::optional<std::array<float, 4>> m_clearColorValues;
             std::optional<std::array<float, 2>> m_clearDepthStencilValues;
+            Core::Enums::Format m_imageFormat;
+
         public:
 
             // The image is created externally and the id have been assigned
@@ -80,10 +82,12 @@ namespace Renderer
                 const size_t& width,
                 const size_t& height,
                 uint32_t memId,
+                const Core::Enums::Format& imageFormat,
                 bool isMemoryShared): 
                 Resource(ResourceType::IMAGE, name, isMemoryShared),
                 m_width(width),
-                m_height(height)
+                m_height(height),
+                m_imageFormat(imageFormat)
             {
                 m_physicalResourceId = id;
                 m_memId = memId;
@@ -109,6 +113,11 @@ namespace Renderer
             std::array<float, 2>& GetClearDepthValue()
             {
                 return m_clearDepthStencilValues.value();
+            }
+
+            const Core::Enums::Format& GetImageFormat() const
+            {
+                return m_imageFormat;
             }
 
             uint32_t GetWidth()

@@ -79,6 +79,7 @@ namespace Renderer
                         imageCreateInfo.m_width,
                         imageCreateInfo.m_height,
                         imageInfo.second[0], // as the memory is shared for the images per frame
+                        imageCreateInfo.m_format,
                         true
                     );
                     imageList.push_back(obj.get());
@@ -131,6 +132,7 @@ namespace Renderer
                             m_windowSettings.m_windowWidth,
                             m_windowSettings.m_windowHeight,
                             0, // memory is handled by swapchain
+                            RendererSettings::GetSurfaceFormat(),
                             true
                         );
                         m_swapchainList.push_back(std::move(obj));
@@ -200,7 +202,7 @@ namespace Renderer
             /// <summary>
             /// Create all the effects
             /// </summary>
-            //virtual void CreatePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph) = 0;
+            virtual void CreatePipeline() = 0;
 
             /// <summary>
             /// Create flat render pass/ task arrays segregated on level basis

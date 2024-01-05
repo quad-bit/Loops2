@@ -22,6 +22,39 @@ namespace Renderer
             //std::vector<std::unique_ptr<Task>> m_tasks;
             std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> m_taskNodes, m_resourceNodes;
             Utils::CallbackUtility& m_callbackUtility;
+            std::string m_parentEffectName;
+
+            virtual void CreateResources(){}
+
+            //void CreateVulkanPipeline()
+            //{
+            //    for (auto& taskNode : m_taskNodes)
+            //    {
+            //        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
+
+            //        if (task->GetTaskType() == Renderer::RenderGraph::TaskType::RENDER_TASK)
+            //        {
+            //            // Three lying in vkShaderResourceManager
+            //            // Vertex input Create info
+            //            auto vertexInputId = VulkanInterfaceAlias::GetVertexInputStateId(m_parentEffectName,
+            //                m_name, task->GetTaskName());
+            //            // Shader module info
+            //            auto shaderInputId = VulkanInterfaceAlias::GetShaderStateId(m_parentEffectName,
+            //            m_name, task->GetTaskName());
+            //            // pipelineLayout
+            //            auto pipelineLayoutId = VulkanInterfaceAlias::GetPipelineLayoutId(m_parentEffectName,
+            //                m_name, task->GetTaskName());
+
+            //            // The rest need to be configured
+
+            //        }
+            //        else if (task->GetTaskType() == Renderer::RenderGraph::TaskType::COMPUTE_TASK)
+            //        {
+
+            //        }
+            //    }
+            //}
+
         public:
             typedef Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase> graphNodeAlias;
 
@@ -33,8 +66,12 @@ namespace Renderer
             /// Checks if this technique is supported on the current hardware.
             //virtual bool IsSupported() = 0;
 
-            Technique(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Utils::CallbackUtility& funcs) :
-                m_graph(graph), m_name(name), m_callbackUtility(funcs)
+            Technique(
+                Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+                const std::string& name,
+                Utils::CallbackUtility& funcs,
+                const std::string& effectName) :
+                m_graph(graph), m_name(name), m_callbackUtility(funcs), m_parentEffectName(effectName)
             {}
 
             virtual ~Technique()

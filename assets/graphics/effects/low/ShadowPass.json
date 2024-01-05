@@ -1,0 +1,37 @@
+{
+    "Technique" : [
+        {
+            "name": "shadow",
+            "tasks":
+            [
+                {
+                    "name" : "shadowPassRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "ShadowMapping.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "ShadowMapping.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "pos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

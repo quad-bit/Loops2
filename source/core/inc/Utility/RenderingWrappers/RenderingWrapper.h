@@ -833,6 +833,7 @@ namespace Core
                 Core::Enums::ImageLayout m_imageLayout;
                 std::optional<std::array<float, 4>> m_clearColorValues;
                 std::optional<std::array<float, 2>> m_clearDepthStencilValues;
+                Core::Enums::Format m_imageFormat;
             };
 
             struct RenderingInfo
@@ -1139,15 +1140,17 @@ namespace Core
                 //uint32_t descriptorSetId;
             };
 
+            //supporting dynamic rendering
             struct PipelineCreateInfo
             {
                 std::map<Core::Enums::PipelineStates, uint32_t> statesToIdMap;
-                uint32_t renderPassId;
-                uint32_t subpassId;
+                //uint32_t renderPassId;
+                //uint32_t subpassId;
                 std::vector<uint32_t> meshList;
                 std::vector<SetWrapper*> setsPerPipeline;
                 uint32_t pipelineLayoutId;
-                uint16_t tagMask;
+                std::optional<Core::Enums::Format> depthFormat;
+                std::vector<Core::Enums::Format> colorFormats;
             };
 
             // used for vkCmdBindDescriptorSets

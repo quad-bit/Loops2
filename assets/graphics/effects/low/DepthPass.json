@@ -1,0 +1,43 @@
+{
+    "Technique" : [
+        {
+            "name": "DepthTechnique",
+            "tasks":
+            [
+                {
+                    "name" : "DepthPassRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "Color.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "PC.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "pos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inColor",
+                            "location": 1,
+                            "attribType": "COLOR",
+                            "dataType": "vec4"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

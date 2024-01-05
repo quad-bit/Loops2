@@ -220,6 +220,35 @@ void GfxVk::Utility::VulkanManager::GetPhysicalDevice()
     vkGetPhysicalDeviceFeatures(DeviceInfo::m_physicalDeviceObj, &DeviceInfo::m_physicalDeviceFeatures);
 }
 
+void GfxVk::Utility::VulkanManager::FindBestDepthFormat()
+{
+    /*Format* depthFormats = new Format[5];
+    depthFormats[0] = Format::D32_SFLOAT_S8_UINT;
+    depthFormats[1] = Format::D24_UNORM_S8_UINT;
+    depthFormats[2] = Format::D16_UNORM_S8_UINT;
+    depthFormats[3] = Format::D32_SFLOAT;
+    depthFormats[4] = Format::D16_UNORM;*/
+    VkFormat formatList[5]{
+    VK_FORMAT_D32_SFLOAT_S8_UINT,
+    VK_FORMAT_D24_UNORM_S8_UINT,
+    VK_FORMAT_D16_UNORM_S8_UINT,
+    VK_FORMAT_D32_SFLOAT,
+    VK_FORMAT_D16_UNORM};
+
+    VkFormatProperties props = {};
+
+    for (uint32_t i = 0; i < 5; i++)
+    {
+        vkGetPhysicalDeviceFormatProperties(DeviceInfo::m_physicalDeviceObj, formatList[i], &props);
+        if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        {
+            DeviceInfo::m_bestDepthFormat = formatList[i];
+            return;
+        }
+    }
+}
+
+
 /*
 void GfxVk::Utility::VulkanManager::Init()
 {
@@ -299,6 +328,7 @@ void GfxVk::Utility::VulkanManager::Init(std::vector<Core::Wrappers::QueueWrappe
 
     CreateQueues();
     GetMaxUsableVKSampleCount();
+    FindBestDepthFormat();
 }
 
 void GfxVk::Utility::VulkanManager::InitializeFactories()

@@ -26,8 +26,11 @@ namespace
         std::unique_ptr<Renderer::RenderGraph::Task> task1, task2, task3, task4;
 
     public:
-        Tech0(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
-            Technique(graph, name, funcs)
+        Tech0(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+            const std::string& name,
+            Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+            const std::string& effectName) :
+            Technique(graph, name, funcs, effectName)
         {
             r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T0_E0_0", "color1_T0_E0_1", "color1_T0_E0_2" }));
             r2Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color2_T0_E0_0", "color2_T0_E0_1", "color2_T0_E0_2" }));
@@ -72,12 +75,12 @@ namespace
             m_resourceNodes.push_back(r8Node);
 
             // Create task node
-            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T0_E0", g_renderArea);
+            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T0_E0", g_renderArea, m_parentEffectName, m_name);
             t1 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task1), m_callbackUtility.m_graphTraversalCallback);
             t1Node = graph.Push(t1.get());
             m_taskNodes.push_back(t1Node);
 
-            task2 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task2_T0_E0", g_renderArea);
+            task2 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task2_T0_E0", g_renderArea, m_parentEffectName, m_name);
             t2 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task2), m_callbackUtility.m_graphTraversalCallback);
             t2Node = graph.Push(t2.get());
             m_taskNodes.push_back(t2Node);
@@ -87,7 +90,7 @@ namespace
             t3Node = graph.Push(t3.get());
             m_taskNodes.push_back(t3Node);
 
-            task4 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task4_T0_E0", g_renderArea);
+            task4 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task4_T0_E0", g_renderArea, m_parentEffectName, m_name);
             t4 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task4), m_callbackUtility.m_graphTraversalCallback);
             t4Node = graph.Push(t4.get());
             m_taskNodes.push_back(t4Node);
@@ -165,8 +168,10 @@ namespace
         std::unique_ptr<Renderer::RenderGraph::Task> task1, task2, task3;
 
     public:
-        Tech1(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
-            Technique(graph, name, funcs)
+        Tech1(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+            const std::string& effectName) :
+            Technique(graph, name, funcs, effectName)
+
         {
             // Create resource node
             r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T1_E1_0", "color1_T1_E1_1", "color1_T1_E1_2" }));
@@ -204,7 +209,7 @@ namespace
             m_resourceNodes.push_back(r5Node);
 
             // Create task node
-            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T1_E1", g_renderArea);
+            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T1_E1", g_renderArea, m_parentEffectName, m_name);
             t1 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task1), m_callbackUtility.m_graphTraversalCallback);
             t1Node = graph.Push(t1.get());
             m_taskNodes.push_back(t1Node);
@@ -280,8 +285,9 @@ namespace
         std::unique_ptr<Renderer::RenderGraph::Task> task1;
 
     public:
-        Tech2(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
-            Technique(graph, name, funcs)
+        Tech2(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+            const std::string& effectName) :
+            Technique(graph, name, funcs, effectName)
         {
             // Create resource node
             r1Image = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(g_info, std::vector<std::string>({ "color1_T2_E2_0", "color1_T2_E2_1", "color1_T2_E2_2" }));
@@ -295,7 +301,7 @@ namespace
             m_resourceNodes.push_back(r2Node);
 
             // Create task node
-            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T2_E2", g_renderArea);
+            task1 = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("task1_T2_E2", g_renderArea, m_parentEffectName, m_name);
             t1 = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task1), m_callbackUtility.m_graphTraversalCallback);
             t1Node = graph.Push(t1.get());
             m_taskNodes.push_back(t1Node);
@@ -324,7 +330,7 @@ namespace
         effect0(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
             Effect(graph, name, funcs)
         {
-            std::unique_ptr<Renderer::RenderGraph::Technique> tech0 = std::make_unique<Tech0>(graph, "Tech0", m_callbackUtility);
+            std::unique_ptr<Renderer::RenderGraph::Technique> tech0 = std::make_unique<Tech0>(graph, "Tech0", m_callbackUtility, m_name);
             auto tech0_Output = tech0->GetGraphEndResourceNodes();
             m_techniques.push_back(std::move(tech0));
 
@@ -355,7 +361,7 @@ namespace
         effect1(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
             Effect(graph, name, funcs)
         {
-            std::unique_ptr<Renderer::RenderGraph::Technique> tech1 = std::make_unique<Tech1>(graph, "Tech1", m_callbackUtility);
+            std::unique_ptr<Renderer::RenderGraph::Technique> tech1 = std::make_unique<Tech1>(graph, "Tech1", m_callbackUtility, m_name);
             //auto tech1TaskNode = tech1->GetTaskNode("task2_TECH1");
             m_techniques.push_back(std::move(tech1));
         }
@@ -377,7 +383,7 @@ namespace
         effect2(Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
             Effect(graph, name, funcs)
         {
-            std::unique_ptr<Renderer::RenderGraph::Technique> tech2 = std::make_unique<Tech2>(graph, "Tech2", m_callbackUtility);
+            std::unique_ptr<Renderer::RenderGraph::Technique> tech2 = std::make_unique<Tech2>(graph, "Tech2", m_callbackUtility, m_name);
             m_techniques.push_back(std::move(tech2));
         }
 
@@ -433,38 +439,46 @@ namespace
         effects.push_back(std::move(eff1));
         effects.push_back(std::move(eff2));
     }
+
+    void CreateTestPipeline(Renderer::RenderGraph::Utils::CallbackUtility& callbackUtility,
+        Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* graph,
+        std::vector<std::unique_ptr<Renderer::RenderGraph::Effect>>& effects)
+    {
+        g_resourceDistributionCount = Core::Settings::m_swapBufferCount;
+
+        Core::Enums::Format format{ Core::Enums::Format::B8G8R8A8_UNORM };
+        Core::Enums::ImageType type{ Core::Enums::ImageType::IMAGE_TYPE_2D };
+        std::vector<Core::Enums::ImageUsage> usages{ Core::Enums::ImageUsage::USAGE_SAMPLED_BIT, Core::Enums::ImageUsage::USAGE_COLOR_ATTACHMENT_BIT,
+        Core::Enums::ImageUsage::USAGE_TRANSFER_SRC_BIT , Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT };
+
+        g_info.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        g_info.m_depth = 1;
+        g_info.m_format = format;
+        g_info.m_height = 1024;
+        g_info.m_imageType = type;
+        g_info.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
+        g_info.m_layers = 1;
+        g_info.m_mips = 1;
+        g_info.m_sampleCount = Renderer::RendererSettings::GetMaxSampleCountAvailable();
+        g_info.m_usages = usages;
+        g_info.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
+        g_info.m_width = 1024;
+
+        g_renderArea.lengthX = 1024;
+        g_renderArea.lengthY = 1024;
+        g_renderArea.offsetX = 0;
+        g_renderArea.offsetY = 0;
+
+        AddEffects(*graph, effects, callbackUtility);
+        graph->PrintGraph();
+    }
 }
+
 
 Renderer::RenderGraph::Pipelines::LowEndPipeline::LowEndPipeline(Core::Utility::RenderData& renderData, const Core::WindowSettings& windowSettings, const std::string& name) :
     Renderer::RenderGraph::Pipeline(renderData, windowSettings, name)
 {
-    g_resourceDistributionCount = Core::Settings::m_swapBufferCount;
-
-    Core::Enums::Format format{ Core::Enums::Format::B8G8R8A8_UNORM };
-    Core::Enums::ImageType type{ Core::Enums::ImageType::IMAGE_TYPE_2D };
-    std::vector<Core::Enums::ImageUsage> usages{ Core::Enums::ImageUsage::USAGE_SAMPLED_BIT, Core::Enums::ImageUsage::USAGE_COLOR_ATTACHMENT_BIT,
-    Core::Enums::ImageUsage::USAGE_TRANSFER_SRC_BIT , Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT };
-
-    g_info.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    g_info.m_depth = 1;
-    g_info.m_format = format;
-    g_info.m_height = 1024;
-    g_info.m_imageType = type;
-    g_info.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
-    g_info.m_layers = 1;
-    g_info.m_mips = 1;
-    g_info.m_sampleCount = Renderer::RendererSettings::GetMaxSampleCountAvailable();
-    g_info.m_usages = usages;
-    g_info.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
-    g_info.m_width = 1024;
-
-    g_renderArea.lengthX = 1024;
-    g_renderArea.lengthY = 1024;
-    g_renderArea.offsetX = 0;
-    g_renderArea.offsetY = 0;
-
-    AddEffects(*m_graph.get(), m_effects, m_callbackUtility);
-    m_graph->PrintGraph();
+    //CreateTestPipeline(m_callbackUtility, m_graph.get(), m_effects);
 }
 
 //void Renderer::RenderGraph::Pipelines::LowEndPipeline::ValidatePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
@@ -491,10 +505,10 @@ Renderer::RenderGraph::Pipelines::LowEndPipeline::LowEndPipeline(Core::Utility::
 //{
 //}
 //
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//
-//}
+void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
+{
+
+}
 //
 //void Renderer::RenderGraph::Pipelines::LowEndPipeline::DestroyPipeline()
 //{

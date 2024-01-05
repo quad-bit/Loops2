@@ -10,16 +10,157 @@
 #include "shading/VkDescriptorPoolFactory.h"
 #include "shading/VkBufferFactory.h"
 #include "utility/VkImageFactory.h"
+#include "shading/VkShaderFactory.h"
 #include "VkSamplerFactory.h"
 #include <CorePrecompiled.h>
 
 using namespace rapidjson;
 
+constexpr auto POSITION_BINDING_LOCATION = 0;
+constexpr auto COLOR_BINDING_LOCATION = 1;
+constexpr auto NORMAL_BINDING_LOCATION = 2;
+constexpr auto UV0_BINDING_LOCATION = 3;
+
 GfxVk::Shading::VkShaderResourceManager* GfxVk::Shading::VkShaderResourceManager::instance = nullptr;
+
+void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
+    const rapidjson::Value& taskDoc,
+    GfxVk::Shading::TaskWrapper& taskWapper)
+{
+    auto id = GetVertexInputID();
+
+    m_vertexInputWrapperMap.insert({ id, {} });
+    auto& wrapper = m_vertexInputWrapperMap[id];
+
+    auto& info = wrapper.m_createInfo;
+    auto& vertexBindingList = wrapper.m_bindingList;
+    auto& vertexAttribList = wrapper.m_attributeList;
+
+    std::vector<GfxVk::Shading::VertexBindingTypeInfo> bindingTypeInfo;
+
+    if (taskDoc.HasMember("attributes"))
+    {
+        const Value& techniqueAttribs = taskDoc["attributes"];
+        for (SizeType i = 0; i < techniqueAttribs.Size(); i++)
+        {
+            VkVertexInputBindingDescription bindingInfo{};
+            bindingInfo.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            bindingInfo.binding = i;
+
+            VkVertexInputAttributeDescription attribInfo{};
+            attribInfo.offset = 0;
+            attribInfo.binding = i;
+
+            const Value& attrib = techniqueAttribs[i];
+            std::string attribType = attrib["attribType"].GetString();
+            if (attribType == "POSITION")
+            {
+                taskWapper.m_bindingTypeInfo.push_back({ BindingType::POSITION, i });
+
+                attribInfo.location = POSITION_BINDING_LOCATION;
+                attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
+                    
+                bindingInfo.stride = sizeof(glm::vec3);
+            }
+            else if (attribType == "COLOR")
+            {
+                taskWapper.m_bindingTypeInfo.push_back({ BindingType::COLOR, i });
+
+                attribInfo.location = COLOR_BINDING_LOCATION;
+                attribInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+                bindingInfo.stride = sizeof(glm::vec4);
+            }
+            else if (attribType == "NORMAL")
+            {
+                taskWapper.m_bindingTypeInfo.push_back({ BindingType::NORMAL, i });
+
+                attribInfo.location = NORMAL_BINDING_LOCATION;
+                attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
+
+                bindingInfo.stride = sizeof(glm::vec3);
+            }
+            else if (attribType == "UV")
+            {
+                taskWapper.m_bindingTypeInfo.push_back({ BindingType::UV_0, i });
+
+                attribInfo.location = UV0_BINDING_LOCATION;
+                attribInfo.format = VK_FORMAT_R32G32_SFLOAT;
+
+                bindingInfo.stride = sizeof(glm::vec2);
+            }
+            else
+                ASSERT_MSG_DEBUG(0, "name mismatch");
+
+            vertexBindingList.push_back(bindingInfo);
+            vertexAttribList.push_back(attribInfo);
+
+            /*uint32_t location = attrib["location"].GetInt();
+            std::string attribType = attrib["attribType"].GetString();
+            std::string dataType = attrib["dataType"].GetString();*/
+        }
+    }
+
+    info.pVertexAttributeDescriptions = vertexAttribList.data();
+    info.vertexAttributeDescriptionCount = vertexAttribList.size();
+    info.pVertexBindingDescriptions = vertexBindingList.data();
+    info.vertexBindingDescriptionCount = vertexBindingList.size();
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+    taskWapper.m_vertexInputStateId = id;
+}
+
+void GfxVk::Shading::VkShaderResourceManager::CreateShaderInfoForTask(
+    const rapidjson::Value& taskDoc, GfxVk::Shading::TaskWrapper& taskWapper)
+{
+    auto id = GetShaderStateID();
+    m_shaderStageWrapperMap.insert({ id, {} });
+
+    auto& shaderStage = m_shaderStageWrapperMap[id];
+    for (SizeType i = 0; i < taskDoc.Size(); i++)
+    {
+        VkShaderModule* shaderModule = nullptr;
+        const Value& effect = taskDoc[i];
+        std::string shaderName = effect["name"].GetString();
+        //taskWapper.m_shaderNames.push_back(shaderName);
+
+        std::string shaderTypeVal = effect["type"].GetString();
+        Core::Enums::ShaderType shaderType;
+        VkShaderStageFlagBits stage;
+        if (shaderTypeVal == "FRAGMENT")
+        {
+            shaderType = Core::Enums::ShaderType::FRAGMENT;
+            stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        }
+        else if (shaderTypeVal == "VERTEX")
+        {
+            shaderType = Core::Enums::ShaderType::VERTEX;
+            stage = VK_SHADER_STAGE_VERTEX_BIT;
+        }
+        else if (shaderTypeVal == "COMPUTE")
+        {
+            shaderType = Core::Enums::ShaderType::COMPUTE;
+            stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        }
+        else
+            ASSERT_MSG_DEBUG(0, "Type mismatch");
+
+        shaderModule = GfxVk::Shading::VkShaderFactory::GetInstance()->GetShaderModule(shaderName, shaderType);
+
+        VkPipelineShaderStageCreateInfo info{};
+        info.module = *shaderModule;
+        info.pName = shaderEntryName;
+        info.stage = stage;
+        info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+        shaderStage.m_infoList.push_back(info);
+        taskWapper.m_shaderModuleStateId = id;
+    }
+}
 
 uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
 {
-    size_t uboAlignment = GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceProps().limits.minUniformBufferOffsetAlignment;//vkh::GContext.gpu.deviceProps.limits.minUniformBufferOffsetAlignment;
+    size_t uboAlignment = GfxVk::Utility::VulkanDeviceInfo::GetPhysicalDeviceProps().limits.minUniformBufferOffsetAlignment;
     return static_cast<uint32_t>((unalignedSize / uboAlignment) * uboAlignment + ((unalignedSize % uboAlignment) > 0 ? uboAlignment : 0));
 }
 
@@ -64,6 +205,16 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetVkDescriptorSetLayoutWrappe
 uint32_t GfxVk::Shading::VkShaderResourceManager::GetVkDescriptorSetID()
 {
     return m_vkdescriptorSetIdCounter++;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputID()
+{
+    return m_vertexInputWrapperIdCounter++;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateID()
+{
+    return m_shaderStateWrapperIdCounter++;
 }
 
 void GfxVk::Shading::VkShaderResourceManager::CreateUniqueSetLayoutWrapper(std::vector<Core::Wrappers::BindingWrapper> & bindingList, std::string shaderName, uint32_t set)
@@ -541,7 +692,7 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                 const Value& techniques = effectDoc["Technique"];
                 for (SizeType i = 0; i < techniques.Size(); i++)
                 {
-                    Technique technqueObj = {};
+                    TechniqueWrapper technqueObj = {};
                     const Value& techniqueDoc = techniques[i];
                     if (techniqueDoc.HasMember("name"))
                     {
@@ -558,6 +709,156 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                         technqueObj.lodMax= techniqueDoc["lod_max"].GetInt();
                     }
 
+                    if (techniqueDoc.HasMember("tasks"))
+                    {
+                        const Value& techniqueTasks = techniqueDoc["tasks"];
+                        for (SizeType i = 0; i < techniqueTasks.Size(); i++)
+                        {
+                            GfxVk::Shading::TaskWrapper taskWrapper{};
+                            const Value& taskDoc = techniqueTasks[i];
+                            if (taskDoc.HasMember("name"))
+                                taskWrapper.m_name = taskDoc["name"].GetString();
+
+                            if (taskDoc.HasMember("shaders"))
+                            {
+                                std::map<uint32_t, std::vector<Core::Wrappers::BindingWrapper>> setMap;
+                                std::vector<std::string> shaderNameList;
+
+                                uint32_t numUniform = 0;
+
+                                const Value& taskShaders = taskDoc["shaders"];
+                                CreateShaderInfoForTask(taskShaders, taskWrapper);
+
+                                for (SizeType i = 0; i < taskShaders.Size(); i++)
+                                {
+                                    const Value& taskShader = taskShaders[i];
+                                    std::string shaderName = taskShader["name"].GetString();
+                                    taskWrapper.m_shaderNames.push_back(shaderName);
+
+                                    std::string shaderTypeVal = taskShader["type"].GetString();
+                                    shaderNameList.push_back(shaderName);
+
+                                    std::string reflPath = VULKAN_ASSETS_PATH + std::string{ "/Reflections/" } + shaderName + std::string{ ".refl" };
+
+                                    if (taskShader.HasMember("reflPath"))
+                                    {
+                                        std::string path = taskShader["reflPath"].GetString();
+                                        if (!path.empty())
+                                        {
+                                            reflPath = path;
+                                        }
+                                    }
+
+                                    //printf("%s %s %s \n", shaderName.c_str(), shaderType.c_str(), reflPath.c_str());
+
+                                    Document reflDoc = LoadJson(reflPath.c_str());
+                                    bool hasDescriptors = reflDoc.HasMember("descriptor_sets");
+                                    if (hasDescriptors)
+                                    {
+                                        const Value& reflFileDescSets = reflDoc["descriptor_sets"];
+                                        numUniform = reflFileDescSets.Size();
+                                    }
+                                    else
+                                        numUniform = 0;
+
+                                    if (numUniform > 0)
+                                    {
+                                        const Value& reflFileDescSets = reflDoc["descriptor_sets"];
+
+                                        for (SizeType dsIdx = 0; dsIdx < reflFileDescSets.Size(); dsIdx++)
+                                        {
+                                            const Value& currentInputFromReflData = reflFileDescSets[dsIdx];
+
+                                            // this logic works only if the sets are kept in increasing order and 
+                                            // they are not repeating in a given shader, they can have multiple bindings.
+                                            int set = currentInputFromReflData["set"].GetInt();
+
+                                            // add binding to the binding list
+                                            Core::Wrappers::BindingWrapper wrapper = {};
+                                            wrapper.bindingObj.binding = currentInputFromReflData["binding"].GetInt();
+
+                                            int arraySize = currentInputFromReflData["ArraySize"].GetInt();
+                                            if (arraySize == 0)
+                                                wrapper.bindingObj.descriptorCount = 1;
+                                            else
+                                                wrapper.bindingObj.descriptorCount = arraySize;
+
+                                            wrapper.bindingName = currentInputFromReflData["name"].GetString();
+                                            wrapper.bindingObj.descriptorType = StringToDescType(currentInputFromReflData["type"].GetString(), wrapper.bindingName.c_str());
+
+                                            //add all members to block definition
+                                            const Value& reflBlockMembers = currentInputFromReflData["members"];
+                                            for (SizeType m = 0; m < reflBlockMembers.Size(); m++)
+                                            {
+                                                const Value& reflBlockMember = reflBlockMembers[m];
+
+                                                Core::Wrappers::UniformStructMember mem = {};
+                                                mem.offset = reflBlockMember["offset"].GetInt();
+                                                mem.size = reflBlockMember["size"].GetInt();
+
+                                                snprintf(mem.name, sizeof(mem.name), "%s", reflBlockMember["name"].GetString());
+
+                                                wrapper.memberList.push_back(mem);
+                                            }
+
+                                            Core::Enums::ShaderType shaderType;
+                                            if (shaderTypeVal == "FRAGMENT")
+                                                shaderType = Core::Enums::ShaderType::FRAGMENT;
+                                            else if (shaderTypeVal == "VERTEX")
+                                                shaderType = Core::Enums::ShaderType::VERTEX;
+                                            wrapper.bindingObj.stageFlags.push_back(shaderType);
+
+                                            if (setMap.find(set) == setMap.end())
+                                            {
+                                                setMap.insert(std::pair<uint32_t, std::vector<Core::Wrappers::BindingWrapper>>(set, std::vector{ wrapper }));
+                                            }
+                                            else
+                                            {
+                                                setMap[set].push_back(wrapper);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Create per effect resources
+                                auto CreatePerTaskResources = [&taskWrapper, &setMap, &effect, &shaderNameList,
+                                    this]()
+                                {
+                                    std::vector<Core::Wrappers::SetWrapper*> setWrapperListPerTechnique;
+
+                                    // Create descriptor set layout
+                                    for (auto const& [key, val] : setMap)
+                                    {
+                                        Core::Wrappers::SetWrapper* setWrapper = CreateUniqueSetLayoutWrapper(val, effect.GetString(), shaderNameList, key);
+                                        setWrapperListPerTechnique.push_back(setWrapper);
+                                        taskWrapper.m_setWrappers.push_back(setWrapper);
+
+                                        if (m_perSetMap.find(key) == m_perSetMap.end())
+                                        {
+                                            m_perSetMap.insert(std::pair<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>(key, std::vector{ setWrapper }));
+                                        }
+                                        else
+                                        {
+                                            m_perSetMap[key].push_back(setWrapper);
+                                        }
+                                    }
+
+                                    // Create pipeline layout
+                                    taskWrapper.m_pipelineLayoutId = CreatePipelineLayout(setWrapperListPerTechnique.data(), setWrapperListPerTechnique.size());
+                                };
+
+                                CreatePerTaskResources();
+                            }
+                            else
+                            {
+                                ASSERT_MSG_DEBUG(0, "Shaders not found in effect file");
+                            }
+                            CreateVertexInfoForTask(taskDoc, taskWrapper);
+                            technqueObj.m_taskList.push_back(taskWrapper);
+                            effectResource.techniqueList.push_back(technqueObj);
+                        }
+                    }
+                    /*
                     if (techniqueDoc.HasMember("shaders"))
                     {
                         std::map<uint32_t, std::vector<Core::Wrappers::BindingWrapper>> setMap;
@@ -566,6 +867,8 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                         uint32_t numUniform = 0;
 
                         const Value& techniqueShaders = techniqueDoc["shaders"];
+                        CreateShaderInfoForTask(techniqueShaders, technqueObj);
+
                         for (SizeType i = 0; i < techniqueShaders.Size(); i++)
                         {
                             const Value& effect = techniqueShaders[i];
@@ -680,7 +983,7 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                             }
 
                             // Create pipeline layout
-                            technqueObj.m_pipelineLayoutWrapperId = CreatePipelineLayout(setWrapperListPerTechnique.data(), setWrapperListPerTechnique.size());
+                            technqueObj.m_pipelineLayoutId = CreatePipelineLayout(setWrapperListPerTechnique.data(), setWrapperListPerTechnique.size());
                         };
 
                         CreatePerTechniqueResources();
@@ -690,6 +993,9 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                     {
                         ASSERT_MSG_DEBUG(0, "Shaders not found in effect file");
                     }
+
+                    CreateVertexInfoForTask(techniqueDoc, technqueObj);
+                    */
                 }
                 m_perEffectResources.push_back(effectResource);
             }
@@ -833,6 +1139,11 @@ VkPipelineLayout * GfxVk::Shading::VkShaderResourceManager::GetPipelineLayout(co
     ASSERT_MSG_DEBUG(it != m_pipelineLayoutWrapperList.end(), "id not found");
     
     return (it)->pipelineLayout;
+}
+
+VkPipelineShaderStageCreateInfo* GfxVk::Shading::VkShaderResourceManager::GetShaderStageCreateInfo(uint32_t id)
+{
+    return m_shaderStageWrapperMap[id].m_infoList.data();
 }
 
 std::vector<Core::Wrappers::SetWrapper*>* GfxVk::Shading::VkShaderResourceManager::GetSetWrapperList()
@@ -1297,7 +1608,6 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                 imageInfo.sampler = *sampler;
 
                 writeList[k].pImageInfo = &(imageInfo);
-
             }
             break;
 
@@ -1317,7 +1627,6 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
     }
 }
 
-
 const std::vector<int>* GfxVk::Shading::VkShaderResourceManager::GetSetValuesInPipelineLayout(const uint32_t & pipelineLayoutId)
 {
     return &m_pipelineLayoutIdToSetValuesMap[pipelineLayoutId];
@@ -1326,4 +1635,91 @@ const std::vector<int>* GfxVk::Shading::VkShaderResourceManager::GetSetValuesInP
 std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GfxVk::Shading::VkShaderResourceManager::GetPerSetSetwrapperMap()
 {
     return &m_perSetMap;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
+
+    if (it == m_perEffectResources.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    }
+
+    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
+        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
+
+    if (itt == it->techniqueList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    }
+
+    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
+        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
+
+    if (ittt == itt->m_taskList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Task mismatch");
+    }
+
+    return ittt->m_vertexInputStateId.value();
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
+
+    if (it == m_perEffectResources.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    }
+
+    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
+        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
+
+    if (itt == it->techniqueList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    }
+
+    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
+        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
+
+    if (ittt == itt->m_taskList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Task mismatch");
+    }
+
+    return ittt->m_pipelineLayoutId;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
+
+    if (it == m_perEffectResources.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    }
+
+    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
+        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
+
+    if (itt == it->techniqueList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    }
+
+    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
+        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
+
+    if (ittt == itt->m_taskList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Task mismatch");
+    }
+
+    return ittt->m_shaderModuleStateId;
 }

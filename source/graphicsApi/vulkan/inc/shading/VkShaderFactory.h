@@ -54,6 +54,7 @@ namespace GfxVk
 
             void GetShaderIds(char** shaderName, Core::Enums::ShaderType* type, uint32_t* id, const uint32_t& shaderCount);
             VkShaderModule* GetShaderModule(const uint32_t& id);
+            VkShaderModule* GetShaderModule(const std::string& shaderName, const Core::Enums::ShaderType& type);
             VkShaderStageFlagBits GetShaderStageFlag(const uint32_t& id);
 
         };

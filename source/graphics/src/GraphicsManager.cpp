@@ -13,15 +13,18 @@
 
 #include <renderGraph/RenderGraphManager.h>
 #include <renderGraph/pipelines/LowEndPipeline.h>
+#include <renderGraph/pipelines/DepthViewPipeline.h>
 
 #include <shading/VkDescriptorPoolFactory.h>
 #include <shading/VkShaderResourceManager.h>
+#include <shading/VkShaderFactory.h>
 #include <shading/VkBufferFactory.h>
 #include <utility/VulkanMemoryManager.h>
 #include <VkCommandBufferFactory.h>
 #include <synchronisation/VkSynchroniserFactory.h>
 #include <utility/VkImageFactory.h>
 #include <VkRenderPassFactory.h>
+#include <pipeline/VulkanGraphicsPipelineFactory.h>
 
 #include <resourceManagement/UniformFactory.h>
 #include <resourceManagement/MeshFactory.h>
@@ -40,6 +43,7 @@ void Renderer::GraphicsManager::Init()
 
     // first api level
     GfxVk::Shading::VkDescriptorPoolFactory::GetInstance()->Init();
+    GfxVk::Shading::VkShaderFactory::GetInstance()->Init();
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->Init();
     GfxVk::Shading::VkBufferFactory::GetInstance()->Init();
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::GetPhysicalDeviceMemProps());
@@ -50,13 +54,15 @@ void Renderer::GraphicsManager::Init()
     GfxVk::Sync::VkSynchroniserFactory::GetInstance()->Init();
     GfxVk::Utility::VkImageFactory::GetInstance()->Init(Core::Settings::m_swapBufferCount);
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
+    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->Init(m_windowSettings);
 
     // next high level wrappers
     Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MeshFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MaterialFactory::GetInstance()->Init();
 
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, m_windowSettings, "LowEndPipeline");
+    //std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, m_windowSettings, "LowEndPipeline");
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::DepthViewPipeline>(m_renderData, m_windowSettings, "DepthView");
     m_renderGraphManager->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
         Renderer::RendererSettings::GetComputeQueueId(),
@@ -91,6 +97,9 @@ void Renderer::GraphicsManager::DeInit()
     Renderer::ResourceManagement::UniformFactory::GetInstance()->DeInit();
     delete Renderer::ResourceManagement::UniformFactory::GetInstance();
 
+    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->DeInit();
+    delete GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance();
+
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->DeInit();
     delete GfxVk::Renderpass::VkRenderPassFactory::GetInstance();
 
@@ -111,6 +120,9 @@ void Renderer::GraphicsManager::DeInit()
 
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->DeInit();
     delete GfxVk::Shading::VkShaderResourceManager::GetInstance();
+
+    GfxVk::Shading::VkShaderFactory::GetInstance()->DeInit();
+    delete GfxVk::Shading::VkShaderFactory::GetInstance();
 
     GfxVk::Shading::VkDescriptorPoolFactory::GetInstance()->DeInit();
     delete GfxVk::Shading::VkDescriptorPoolFactory::GetInstance();

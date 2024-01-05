@@ -262,8 +262,6 @@ void Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(
     const Core::Enums::ImageLayout previousImageLayout
 )
 {
-    ASSERT_MSG_DEBUG(0, "Not getting used");
-
     CreatePrintGraphInfo(graph, resourceNode, taskNode, usage, Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, previousImageLayout);
     if (resourceNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::RESOURCE_NODE &&
         taskNode->GetNodeData()->GetNodeType() == RenderGraphNodeType::TASK_NODE)
@@ -276,8 +274,9 @@ void Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(
 
         ImageResourceConnectionInfo imageInfo{};
         imageInfo.m_expectedImageLayout = Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        imageInfo.m_prevImageLayout = previousImageLayout;
 
-        //task->AddInput(ConnectionInfo{ resource, imageInfo });
+        task->AddInput(ConnectionInfo{ usage, resource, resourceNode->GetNodeId(), imageInfo, std::nullopt });
     }
     else
         ASSERT_MSG_DEBUG(0, "resource/task node mismatch");

@@ -1,0 +1,70 @@
+{
+    "Technique" : [
+        {
+            "name": "low",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "OpaqueRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "ColorLighting.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "PCN_Lighting.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "pos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inColor",
+                            "location": 1,
+                            "attribType": "COLOR",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inNormal",
+                            "location": 2,
+                            "attribType": "NORMAL",
+                            "dataType": "vec3"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "high",
+            "lod_min": 0,
+            "lod_max": 10,
+            "shaders":[
+                {
+                    "name": "ColorLighting.frag",
+                    "type": "FRAGMENT",
+                    "shaderPath": "",
+                    "reflPath": ""
+                },
+                {
+                    "name": "PCN_Lighting.vert",
+                    "type": "VERTEX",
+                    "shaderPath": "",
+                    "reflPath": ""
+                }
+            ]
+        }
+    ]
+}

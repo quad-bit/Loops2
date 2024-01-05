@@ -75,7 +75,7 @@ void GfxVk::CommandPool::VkDrawCommandBuffer::BindPipeline(Core::Enums::Pipeline
         ASSERT_MSG_DEBUG(0, "Invalid option");
     }
 
-    vkCmdBindPipeline(*commandBuffer, bindPoint, *GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->GetPipeline(pipelineId));
+    vkCmdBindPipeline(*commandBuffer, bindPoint, GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->GetPipeline(pipelineId));
 }
 
 void GfxVk::CommandPool::VkDrawCommandBuffer::BindDescriptorSet(Core::Wrappers::DescriptorSetBindingInfo * info)

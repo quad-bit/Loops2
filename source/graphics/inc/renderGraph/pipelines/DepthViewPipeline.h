@@ -2,6 +2,7 @@
 #define RENDERER_DEPTHVIEWPIPELINE_H_
 
 #include <renderGraph/Pipeline.h>
+#include "Settings.h"
 
 namespace Renderer
 {
@@ -12,19 +13,22 @@ namespace Renderer
             class DepthViewPipeline : public Pipeline
             {
             private:
-                virtual void ValidatePipeline() override;
+               /* virtual void ValidatePipeline() override;
                 virtual void CreateLogicalPasses() override;
                 virtual void CreatePassResources() override;
                 virtual void CreateRenderPasses() override;
-                virtual void CreateSynchronisations() override;
+                virtual void CreateSynchronisations() override;*/
 
             public:
                 ~DepthViewPipeline() {}
-                DepthViewPipeline(const Core::Utility::RenderData& renderData, const Renderer::RenderGraph::Graph<RenderGraphNode>& graph);
+                Renderer::RenderGraph::Pipelines::DepthViewPipeline::DepthViewPipeline(
+                    Core::Utility::RenderData& renderData,
+                    const Core::WindowSettings& windowSettings,
+                    const std::string& name);
 
                 virtual void CreatePipeline() override;
-                virtual void DestroyPipeline() override;
-                virtual void ExecutePipeline() override;
+                //virtual void DestroyPipeline() override;
+                //virtual void ExecutePipeline() override;
             };
         }
     }

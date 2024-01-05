@@ -13,11 +13,14 @@ namespace Renderer
             class LambertianLit : public Technique
             {
             private:
-                const Core::Utility::RenderData& m_renderData;
+                Core::Utility::RenderData& m_renderData;
 
             public:
-                LambertianLit(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, Renderer::RenderGraph::Utils::CallbackUtility& funcs) :
-                    Technique(graph, "LambertianLit", funcs), m_renderData(renderData)
+                LambertianLit(Core::Utility::RenderData& renderData,
+                Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+                Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+                const std::string& effectName) :
+                Technique(graph, "LambertianLit", funcs, effectName), m_renderData(renderData)
                 {
                     // Create resource node
                 }

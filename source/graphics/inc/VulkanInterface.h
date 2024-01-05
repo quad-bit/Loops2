@@ -164,17 +164,23 @@ namespace Renderer
             void BindImageMemory(const uint32_t& imageId, const uint32_t& memId, const size_t& offset);
 
             void GetShaderIds(char** shaderName, Core::Enums::ShaderType* type, uint32_t* id, const uint32_t& shaderCount);
-            void CreateVertexInputState(const Core::Utility::VertexInputWrapper* vertexInputWrapper);
-            void CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper* InputAssemblyWrapper);
-            void CreateShaderState(const Core::Utility::ShaderStateWrapper* shaderStateWrapper);
-            void CreateTessellationState(const Core::Utility::TessellationStateWrapper* wrapper);
-            void CreateViewportState(const Core::Utility::ViewPortStateWrapper* wrapper);
-            void CreateRasterisationState(const Core::Utility::RasterizationStateWrapper* wrapper);
-            void CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper* wrapper);
-            void CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper* wrapper);
-            void CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper* wrapper);
-            void CreateDynamicState(const Core::Utility::DynamicStateWrapper* wrapper);
+            void CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper);
+            void CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& InputAssemblyWrapper);
+            void CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper);
+            void CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper);
+            void CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper);
+            void CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper);
+            void CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper);
+            void CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper);
+            void CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper);
+            void CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper);
             void CreatePipeline(Core::Wrappers::PipelineCreateInfo* info, const uint32_t& pipelineCount, uint32_t* pipelineId);
+            uint32_t CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info);
+            //uint32_t CreatePipeline(uint32_t pipelineId);
+
+            uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
 
             std::vector<Core::Wrappers::SetWrapper*> GetSetsForShaders(const std::vector<std::string>& shaderNames);
             uint32_t CreatePipelineLayout(Core::Wrappers::SetWrapper** setWrapperList, const size_t& numSets);

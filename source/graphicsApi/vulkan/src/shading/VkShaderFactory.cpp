@@ -87,6 +87,8 @@ void GfxVk::Shading::VkShaderFactory::Init()
             wrapper->shaderType = new Core::Enums::ShaderType{ Core::Enums::ShaderType::VERTEX };
             wrapper->stageFlag = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
         }
+        else
+            ASSERT_MSG_DEBUG(0, "Case not handled");
         
         wrapper->shaderName = var;
         wrapper->shaderId = AssignId();
@@ -153,6 +155,19 @@ VkShaderModule * GfxVk::Shading::VkShaderFactory::GetShaderModule(const uint32_t
             return (*it)->module;
     }
     
+    ASSERT_MSG_DEBUG(0, "shader not found");
+    return nullptr;
+}
+
+VkShaderModule* GfxVk::Shading::VkShaderFactory::GetShaderModule(const std::string& shaderName, const Core::Enums::ShaderType& type)
+{
+    std::vector<ShaderModuleWrapper*>::iterator it;
+    for (it = shaderModuleList.begin(); it != shaderModuleList.end(); it++)
+    {
+        if ((*it)->shaderName.find(shaderName) != std::string::npos && *(*it)->shaderType == type)
+            return (*it)->module;
+    }
+
     ASSERT_MSG_DEBUG(0, "shader not found");
     return nullptr;
 }
