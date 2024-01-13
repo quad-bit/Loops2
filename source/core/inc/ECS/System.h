@@ -3,6 +3,7 @@
 #include <bitset>
 #include <vector>
 #include "ComponentMask.h"
+#include "Utility/RenderingWrappers/RenderingWrapper.h"
 
 namespace Core
 {
@@ -32,7 +33,7 @@ namespace Core
             virtual void DeInit() {};
 
             // Called every game update
-            virtual void Update(float dt) {};
+            virtual void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo) {};
 
             // Called every game render
             virtual void Render(float dt) {};

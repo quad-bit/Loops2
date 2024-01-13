@@ -149,7 +149,6 @@ namespace GfxVk
             Core::Enums::ShaderType GetTypeFromName(const std::string& shaderName);
             std::string GetShaderNameFromRefl(const std::string& reflName);
 
-            VkDescriptorSet GetDescriptorSet(const uint32_t& id);
 
             // will add fller setlayouts in case intermediate sets are missing.
             void GetSetLayouts(Core::Wrappers::SetWrapper** setWrapperList, const uint32_t& numSets, std::vector<VkDescriptorSetLayout>& layoutList,
@@ -171,11 +170,13 @@ namespace GfxVk
             std::vector<Core::Wrappers::SetWrapper*> GetSetsForShaders(const std::vector<std::string>& shaderNames);
             uint32_t CreatePipelineLayout(Core::Wrappers::SetWrapper** setWrapperList, const size_t& numSets);
             VkPipelineLayout* GetPipelineLayout(const uint32_t& id);
-            VkPipelineShaderStageCreateInfo* GetShaderStageCreateInfo(uint32_t id);
 
             std::vector<Core::Wrappers::SetWrapper*>* GetSetWrapperList();
+            
+            const VkDescriptorSet& GetDescriptorSet(const uint32_t& id);
 
             std::vector<VkDescriptorSet> GetDescriptors(uint32_t* ids, const uint32_t& count, const uint32_t& pipelineLayoutId);
+            std::vector<VkDescriptorSet> GetDescriptors(const int* ids, const uint32_t& count);
             std::tuple<std::vector<VkDescriptorSet>, uint32_t> GetDescriptors(uint32_t* ids, const uint32_t& count, const uint32_t& pipelineLayoutId, const uint32_t& firstSet);
             uint32_t* AllocateDescriptorSets(Core::Wrappers::SetWrapper* set, const uint32_t& numDescriptors);
             //void LinkSetBindingToResources(ShaderBindingDescription * desc);
@@ -189,6 +190,8 @@ namespace GfxVk
             uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
             uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
 
+            const VkPipelineVertexInputStateCreateInfo& GetPipelineVertexInputInfo(uint32_t id);
+            const std::vector<VkPipelineShaderStageCreateInfo>& GetPipelineShaderInfo(uint32_t id);
         };
     }
 }

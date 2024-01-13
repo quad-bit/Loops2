@@ -43,6 +43,7 @@ namespace Renderer
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphOriginResourceNodes() override;
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphEndResourceNodes() override;
 
+                virtual void SetupFrame(const Core::Wrappers::FrameInfo& frameInfo) override;
             };
         }
     }

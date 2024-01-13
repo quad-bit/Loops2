@@ -88,7 +88,6 @@ src/VulkanInterface.cpp
 src/CommandReader.cpp
 )
 
-
 #create library
 set(TARGET_NAME "renderer")
 add_library(${TARGET_NAME} 

@@ -22,7 +22,7 @@ private:
 public:
     virtual void Init() override;
     virtual void DeInit() override;
-    virtual void Update(float dt) override;
+    virtual void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo) override;
 
     TransformSystem();
     virtual ~TransformSystem();

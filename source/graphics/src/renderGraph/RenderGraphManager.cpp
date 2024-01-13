@@ -499,7 +499,32 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
         barrier.m_srcQueueFamilyIndex = 0;
         barrier.m_subresourceRange.m_baseArrayLayer = 0;
         barrier.m_subresourceRange.m_baseMipLevel = 0;
-        barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+
+        if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT);
+            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_STENCIL_BIT);
+        }
+        else if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT);
+        else if(imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
+            imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
+            barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+        else if (imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL ||
+            imageInfo.m_expectedLayout == Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL)
+        {
+            if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+            {
+                barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT);
+                barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_STENCIL_BIT);
+            }
+            else if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+                barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_DEPTH_BIT);
+            else if (imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
+                    imageInfo.m_prevLayout == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
+                barrier.m_subresourceRange.m_imageAspect.push_back(Core::Enums::ImageAspectFlag::IMAGE_ASPECT_COLOR_BIT);
+        }
+
         barrier.m_subresourceRange.m_layerCount = 1;
         barrier.m_subresourceRange.m_levelCount = 1;
         barrier.m_imageName = imageName;
@@ -1047,6 +1072,16 @@ void Renderer::RenderGraph::RenderGraphManager::DeInit()
 
 void Renderer::RenderGraph::RenderGraphManager::Update(const Core::Wrappers::FrameInfo& frameInfo)
 {
+    for (auto& effect : m_activePipeline->GetEffects())
+    {
+        auto& techniques = effect->GetTechniques();
+
+        for (auto& technique : techniques)
+        {
+            technique->SetupFrame(frameInfo);
+        }
+    }
+
     auto& levelInfoList = m_activePipeline->GetPerLevelTaskInfo();
     for (auto& level : levelInfoList)
     {
@@ -1070,7 +1105,7 @@ void Renderer::RenderGraph::RenderGraphManager::SetupFrame(Core::Wrappers::Frame
 
     auto currentSwapchainIndex = Renderer::Utility::VulkanInterface::GetAvailableSwapchainIndex(currentFenceId, currentRenderSemaphoreId);
 
-    frameInfo.m_farmeInFlightIndex = m_frameInFlightIndex;
+    frameInfo.m_frameInFlightIndex = m_frameInFlightIndex;
     frameInfo.m_swapBufferIndex = currentSwapchainIndex;
 }
 

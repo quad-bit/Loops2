@@ -32,6 +32,7 @@ namespace Core
             std::string m_tag;// Indicating the effect. Optional.
             std::vector<Core::Enums::RenderLayers> m_renderLayers;
             glm::vec3 m_cameraPosition;
+            glm::mat4 m_viewMat, m_projectionMat;
             uint32_t m_descriptorSetId;
         };
 
@@ -40,9 +41,17 @@ namespace Core
         {
             uint32_t m_descriptorSetId;
             glm::vec3 m_position; // world position, will help with LOD or sorting
+            glm::mat4 m_modelMat;
             std::vector<Core::Enums::RenderLayers> m_renderLayers;
-            std::vector<uint32_t> m_vertexBufferId;
-            std::optional<uint32_t> m_indexBufferId;
+
+            uint32_t m_positionBufferId;
+            std::optional<uint32_t> m_colorBufferId;
+            std::optional<uint32_t> m_normalBufferId;
+            std::optional<uint32_t> m_tangentBufferId;
+
+            uint32_t m_vertexCount;
+            std::optional<uint32_t> m_indexBufferId, m_indexCount;
+
             // To put it in maps
             //friend bool operator<(const TransformData& l, const TransformData& r) { return l.id < r.id; }
         };
@@ -50,6 +59,8 @@ namespace Core
         struct LightData
         {
             uint32_t m_descriptorSetId;
+            glm::vec3 m_position; // world position, will help with LOD or sorting
+            glm::mat4 m_modelMat;
         };
 
         class RenderData

@@ -12,6 +12,21 @@ namespace Renderer
     {
         namespace Tasks
         {
+            struct MeshDrawInfo
+            {
+                Core::Wrappers::DescriptorSetBindingInfo m_descriptorInfo;
+                // incase of non contigous setup in vertex buffers, multiple calls to bind
+                // vertex buffer are required
+                std::vector<Core::Wrappers::VertexBufferBindingInfo> m_vertexBufferInfo;
+                std::optional<Core::Wrappers::IndexBufferBindingInfo> m_indexBufferInfo;
+                uint32_t m_vertexCount, m_indexCount;
+            };
+
+            struct DrawInfo
+            {
+                std::vector<MeshDrawInfo> m_meshInfoList{};
+            };
+
             class RenderTask : public Task
             {
             private:
@@ -20,6 +35,7 @@ namespace Renderer
                 Core::Wrappers::Rect2D m_renderArea;
 
                 std::optional<uint32_t> m_graphicsPipelineId;
+                DrawInfo m_drawInfo;
 
             public:
                 std::optional<uint32_t> m_vertexInputStateId;
@@ -39,6 +55,8 @@ namespace Renderer
                     const std::string& effectName, const std::string& techniqueName) :
                     Task(name, TaskType::RENDER_TASK), m_renderArea(renderArea)
                 {
+                    m_drawInfo = {};
+
                     // Vertex input Create info
                     m_vertexInputStateId = VulkanInterfaceAlias::GetVertexInputStateId(effectName,
                         techniqueName, m_name);
@@ -99,11 +117,6 @@ namespace Renderer
                     m_graphicsPipelineId = VulkanInterfaceAlias::CreatePipeline(pipelineInfo);
                 }
 
-                void DestroyGraphicsPipeline()
-                {
-                    //VulkanInterfaceAlias::pipe
-                }
-
                 void Execute(const Core::Wrappers::FrameInfo& frameInfo) override
                 {
                     auto queueType = Core::Enums::QueueType::RENDER;
@@ -114,6 +127,55 @@ namespace Renderer
                     Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
                     Renderer::CommandReader::BeginRendering(info, m_renderingInfoId[frameInfo.m_swapBufferIndex]);
 
+                    CommandReader::SetViewport(info, m_renderArea.lengthX, m_renderArea.lengthY,
+                        m_renderArea.offsetX, m_renderArea.offsetY, 0.0f, 1.0f);
+
+                    CommandReader::SetScissor(info, m_renderArea.lengthX, m_renderArea.lengthY,
+                        m_renderArea.offsetX, m_renderArea.offsetY);
+
+                    // bind pipeline
+                    CommandReader::BindPipeline(info, Core::Enums::PipelineType::GRAPHICS, m_graphicsPipelineId.value());
+                    for (auto& meshInfo : m_drawInfo.m_meshInfoList)
+                    {
+                        // bind vertex buffer
+                        for (auto& vertInfo : meshInfo.m_vertexBufferInfo)
+                        {
+                            CommandReader::BindVertexBuffers(info, vertInfo);
+                        }
+
+                        // bind index buffer
+                        if (meshInfo.m_indexBufferInfo.has_value())
+                        {
+                            CommandReader::BindIndexBuffers(info, meshInfo.m_indexBufferInfo.value());
+                        }
+
+                        // bind descriptor set
+                        CommandReader::BindDescriptorSet(info, meshInfo.m_descriptorInfo, m_pipelineLayoutId.value());
+
+                        // draw
+                        if (meshInfo.m_indexBufferInfo.has_value())
+                        {
+                            Core::Wrappers::IndexedDrawInfo indexDrawInfo{};
+                            indexDrawInfo.firstIndex = 0;
+                            indexDrawInfo.firstInstance = 0;
+                            indexDrawInfo.indexCount = meshInfo.m_indexCount;
+                            indexDrawInfo.instanceCount = 1;
+                            indexDrawInfo.vertexOffset = 0;
+
+                            CommandReader::DrawIndex(info, indexDrawInfo);
+                        }
+                        else
+                        {
+                            Core::Wrappers::DrawArrayInfo drawInfo{};
+                            drawInfo.firstInstance = 0;
+                            drawInfo.firstVertex = 0;
+                            drawInfo.instanceCount = 1;
+                            drawInfo.vertexCount = meshInfo.m_vertexCount;
+
+                            CommandReader::Draw(info, drawInfo);
+                        }
+                    }
+
                     Renderer::CommandReader::EndRendering(info);
                     EndTask(frameInfo, queueType);
                 }
@@ -121,6 +183,11 @@ namespace Renderer
                 Core::Wrappers::Rect2D GetRenderArea()
                 {
                     return m_renderArea;
+                }
+
+                void UpdateDrawInfo(const DrawInfo& drawInfo)
+                {
+                    m_drawInfo = drawInfo;
                 }
             };
         }

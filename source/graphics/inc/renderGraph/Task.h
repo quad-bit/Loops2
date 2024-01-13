@@ -125,22 +125,22 @@ namespace Renderer
 
                 if (m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_shouldStop)
                 {
-                    VulkanInterfaceAlias::EndCommandBufferRecording(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose);
+                    VulkanInterfaceAlias::EndCommandBufferRecording(m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId, m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_queuePurpose);
 
                     Core::Wrappers::SubmitInfo info = {};
                     info.commandBufferCount = 1;
                     info.commandBufferIds = &m_activeCommandBuffer;
                     info.pipelineStage = Core::Enums::PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT;
-                    info.purpose = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_queuePurpose;
-                    info.queueType = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_pipelineType;
+                    info.purpose = &m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_queuePurpose;
+                    info.queueType = &m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_pipelineType;
                     info.queueId = m_taskQueueInfo.m_taskQueueId;
                     info.signalSemaphoreCount = 1;
-                    info.signalSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_signalSemaphoreId.value();
+                    info.signalSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_signalSemaphoreId.value();
                     info.waitSemaphoreCount = 1;
-                    info.waitSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_waitSemaphoreId.value();
+                    info.waitSemaphoreIds = &m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_waitSemaphoreId.value();
 
-                    if (m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.has_value())
-                        VulkanInterfaceAlias::SubmitJob(&info, 1, m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_fenceId.value());
+                    if (m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_fenceId.has_value())
+                        VulkanInterfaceAlias::SubmitJob(&info, 1, m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_fenceId.value());
                     else
                         VulkanInterfaceAlias::SubmitJob(&info, 1, std::nullopt);
                 }

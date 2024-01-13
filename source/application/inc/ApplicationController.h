@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 namespace Core
 {
     namespace ECS
@@ -17,6 +19,8 @@ class ApplicationController
 private:
     Core::ECS::EntityHandle* mainObject;
     Core::ECS::Components::Scriptable* sceneManagerScript;
+
+    std::vector< Core::ECS::EntityHandle*> m_entityList;
 
 public:
     void Init();

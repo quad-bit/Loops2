@@ -37,7 +37,7 @@ void Engine::EngineManager::Init(const std::string& windowName,
     Renderer::Windowing::InputManager::GetInstance()->Init(m_graphicsMngrObj->GetGlfwWindow());
     Renderer::Windowing::MouseInputManager::GetInstance()->Init();
 
-    ECS_Manager::GetInstance()->Init();
+    ECS_Manager::GetInstance()->Init(m_renderData, m_gltfLoader);
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
 
@@ -96,14 +96,14 @@ void Engine::EngineManager::Update()
         uint16_t iterations = 0, maxIterations = 5;
         while (lag >= msPerUpdate && iterations < maxIterations)
         {
-            ECS_Manager::GetInstance()->Update((float)msPerUpdate);
+            ECS_Manager::GetInstance()->Update((float)msPerUpdate, m_frameInfo);
             lag -= msPerUpdate;
             iterations++;
             //PLOGD << "Test";
         }
 
         // to make it more smooth pass this(lag / MS_PER_UPDATE) to renderer, advance the render
-        ECS_Manager::GetInstance()->Update((float)(lag / msPerUpdate));
+        ECS_Manager::GetInstance()->Update((float)(lag / msPerUpdate), m_frameInfo);
         // lag = msPerUpdate;
 
         //Renderer::Windowing::MouseInputManager::GetInstance()->Update();

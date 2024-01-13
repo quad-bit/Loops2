@@ -891,7 +891,7 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::Init(const Core::Wind
 void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::DeInit()
 {
     PLOGD << "VulkanGraphicsPipelineFactory Deinit";
-    
+
     DestroyVertexInputState();
     DestroyInputAssemblyState();
     DestroyShaderState();
@@ -1209,9 +1209,9 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(Core::
 uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info)
 {
     auto pipelineLayout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(info.pipelineLayoutId);
-    auto shaderStageInfo = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetShaderStageCreateInfo(info.statesToIdMap.at(Core::Enums::PipelineStates::ShaderStage));
-
-    //VkFormat depthFormat = GfxVk::Unwrap::UnWrapFormat(info.depthFormat);
+    auto& shaderStageInfo = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineShaderInfo(info.statesToIdMap.at(Core::Enums::PipelineStates::ShaderStage));
+    auto& vertexInputInfo = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineVertexInputInfo(info.statesToIdMap.at(Core::Enums::PipelineStates::VertexInputState));
+    
     std::vector<VkFormat> colorFormats;
     for (auto& format : info.colorFormats)
     {
@@ -1240,12 +1240,12 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipeline(co
     vkinfo.pMultisampleState = &idToMultiSampleMap[info.statesToIdMap.at(Core::Enums::PipelineStates::MultisampleState)];
     vkinfo.pNext = &renderingInfo;
     vkinfo.pRasterizationState = &idToRasterizationMap[info.statesToIdMap.at(Core::Enums::PipelineStates::RasterizationState)];
-    vkinfo.pStages = shaderStageInfo;
+    vkinfo.pStages = shaderStageInfo.data();
     vkinfo.pTessellationState = &idToTessellationMap[info.statesToIdMap.at(Core::Enums::PipelineStates::TessellationState)];
-    vkinfo.pVertexInputState = &idToVertexInputMap[info.statesToIdMap.at(Core::Enums::PipelineStates::VertexInputState)];
+    vkinfo.pVertexInputState = &vertexInputInfo;
     vkinfo.pViewportState = &idToViewportMap[info.statesToIdMap.at(Core::Enums::PipelineStates::ViewportState)];
     vkinfo.renderPass = VK_NULL_HANDLE;
-    vkinfo.stageCount = 2; // TODO: hardcoding for now, fetch it dynamically
+    vkinfo.stageCount = (uint32_t)shaderStageInfo.size();
     vkinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     vkinfo.subpass = 0;
 

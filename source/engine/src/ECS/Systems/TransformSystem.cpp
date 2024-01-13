@@ -45,7 +45,7 @@ void TransformSystem::DeInit()
 {
 }
 
-void TransformSystem::Update(float dt)
+void TransformSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     // Do the scene tree traversal
     // Update the tranform wrt to the parent

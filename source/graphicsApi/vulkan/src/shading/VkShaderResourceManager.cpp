@@ -449,7 +449,7 @@ std::string GfxVk::Shading::VkShaderResourceManager::GetShaderNameFromRefl(const
     return shaderName;
 }
 
-VkDescriptorSet GfxVk::Shading::VkShaderResourceManager::GetDescriptorSet(const uint32_t & id)
+const VkDescriptorSet& GfxVk::Shading::VkShaderResourceManager::GetDescriptorSet(const uint32_t & id)
 {
     return m_idToSetMap[id];
 }
@@ -1141,11 +1141,6 @@ VkPipelineLayout * GfxVk::Shading::VkShaderResourceManager::GetPipelineLayout(co
     return (it)->pipelineLayout;
 }
 
-VkPipelineShaderStageCreateInfo* GfxVk::Shading::VkShaderResourceManager::GetShaderStageCreateInfo(uint32_t id)
-{
-    return m_shaderStageWrapperMap[id].m_infoList.data();
-}
-
 std::vector<Core::Wrappers::SetWrapper*>* GfxVk::Shading::VkShaderResourceManager::GetSetWrapperList()
 {
     return &m_setWrapperList;
@@ -1283,6 +1278,25 @@ std::vector<VkDescriptorSet> GfxVk::Shading::VkShaderResourceManager::GetDescrip
             ASSERT_MSG_DEBUG(set != VK_NULL_HANDLE, "Set not found");
             list.push_back(set);
             k++;
+        }
+        else
+        {
+            list.push_back(m_fillerSet);
+        }
+    }
+    return list;
+}
+
+std::vector<VkDescriptorSet> GfxVk::Shading::VkShaderResourceManager::GetDescriptors(const int* ids, const uint32_t& count)
+{
+    std::vector<VkDescriptorSet> list;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        if (ids[i] != -1)
+        {
+            VkDescriptorSet set = m_idToSetMap[ids[i]];
+            ASSERT_MSG_DEBUG(set != VK_NULL_HANDLE, "Set not found");
+            list.push_back(set);
         }
         else
         {
@@ -1722,4 +1736,20 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::st
     }
 
     return ittt->m_shaderModuleStateId;
+}
+
+const VkPipelineVertexInputStateCreateInfo& GfxVk::Shading::VkShaderResourceManager::GetPipelineVertexInputInfo(uint32_t id)
+{
+    auto it = m_vertexInputWrapperMap.find(id);
+    ASSERT_MSG_DEBUG(it != m_vertexInputWrapperMap.end(), "id not found");
+
+    return m_vertexInputWrapperMap[id].m_createInfo;
+}
+
+const std::vector<VkPipelineShaderStageCreateInfo>& GfxVk::Shading::VkShaderResourceManager::GetPipelineShaderInfo(uint32_t id)
+{
+    auto it = m_shaderStageWrapperMap.find(id);
+    ASSERT_MSG_DEBUG(it != m_shaderStageWrapperMap.end(), "id not found");
+
+    return m_shaderStageWrapperMap[id].m_infoList;
 }

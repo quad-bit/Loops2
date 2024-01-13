@@ -1,5 +1,7 @@
 #pragma once
 
+#if 0
+
 #include <glm/glm.hpp>
 #include <map>
 #include <vector>
@@ -19,13 +21,13 @@ namespace Core
 
     namespace Utility
     {
-        enum class ATTRIBUTES
+        enum VERTEX_ATTRIBUTES
         {
             POSITION = 0,
             COLOR = 1,
             NORMAL = 2,
             TANGENT = 3,
-            UV = 4,
+            UV0 = 4,
             UV1 = 5,
             UV2 = 6,
             UV3 = 7,
@@ -177,38 +179,38 @@ inline void Core::Utility::AttribPC::FillData(Core::ECS::Components::Mesh* mesh)
     T obj;
 
     size_t numVertices = obj.positions.size();
-    posColList.resize(numVertices);
+    //posColList.resize(numVertices);
 
-    mesh->positions.resize(numVertices);
-    mesh->colors.resize(numVertices);
+    mesh->m_positions.resize(numVertices);
+    mesh->m_colors.resize(numVertices);
 
     for (uint32_t i = 0; i < numVertices; i++)
     {
-        posColList[i].position = obj.positions[i];
-        posColList[i].color = obj.color;
+        //posColList[i].position = obj.positions[i];
+        //posColList[i].color = obj.color;
 
-        mesh->positions[i] = &posColList[i].position;
-        mesh->colors[i] = &posColList[i].color;
+        mesh->m_positions[i] = obj.positions[i];
+        mesh->m_colors[i] = obj.color;
     }
 
-    vertexData = posColList.data();
-    vertexDataSize = (uint32_t)posColList.size() * sizeof(PC);
-    vertexCount = (uint32_t)numVertices;
+    //vertexData = posColList.data();
+    //vertexDataSize = (uint32_t)posColList.size() * sizeof(PC);
+    //vertexCount = (uint32_t)numVertices;
 
     size_t numIndicies = obj.indices.size();
 
-    indicies.resize(numIndicies);
-    mesh->indicies.resize(numIndicies);
+    //indicies.resize(numIndicies);
+    mesh->m_indicies.resize(numIndicies);
 
     for (uint32_t i = 0; i < numIndicies; i++)
     {
-        indicies[i] = obj.indices[i];
-        mesh->indicies[i] = &indicies[i];
+        //indicies[i] = obj.indices[i];
+        mesh->m_indicies[i] = indicies[i];
     }
 
-    indexData = indicies.data();
+    /*indexData = indicies.data();
     indexDataSize = (uint32_t)indicies.size() * sizeof(uint32_t);
-    indexCount = (uint32_t)numIndicies;
+    indexCount = (uint32_t)numIndicies;*/
 }
 
 template<typename T>
@@ -217,38 +219,38 @@ inline void Core::Utility::AttribPC::FillData(Core::ECS::Components::Mesh* mesh,
     T obj;
 
     size_t numVertices = obj.positions.size();
-    posColList.resize(numVertices);
+    //posColList.resize(numVertices);
 
-    mesh->positions.resize(numVertices);
-    mesh->colors.resize(numVertices);
+    mesh->m_positions = obj.positions;
+    mesh->m_colors.resize(numVertices);
 
     for (uint32_t i = 0; i < numVertices; i++)
     {
-        posColList[i].position = obj.positions[i];
-        posColList[i].color = color;
+        //posColList[i].position = obj.positions[i];
+        //posColList[i].color = color;
 
-        mesh->positions[i] = &posColList[i].position;
-        mesh->colors[i] = &posColList[i].color;
+        //mesh->m_positions[i] = &posColList[i].position;
+        mesh->m_colors[i] = color;
     }
 
-    vertexData = posColList.data();
+    /*vertexData = posColList.data();
     vertexDataSize = (uint32_t)posColList.size() * sizeof(PC);
-    vertexCount = (uint32_t)numVertices;
+    vertexCount = (uint32_t)numVertices;*/
 
     size_t numIndicies = obj.indices.size();
 
-    indicies.resize(numIndicies);
-    mesh->indicies.resize(numIndicies);
+    //indicies.resize(numIndicies);
+    mesh->m_indicies = obj.indices;
 
-    for (uint32_t i = 0; i < numIndicies; i++)
+    /*for (uint32_t i = 0; i < numIndicies; i++)
     {
         indicies[i] = obj.indices[i];
         mesh->indicies[i] = &indicies[i];
-    }
+    }*/
 
-    indexData = indicies.data();
+    /*indexData = indicies.data();
     indexDataSize = (uint32_t)indicies.size() * sizeof(uint32_t);
-    indexCount = (uint32_t)numIndicies;
+    indexCount = (uint32_t)numIndicies;*/
 }
 
 template<typename T>
@@ -332,3 +334,4 @@ inline void Core::Utility::AttribPCN::FillData(Core::ECS::Components::Mesh* mesh
     indicies.resize(numIndicies);
     mesh->indicies.resize(numIndicies);
 }
+#endif

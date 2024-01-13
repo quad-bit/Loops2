@@ -5,6 +5,9 @@
 #include "synchronisation/VkSynchroniserFactory.h"
 #include "VkRenderPassFactory.h"
 #include <utility/VkDebugMarkerUtil.h>
+#include "shading/VkShaderResourceManager.h"
+#include "pipeline/VulkanGraphicsPipelineFactory.h"
+#include "shading/VkBufferFactory.h"
 
 std::vector<float> labelColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -48,10 +51,28 @@ namespace
 
 void GfxVk::CommandWriter::SetViewport(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, float width, float height, float positionX, float positionY, float minDepth, float maxDepth)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+
+    VkViewport viewport;
+    viewport.height = height;
+    viewport.width = width;
+    viewport.minDepth = minDepth;
+    viewport.maxDepth = maxDepth;
+    viewport.x = positionX;
+    viewport.y = positionY;
+    vkCmdSetViewport(cmBuf, 0, 1, &viewport);
 }
 
 void GfxVk::CommandWriter::SetScissor(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, float width, float height, float positionX, float positionY)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+
+    VkRect2D scissor;
+    scissor.extent.width = (uint32_t)width;
+    scissor.extent.height = (uint32_t)height;
+    scissor.offset.x = (int32_t)positionX;
+    scissor.offset.y = (int32_t)positionY;
+    vkCmdSetScissor(cmBuf, 0, 1, &scissor);
 }
 
 void GfxVk::CommandWriter::SetDepthBias(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, float depthBiasConstant, float depthBiasClamp, float depthBiasSlope)
@@ -68,26 +89,91 @@ void GfxVk::CommandWriter::EndRenderPass(const Core::Wrappers::CommandBufferInfo
 
 void GfxVk::CommandWriter::BindPipeline(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Enums::PipelineType& type, uint32_t pipelineId)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    VkPipelineBindPoint bindPoint;
+    switch (type)
+    {
+    case Core::Enums::PipelineType::COMPUTE :
+        bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE;
+        break;
+    case Core::Enums::PipelineType::GRAPHICS:
+        bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
+        break;
+    default:
+        ASSERT_MSG_DEBUG(0, "invalid option");
+    }
+
+    const VkPipeline& pipeline = GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->GetPipeline(pipelineId);
+
+    vkCmdBindPipeline(cmBuf, bindPoint, pipeline);
 }
 
-void GfxVk::CommandWriter::BindDescriptorSet(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DescriptorSetBindingInfo& info)
+void GfxVk::CommandWriter::BindDescriptorSet(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DescriptorSetBindingInfo& info, uint32_t pipelineLayoutId)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+
+    VkPipelineBindPoint bindPoint;
+    switch (info.pipelineBindPoint)
+    {
+    case Core::Enums::PipelineType::GRAPHICS:
+        bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        break;
+
+    case Core::Enums::PipelineType::COMPUTE:
+        bindPoint = VK_PIPELINE_BIND_POINT_COMPUTE;
+        break;
+
+    default:
+        ASSERT_MSG_DEBUG(0, "Invalid option");
+    }
+
+    VkPipelineLayout* layout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(pipelineLayoutId);
+    std::vector<VkDescriptorSet> sets = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetDescriptors(info.descriptorSetIds.data(), (uint32_t)info.descriptorSetIds.size());
+    vkCmdBindDescriptorSets(cmBuf, bindPoint, *layout, info.firstSet,
+        info.numSetsToBind, &sets[info.firstSet], info.dynamicOffsetCount, info.pDynamicOffsets);
 }
 
 void GfxVk::CommandWriter::BindVertexBuffers(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::VertexBufferBindingInfo& info)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    std::vector<VkBuffer> buffers;
+    for (auto& id : info.bufferIds)
+    {
+        buffers.push_back(*GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer(id));
+    }
+    vkCmdBindVertexBuffers(cmBuf, info.firstBinding, info.bindingCount, buffers.data(), info.pOffsets.data());
 }
 
 void GfxVk::CommandWriter::BindIndexBuffers(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::IndexBufferBindingInfo& info)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+
+    VkIndexType indexType;
+    switch (info.indexType)
+    {
+    case Core::Enums::IndexType::INDEX_TYPE_UINT16:
+        indexType = VK_INDEX_TYPE_UINT16;
+        break;
+    case Core::Enums::IndexType::INDEX_TYPE_UINT32:
+        indexType = VK_INDEX_TYPE_UINT32;
+        break;
+    default: ASSERT_MSG_DEBUG(0, "index type invalid");
+    }
+
+    VkBuffer indBuf = *GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer(info.bufferId);
+    vkCmdBindIndexBuffer(cmBuf, indBuf, info.offset, indexType);
 }
 
 void GfxVk::CommandWriter::DrawIndex(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::IndexedDrawInfo& info)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    vkCmdDrawIndexed(cmBuf, info.indexCount, info.instanceCount, info.firstIndex, info.vertexOffset, info.firstInstance);
 }
 
 void GfxVk::CommandWriter::Draw(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DrawArrayInfo& info)
 {
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    vkCmdDraw(cmBuf, info.vertexCount, info.instanceCount, info.firstVertex, info.firstInstance);
 }
 
 void GfxVk::CommandWriter::SetPipelineBarrier(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t barrierId)

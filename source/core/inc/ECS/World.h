@@ -4,6 +4,7 @@
 #include <string>
 #include "ComponentMask.h"
 #include <functional>
+#include "Utility/RenderingWrappers/RenderingWrapper.h"
 
 namespace Core
 {
@@ -114,7 +115,7 @@ namespace Core
                 *handle = (manager->GetComponentHandle(e));
             }
 
-            void Update(float dt);
+            void Update(float dt, const Core::Wrappers::FrameInfo& m_frameInfo);
 
             void Render(float dt);
 

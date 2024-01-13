@@ -15,11 +15,12 @@
 #include "ECS/Systems/MeshRendererSystem.h"
 #include "ECS/Systems/LightSystem.h"
 #include <ECS/Components/Light.h>
+#include <Utility/SceneLoader.h>
 
 Engine::ECS_Manager* Engine::ECS_Manager::instance = nullptr;
 Core::ECS::World * worldObj;
 
-void Engine::ECS_Manager::Init()
+void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::unique_ptr<Core::Utility::GltfLoader>& sceneLoader)
 {
     PLOGD << "ECS Manager Init";
 
@@ -39,17 +40,19 @@ void Engine::ECS_Manager::Init()
     transformSystemObj = new TransformSystem();
     worldObj->AddSystem(transformSystemObj, Core::ECS::COMPONENT_TYPE::TRANSFORM);
 
-    cameraSystemObj = new Engine::ECS::Systems::CameraSystem(m_renderData.m_cameraData);
+    cameraSystemObj = new Engine::ECS::Systems::CameraSystem(renderData.m_cameraData);
     worldObj->AddSystem(cameraSystemObj, Core::ECS::COMPONENT_TYPE::CAMERA);
 
-    meshRendererSystem = new MeshRendererSystem(m_renderData.m_transformData, m_renderData.m_perEffectTransformData);
+    meshRendererSystem = new MeshRendererSystem(renderData.m_transformData, renderData.m_perEffectTransformData);
     worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
 
-    lightSystem = new LightSystem(m_renderData.m_lightData);
+    lightSystem = new LightSystem(renderData.m_lightData);
     worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
     //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
 
     worldObj->Init();
+
+    sceneLoader = std::make_unique<Core::Utility::GltfLoader>(worldObj);
 }
 
 void Engine::ECS_Manager::DeInit()
@@ -70,9 +73,9 @@ void Engine::ECS_Manager::DeInit()
     delete worldObj;
 }
 
-void Engine::ECS_Manager::Update(float dt)
+void Engine::ECS_Manager::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
-    worldObj->Update(dt);
+    worldObj->Update(dt, frameInfo);
 }
 
 void Engine::ECS_Manager::Render(float dt)
@@ -98,7 +101,7 @@ Engine::ECS_Manager::~ECS_Manager()
 {
 }
 
-const Core::Utility::RenderData& Engine::ECS_Manager::GetRenderData()
-{
-    return m_renderData;
-}
+//const Core::Utility::RenderData& Engine::ECS_Manager::GetRenderData()
+//{
+//    return m_renderData;
+//}

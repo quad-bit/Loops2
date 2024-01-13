@@ -33,7 +33,7 @@ namespace Renderer
                 {
                     // submit for presentation
                     Core::Wrappers::PresentInfo presentInfo = {};
-                    presentInfo.m_waitSemaphoreIds.push_back(m_taskSubmitInfo[frameInfo.m_farmeInFlightIndex].m_waitSemaphoreId.value());
+                    presentInfo.m_waitSemaphoreIds.push_back(m_taskSubmitInfo[frameInfo.m_frameInFlightIndex].m_waitSemaphoreId.value());
                     presentInfo.m_imageIndices.push_back(frameInfo.m_swapBufferIndex);
                     presentInfo.m_queueId = m_taskQueueInfo.m_taskQueueId;
 

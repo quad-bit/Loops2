@@ -49,7 +49,7 @@ void Engine::ECS::Systems::CameraSystem::DeInit()
     resDescriptionList.clear();
 }
 
-void Engine::ECS::Systems::CameraSystem::Update(float dt)
+void Engine::ECS::Systems::CameraSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     m_cameraDataList.clear();
     for (auto & entity : registeredEntities)
@@ -74,7 +74,9 @@ void Engine::ECS::Systems::CameraSystem::Update(float dt)
         // TODO : write the uniform data of Camera to gpu memory via void*
         Core::Utility::CameraData data = {};
         data.m_cameraPosition = obj.cameraPos;
-        data.m_descriptorSetId = desc.m_descriptorSetIds[Core::Settings::m_currentFrameInFlight];
+        data.m_projectionMat = obj.projectionMat;
+        data.m_viewMat = obj.viewMat;
+        data.m_descriptorSetId = desc.m_descriptorSetIds[frameInfo.m_frameInFlightIndex];
         data.m_renderLayers = entity->GetEntityLayers();
         data.m_tag = entity->entityTag;
         m_cameraDataList.push_back(data);

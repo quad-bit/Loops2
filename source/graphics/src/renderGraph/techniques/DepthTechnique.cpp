@@ -3,6 +3,26 @@
 #include <VulkanInterface.h>
 #include <renderGraph/tasks/RenderTask.h>
 #include <renderGraph/tasks/TransferTask.h>
+#include <stack>
+
+namespace
+{
+    template <typename T>
+    void dump_stack(std::stack<T>& stack) {
+        std::stack<T> temp;
+        while (!stack.empty()) {
+            T top = stack.top(); stack.pop();
+            std::cout << top << " ";
+            temp.push(top);
+        }
+        while (!temp.empty()) {
+            T top = temp.top(); temp.pop();
+            stack.push(top);
+        }
+    }
+
+};
+
 
 void Renderer::RenderGraph::Techniques::DepthTechnique::CreateResources()
 {
@@ -97,7 +117,7 @@ Renderer::RenderGraph::Techniques::DepthTechnique::DepthTechnique(
 
 Renderer::RenderGraph::Techniques::DepthTechnique::~DepthTechnique()
 {
-    ((Renderer::RenderGraph::Tasks::RenderTask*)task.get())->DestroyGraphicsPipeline();
+    //((Renderer::RenderGraph::Tasks::RenderTask*)task.get())->DestroyGraphicsPipeline();
 }
 
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::DepthTechnique::GetGraphOriginResourceNodes()
@@ -108,4 +128,114 @@ std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::Rende
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::DepthTechnique::GetGraphEndResourceNodes()
 {
     return std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>();
+}
+
+void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
+{
+    Renderer::RenderGraph::Tasks::DrawInfo drawInfo{};
+    std::map<uint32_t, std::vector<uint32_t>> setIdMap;
+
+    uint32_t minSetVal = Core::Enums::ResourceSets::CAMERA, maxSetVal = Core::Enums::ResourceSets::TRANSFORM;
+    for (uint32_t i = minSetVal; i < maxSetVal; i++)
+    {
+        setIdMap.insert({ i, {} });
+    }
+
+    setIdMap[Core::Enums::ResourceSets::CAMERA].push_back(m_renderData.m_cameraData[0].m_descriptorSetId);
+
+    auto& transformData = m_renderData.m_transformData;
+    for (auto& data : transformData)
+    {
+        Renderer::RenderGraph::Tasks::MeshDrawInfo meshInfo{};
+        if (data.m_indexBufferId.has_value())
+        {
+            Core::Wrappers::IndexBufferBindingInfo indexInfo{};
+            indexInfo.bufferId = data.m_indexBufferId.value();
+            indexInfo.indexType = Core::Enums::IndexType::INDEX_TYPE_UINT32;
+            indexInfo.offset = 0;
+            meshInfo.m_indexBufferInfo = indexInfo;
+            meshInfo.m_indexCount = data.m_indexCount.value();
+        }
+
+        Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
+        vertexInfo.bindingCount = 1;
+
+        ASSERT_MSG_DEBUG(0, "Fix this");
+        //vertexInfo.bufferIds = data.m_vertexBufferId;
+        
+        vertexInfo.firstBinding = 0;
+        vertexInfo.pOffsets = { 0 };
+        meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
+        meshInfo.m_vertexCount = data.m_vertexCount;
+
+        setIdMap[Core::Enums::ResourceSets::TRANSFORM].push_back(data.m_descriptorSetId);
+        drawInfo.m_meshInfoList.push_back(meshInfo);
+    }
+
+    //setIdMap.insert({ 0, {2, 3} });
+    //setIdMap.insert({ 1, {5, 8, 10} });
+    //setIdMap.insert({ 2, {12, 15} });
+    //setIdMap.insert({ 3, {} });
+    //setIdMap.insert({ 4, {17, 21, 25, 26} });
+
+    uint32_t totalSetCount = (uint32_t)Core::Enums::ResourceSets::TRANSFORM + 1;
+    uint32_t bindCount = 0, firstSet = totalSetCount;
+    std::vector<int> idList;
+    std::function<void(uint32_t)> iterate;
+
+    auto& meshInfoList = drawInfo.m_meshInfoList;
+
+    uint32_t index = 0;
+    iterate = [&iterate, &setIdMap, &maxSetVal, &idList, &bindCount, &firstSet, &meshInfoList, &index](uint32_t setVal)
+    {
+        if (setVal > maxSetVal)
+            return;
+
+        auto FillStack = [&iterate, &setIdMap, &maxSetVal, &idList, &bindCount, &firstSet, &meshInfoList, &index](int id, uint32_t setVal)
+        {
+            idList.push_back(id);
+            bindCount++;
+            firstSet--;
+            iterate(setVal + 1);
+
+            if (setVal == maxSetVal)
+            {
+                /*for (auto& id : idList)
+                    std::cout << id << " ";
+                std::cout << "\t" << bindCount << "\t" << firstSet << "\n";*/
+
+                Core::Wrappers::DescriptorSetBindingInfo info{};
+                info.descriptorSetIds = idList;
+                info.firstSet = firstSet;
+                info.dynamicOffsetCount = 0;
+                info.numSetsToBind = bindCount;
+                info.pDynamicOffsets = nullptr;
+                info.pipelineBindPoint = Core::Enums::PipelineType::GRAPHICS;
+
+                meshInfoList[index++].m_descriptorInfo = info;
+            }
+
+            bindCount = 0;
+
+            firstSet = maxSetVal + 1;
+            idList.erase(idList.end() - 1);
+        };
+
+        if (setIdMap[setVal].size() == 0)
+        {
+            FillStack(-1, setVal);
+        }
+        else
+        {
+            for (auto& id : setIdMap[setVal])
+            {
+                FillStack(id, setVal);
+            }
+        }
+    };
+
+    iterate(minSetVal);
+
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)taskNodeBase.get())->GetTask();
+    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
 }

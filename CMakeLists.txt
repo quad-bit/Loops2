@@ -20,6 +20,12 @@ find_package(glm REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(plog REQUIRED)
+# find_package(tinyGltf REQUIRED)
+FIND_PATH(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
+
+if(TINYGLTF_INCLUDE_DIRS STREQUAL "")
+    message(FATAL_ERROR "Tiny not found")
+endif()
 
 message ("\nConfiguring Core ..\n")
 add_subdirectory(source/core projects/core)

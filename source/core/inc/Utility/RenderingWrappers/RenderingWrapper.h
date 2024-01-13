@@ -726,6 +726,20 @@ namespace Core
             OPAQUE_LR,
             TRANSPARENT_LR
         };
+
+        enum VertexAttributes
+        {
+            POSITION = 0,
+            COLOR = 1,
+            NORMAL = 2,
+            TANGENT = 3,
+            UV0 = 4,
+            UV1 = 5,
+            UV2 = 6,
+            UV3 = 7,
+            UV4 = 8,
+            NUM_ATTRIBUTES = 9
+        };
     }
 
     namespace Wrappers
@@ -1156,11 +1170,10 @@ namespace Core
             // used for vkCmdBindDescriptorSets
             struct DescriptorSetBindingInfo
             {
-                Core::Enums::PipelineType* pipelineBindPoint;
-                uint32_t pipelineLayoutId;
+                Core::Enums::PipelineType pipelineBindPoint;
                 uint32_t firstSet;
-                std::vector<uint32_t> descriptorSetIds;
-                uint32_t descriptorSetId;
+                uint32_t numSetsToBind;
+                std::vector<int> descriptorSetIds;// set value to id
                 uint32_t dynamicOffsetCount;
                 const uint32_t* pDynamicOffsets;
             };
@@ -1210,7 +1223,7 @@ namespace Core
             struct FrameInfo
             {
                 uint32_t m_swapBufferIndex;
-                uint32_t m_farmeInFlightIndex;
+                uint32_t m_frameInFlightIndex;
             };
 
             class CommandBufferInfo

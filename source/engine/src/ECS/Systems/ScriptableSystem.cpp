@@ -16,7 +16,7 @@ void ScriptableSystem::DeInit()
 
 }
 
-void ScriptableSystem::Update(float dt)
+void ScriptableSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     switch (appState)
     {

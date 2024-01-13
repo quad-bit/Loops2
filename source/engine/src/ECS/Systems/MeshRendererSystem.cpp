@@ -39,7 +39,7 @@ void MeshRendererSystem::DeInit()
 {
 }
 
-void MeshRendererSystem::Update(float dt)
+void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     m_transformDataList.clear();
     m_perEffectTransformData.clear();
@@ -59,15 +59,27 @@ void MeshRendererSystem::Update(float dt)
             &obj, std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
 
         Core::Utility::TransformData data;
-        data.m_descriptorSetId = desc.m_descriptorSetIds[Core::Settings::m_currentFrameInFlight];
+        data.m_descriptorSetId = desc.m_descriptorSetIds[frameInfo.m_frameInFlightIndex];
         data.m_position = transformObj->GetGlobalPosition();
+        data.m_modelMat = transformObj->GetGlobalModelMatrix();
         data.m_renderLayers = entity->GetEntityLayers();
-        
-        for (uint32_t i = 0; i < renderer->GetComponent()->geometry->vertexBufferCount; i++)
-            data.m_vertexBufferId.push_back(renderer->GetComponent()->geometry->vertexBuffersIds[i]);
-        
-        if(renderer->GetComponent()->geometry->indicies.size() > 0)
-            data.m_indexBufferId = renderer->GetComponent()->geometry->indexBufferId;
+        data.m_vertexCount = renderer->GetComponent()->geometry->m_positions.size();
+        data.m_positionBufferId = renderer->GetComponent()->geometry->m_positionBufferId;
+
+        if (renderer->GetComponent()->geometry->m_normals.size() > 0)
+        {
+            data.m_normalBufferId = renderer->GetComponent()->geometry->m_normalBufferId;
+        }
+
+        if (renderer->GetComponent()->geometry->m_colors.size() > 0)
+        {
+            data.m_colorBufferId = renderer->GetComponent()->geometry->m_colorBufferId;
+        }
+
+        if (renderer->GetComponent()->geometry->m_indicies.size() > 0)
+        {
+            data.m_indexBufferId = renderer->GetComponent()->geometry->m_indexBufferId;
+        }
 
         m_transformDataList.push_back(data);
 

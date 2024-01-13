@@ -4,6 +4,7 @@
 #include "Math/BoundingBox.h"
 #include <stdint.h>
 #include <glm/glm.hpp>
+#include <utility/RenderingWrappers/RenderingWrapper.h>
 
 namespace Core
 {
@@ -17,7 +18,13 @@ namespace Core
                 QUAD,
                 CUBE,
                 SPHERE,
-                CYLINDER
+                CYLINDER,
+                CUSTOM
+            };
+
+            struct VertexBufferInfoWrapper
+            {
+                uint32_t m_bufferId, m_bufferMemoryId;
             };
 
             class Mesh : public Component<Mesh>
@@ -27,16 +34,8 @@ namespace Core
                 Core::Math::BoundingBox bounds;
                 uint32_t submeshCount;
 
-                std::vector<glm::vec2*> uv;
-                std::vector<glm::vec2*> uv2;
-                std::vector<glm::vec2*> uv3;
-                std::vector<glm::vec2*> uv4;
-                std::vector<glm::vec2*> uv5;
-                std::vector<glm::vec2*> uv6;
-                std::vector<glm::vec2*> uv7;
-                std::vector<glm::vec2*> uv8;
-
-                std::vector<glm::vec3*> positions;
+                //======================= old
+                /*std::vector<glm::vec3*> positions;
                 std::vector<glm::vec4*> colors;
                 std::vector<glm::vec3*> normals;
                 std::vector<glm::vec3*> tangents;
@@ -54,11 +53,33 @@ namespace Core
 
                 uint32_t indexBufferId;
                 uint32_t indexCount;
-                size_t indexDataSize;
-                /*
-                void ** pGpuMemVB;
-                void * pGpuMemIB;
-                */
+                size_t indexDataSize;*/
+                //======================= old
+
+                std::vector<glm::vec2> m_uv0;
+                std::vector<glm::vec2> m_uv1;
+                std::vector<glm::vec2> m_uv2;
+                std::vector<glm::vec2> m_uv3;
+                std::vector<glm::vec2> m_uv4;
+                std::vector<glm::vec2> m_uv5;
+                std::vector<glm::vec2> m_uv6;
+                std::vector<glm::vec2> m_uv7;
+                std::vector<glm::vec2> m_uv8;
+
+                std::vector<glm::vec3> m_positions;
+                std::vector<glm::vec4> m_colors;
+                std::vector<glm::vec3> m_normals;
+                std::vector<glm::vec3> m_tangents;
+                std::vector<uint32_t> m_indicies;
+
+                uint32_t m_positionBufferId, m_positionBufferMemoryId;
+                uint32_t m_colorBufferId, m_colorBufferMemoryId;
+                uint32_t m_normalBufferId, m_normalBufferMemoryId;
+                uint32_t m_tangentBufferId, m_tangentBufferMemoryId;
+                uint32_t m_indexBufferId, m_indexBufferMemoryId;
+
+                // store bufferid and mem id per attrib
+                //std::map<Core::Enums::VertexAttributes, VertexBufferInfoWrapper> m_vertexGpuDataMap;
 
                 Mesh()
                 {
@@ -67,8 +88,8 @@ namespace Core
 
                 ~Mesh()
                 {
-                    delete[] vertexBuffersIds;
-                    delete[] memoryIds;
+                    //delete[] vertexBuffersIds;
+                    //delete[] memoryIds;
                     //delete[] pGpuMemVB;
                 }
             };

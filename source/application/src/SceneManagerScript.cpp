@@ -48,7 +48,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
 
     lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
     lightHandle->AddComponent<Core::ECS::Components::Light>(lightComponent);
-    
+
     Core::ECS::Components::Material *colMat, *floorMat , *wallMat;
 
 #if (debugMeshForLight)
@@ -94,23 +94,24 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     floorTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(90.0), 0, 0));
 
     {
-        std::bitset<(unsigned int)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> req;
-        req.set((unsigned int)Core::Utility::ATTRIBUTES::POSITION);
-        req.set((unsigned int)Core::Utility::ATTRIBUTES::COLOR);
-        req.set((unsigned int)Core::Utility::ATTRIBUTES::NORMAL);
+        //std::bitset<(unsigned int)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> req;
+        //req.set((unsigned int)Core::Utility::ATTRIBUTES::POSITION);
+        //req.set((unsigned int)Core::Utility::ATTRIBUTES::COLOR);
+        //req.set((unsigned int)Core::Utility::ATTRIBUTES::NORMAL);
 
-        Core::Enums::PrimtiveType * prim = new Core::Enums::PrimtiveType{ Core::Enums::PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
-        Core::Wrappers::MeshInfo meshInfo{};
-        meshInfo.attribMaskReq = req;
-        meshInfo.bufferPerAttribRequired = false;
-        meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
-        meshInfo.isPrimitiveRestartEnabled = false;
-        meshInfo.primitive = prim;
-        meshInfo.overrideColor = true;
-        meshInfo.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+        //Core::Enums::PrimtiveType * prim = new Core::Enums::PrimtiveType{ Core::Enums::PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
+        //Core::Wrappers::MeshInfo meshInfo{};
+        //meshInfo.attribMaskReq = req;
+        //meshInfo.bufferPerAttribRequired = false;
+        //meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
+        //meshInfo.isPrimitiveRestartEnabled = false;
+        //meshInfo.primitive = prim;
+        //meshInfo.overrideColor = true;
+        //meshInfo.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+        //
         Core::ECS::Components::MESH_TYPE meshType = Core::ECS::Components::MESH_TYPE::QUAD;
 
-        Core::ECS::Components::Mesh * mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateMesh(&meshInfo, &meshType);
+        Core::ECS::Components::Mesh* mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateBasicPrimitiveMesh(meshType); //CreateMesh(&meshInfo, &meshType);
         floorHandle->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
         floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(Core::ECS::Components::EffectType::OPAQUE_E);

@@ -62,11 +62,11 @@ void Core::ECS::World::AddSystem(Core::ECS::System * system, COMPONENT_TYPE comp
         camSystem = system;
 }
 
-void Core::ECS::World::Update(float dt)
+void Core::ECS::World::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     for (auto system : systemList)
     {
-        system->Update(dt);
+        system->Update(dt, frameInfo);
     }
 }
 //not getting used

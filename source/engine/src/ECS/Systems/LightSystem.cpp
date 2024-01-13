@@ -161,7 +161,7 @@ void LightSystem::DeInit()
 
 }
 
-void LightSystem::Update(float dt)
+void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     m_lightDataList.clear();
     for (auto & entity : registeredEntities)
@@ -197,7 +197,7 @@ void LightSystem::Update(float dt)
 
         Core::Utility::LightData data = {};
         // CHECK THE ABOVE COMMENT, WHEN IMPLEMENTING SHADOWS
-        data.m_descriptorSetId = desc.m_descriptorSetIds[Core::Settings::m_currentFrameInFlight];
+        data.m_descriptorSetId = desc.m_descriptorSetIds[frameInfo.m_frameInFlightIndex];
         m_lightDataList.push_back(data);
     }
 }

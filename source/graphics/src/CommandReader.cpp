@@ -33,9 +33,9 @@ void Renderer::CommandReader::BindPipeline(const Core::Wrappers::CommandBufferIn
     GfxVk::CommandWriter::BindPipeline(cmdBufInfo, type, pipelineId);
 }
 
-void Renderer::CommandReader::BindDescriptorSet(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DescriptorSetBindingInfo& info)
+void Renderer::CommandReader::BindDescriptorSet(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DescriptorSetBindingInfo& info, uint32_t pipelineLayoutId)
 {
-    GfxVk::CommandWriter::BindDescriptorSet(cmdBufInfo, info);
+    GfxVk::CommandWriter::BindDescriptorSet(cmdBufInfo, info, pipelineLayoutId);
 }
 
 void Renderer::CommandReader::BindVertexBuffers(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::VertexBufferBindingInfo& info)

@@ -37,7 +37,7 @@ Core::Enums::Format Renderer::RendererSettings::m_bestDepthFormat;
 Core::Enums::Format Renderer::RendererSettings::m_surfaceFormat;
 
 uint32_t Renderer::RendererSettings::m_swapBufferCount;
-uint32_t Renderer::RendererSettings::m_maxFramesInFlight;// , Renderer::RendererSettings::m_currentFrameInFlight;
+uint32_t Renderer::RendererSettings::m_maxFramesInFlight;//, Renderer::RendererSettings::m_currentFrameInFlight;
 uint32_t Renderer::RendererSettings::m_maxFrameRate;
 
 void Renderer::RenderingManager::BeginRenderLoop()

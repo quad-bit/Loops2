@@ -91,7 +91,7 @@ namespace
 
 
         char prefix[64];
-        char* message = (char*)malloc(strlen(callbackData->pMessage) + 500);
+        char* message = (char*)malloc(strlen(callbackData->pMessage) + 1000);
         
         if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
             strcpy(prefix, "VERBOSE : ");
@@ -104,7 +104,6 @@ namespace
         }
         else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
             strcpy(prefix, "ERROR : ");
-            ASSERT_MSG_DEBUG(0, message);
         }
         if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) {
             strcat(prefix, "GENERAL");
@@ -121,8 +120,9 @@ namespace
                 strcat(prefix, "PERF");
             }
         }
+
         sprintf(message,
-            "%s - Message ID Number %d, Message ID String :\n%s",
+            "%s - Message ID Number %d, Message ID String :\n%s, Message : \n%s",
             prefix,
             callbackData->messageIdNumber,
             callbackData->pMessageIdName,
@@ -218,7 +218,7 @@ void GfxVk::Utility::ValidationManager::SetupDebug()
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     dbg_messenger_create_info.messageType =
-        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     dbg_messenger_create_info.pfnUserCallback = debug_messenger_callback;
     dbg_messenger_create_info.pUserData = NULL;

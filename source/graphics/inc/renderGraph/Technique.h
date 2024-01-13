@@ -124,7 +124,11 @@ namespace Renderer
             // technique origin and ends nodes
             virtual std::vector<graphNodeAlias*> GetGraphOriginResourceNodes() = 0;
             virtual std::vector<graphNodeAlias*> GetGraphEndResourceNodes() = 0;
+            
+            virtual void SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
+            {
 
+            }
         };
     }
 }

@@ -22,6 +22,11 @@ namespace Core
         template<typename T>
         class ComponentManager;
     }
+
+    namespace Utility
+    {
+        class GltfLoader;
+    }
 }
 
 namespace Engine
@@ -34,7 +39,7 @@ namespace Engine
         ECS_Manager const& operator= (ECS_Manager const&) {}
 
         static ECS_Manager* instance;
-        Core::Utility::RenderData m_renderData;
+        //Core::Utility::RenderData m_renderData;
 
     public:
         Core::ECS::ComponentManager<Core::ECS::Components::Transform>* transformManager;
@@ -55,9 +60,9 @@ namespace Engine
         Core::ECS::ComponentManager<Core::ECS::Components::Light>* lightManager;
         Core::ECS::System* lightSystem;
 
-        void Init();
+        void Init(Core::Utility::RenderData& renderData, std::unique_ptr<Core::Utility::GltfLoader>& sceneLoader);
         void DeInit();
-        void Update(float dt);
+        void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo);
         void Render(float dt);
         void PrepareRenderData();
         static ECS_Manager* GetInstance();

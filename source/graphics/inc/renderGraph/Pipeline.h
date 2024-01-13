@@ -245,6 +245,8 @@ namespace Renderer
             }
 
             const std::map<uint32_t, PerLevelTaskInfo>& GetPerLevelTaskInfo();
+
+            const std::vector<std::unique_ptr<Effect>>& GetEffects() const;
         };
     }
 }

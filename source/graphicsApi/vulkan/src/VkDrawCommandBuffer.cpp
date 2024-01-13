@@ -80,7 +80,7 @@ void GfxVk::CommandPool::VkDrawCommandBuffer::BindPipeline(Core::Enums::Pipeline
 
 void GfxVk::CommandPool::VkDrawCommandBuffer::BindDescriptorSet(Core::Wrappers::DescriptorSetBindingInfo * info)
 {
-    VkPipelineBindPoint bindPoint;
+    /*VkPipelineBindPoint bindPoint;
     switch (*info->pipelineBindPoint)
     {
     case Core::Enums::PipelineType::GRAPHICS:
@@ -93,7 +93,7 @@ void GfxVk::CommandPool::VkDrawCommandBuffer::BindDescriptorSet(Core::Wrappers::
 
     default:
         ASSERT_MSG_DEBUG(0, "Invalid option");
-    }
+    }*/
 /*
     static int count = 0;
     uint32_t size, offset;
@@ -141,7 +141,7 @@ void GfxVk::CommandPool::VkDrawCommandBuffer::BindDescriptorSet(Core::Wrappers::
     firstSet = 4, size = 2, address = &array[4]
     */
 
-    VkPipelineLayout* layout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(info->pipelineLayoutId);
+    /*VkPipelineLayout* layout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(info->pipelineLayoutId);
     uint32_t numSets = (uint32_t)info->descriptorSetIds.size();
 
     uint32_t firstSet, numSetsToBind;
@@ -152,7 +152,7 @@ void GfxVk::CommandPool::VkDrawCommandBuffer::BindDescriptorSet(Core::Wrappers::
     numSetsToBind = (uint32_t)setList.size() - firstSet;
 
     vkCmdBindDescriptorSets(*commandBuffer, bindPoint, *layout, firstSet, 
-      numSetsToBind, &setList[firstSet], info->dynamicOffsetCount, info->pDynamicOffsets);
+      numSetsToBind, &setList[firstSet], info->dynamicOffsetCount, info->pDynamicOffsets);*/
 }
 
 void GfxVk::CommandPool::VkDrawCommandBuffer::BindVertexBuffers(Core::Wrappers::VertexBufferBindingInfo * info)

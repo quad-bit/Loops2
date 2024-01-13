@@ -5,12 +5,7 @@
 
   "dependencies": [
         {
-            "name": "cgltf",
-            "version>=":"1.13"
-        },
-        {
-            "name": "cgltf",
-            "version>=":"1.13"
+            "name": "tinygltf"
         },
         {
             "name": "cli11",

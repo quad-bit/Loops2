@@ -428,3 +428,8 @@ const std::map<uint32_t, Renderer::RenderGraph::PerLevelTaskInfo>& Renderer::Ren
 {
     return m_perLevelTaskInfo;
 }
+
+const std::vector<std::unique_ptr<Renderer::RenderGraph::Effect>>& Renderer::RenderGraph::Pipeline::GetEffects() const
+{
+    return m_effects;
+}

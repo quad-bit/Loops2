@@ -117,6 +117,7 @@ set(UTILITY_FILES
     inc/Utility/Container/Vector.h
     inc/Utility/RenderingWrappers/AttributeHelper.h
     inc/Utility/RenderingWrappers/RenderingWrapper.h
+    inc/Utility/SceneLoader.h
 
     src/Utility/HashManager.cpp
     src/Utility/PipelineStateWrappers.cpp
@@ -124,6 +125,7 @@ set(UTILITY_FILES
     src/Utility/Timer.cpp
     src/Utility/Container/BitArray.cpp
     src/Utility/RenderingWrapper.cpp
+    src/Utility/SceneLoader.cpp
 )
 
 # find_package(glm REQUIRED)
@@ -157,7 +159,8 @@ target_include_directories(${TARGET_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
-)
+        ${TINYGLTF_INCLUDE_DIRS}
+    )
 
 if (MSVC)
     # For precompiled header.
