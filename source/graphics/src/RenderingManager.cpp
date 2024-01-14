@@ -192,6 +192,8 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
         info.m_height = m_windowSettings.m_windowHeight;
         info.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
         info.m_usages.push_back(Core::Enums::ImageUsage::USAGE_COLOR_ATTACHMENT_BIT);
+        info.m_usages.push_back(Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT);
+        info.m_usages.push_back(Core::Enums::ImageUsage::USAGE_TRANSFER_SRC_BIT);
 
         GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
     }

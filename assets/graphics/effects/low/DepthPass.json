@@ -9,13 +9,13 @@
                     "shaders":
                     [
                         {
-                            "name": "Color.frag",
+                            "name": "Depth.frag",
                             "type": "FRAGMENT",
                             "shaderPath": "",
                             "reflPath": ""
                         },
                         {
-                            "name": "PC.vert",
+                            "name": "Depth.vert",
                             "type": "VERTEX",
                             "shaderPath": "",
                             "reflPath": ""
@@ -27,13 +27,7 @@
                             "name": "pos",
                             "location": 0,
                             "attribType": "POSITION",
-                            "dataType": "vec4"
-                        },
-                        {
-                            "name": "inColor",
-                            "location": 1,
-                            "attribType": "COLOR",
-                            "dataType": "vec4"
+                            "dataType": "vec3"
                         }
                     ]
                 }

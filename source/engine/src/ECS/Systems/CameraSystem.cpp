@@ -69,7 +69,7 @@ void Engine::ECS::Systems::CameraSystem::Update(float dt, const Core::Wrappers::
         {
             UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
                 sizeof(Core::ECS::Components::CameraUniform), memoryAlignedUniformSize, &obj,
-                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
+                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
         }
         // TODO : write the uniform data of Camera to gpu memory via void*
         Core::Utility::CameraData data = {};

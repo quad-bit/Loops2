@@ -94,24 +94,9 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     floorTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(90.0), 0, 0));
 
     {
-        //std::bitset<(unsigned int)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> req;
-        //req.set((unsigned int)Core::Utility::ATTRIBUTES::POSITION);
-        //req.set((unsigned int)Core::Utility::ATTRIBUTES::COLOR);
-        //req.set((unsigned int)Core::Utility::ATTRIBUTES::NORMAL);
-
-        //Core::Enums::PrimtiveType * prim = new Core::Enums::PrimtiveType{ Core::Enums::PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
-        //Core::Wrappers::MeshInfo meshInfo{};
-        //meshInfo.attribMaskReq = req;
-        //meshInfo.bufferPerAttribRequired = false;
-        //meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
-        //meshInfo.isPrimitiveRestartEnabled = false;
-        //meshInfo.primitive = prim;
-        //meshInfo.overrideColor = true;
-        //meshInfo.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-        //
         Core::ECS::Components::MESH_TYPE meshType = Core::ECS::Components::MESH_TYPE::QUAD;
 
-        Core::ECS::Components::Mesh* mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateBasicPrimitiveMesh(meshType); //CreateMesh(&meshInfo, &meshType);
+        Core::ECS::Components::Mesh* mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateBasicPrimitiveMesh(meshType, false);
         floorHandle->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
         floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(Core::ECS::Components::EffectType::OPAQUE_E);
@@ -158,36 +143,35 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
         trfHandle->SetLocalPosition(glm::vec3(x, y, z));
         trfHandle->SetLocalScale(glm::vec3(1, 1, 1));
         trfHandle->SetLocalEulerAngles(glm::vec3(0, glm::radians(-180.0), 0));
-#if 0
+ 
         {
-            PrimtiveType * prim = new PrimtiveType{ PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
-            //PrimtiveType  prim{ PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
-            MeshInfo meshInfo{};
-            meshInfo.attribMaskReq = req;
-            meshInfo.bufferPerAttribRequired = false;
-            meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
-            meshInfo.isPrimitiveRestartEnabled = false;
-            meshInfo.primitive = prim;
-            meshInfo.overrideColor = true;
+            //PrimtiveType * prim = new PrimtiveType{ PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
+            ////PrimtiveType  prim{ PrimtiveType::TOPOLOGY_TRIANGLE_LIST };
+            //MeshInfo meshInfo{};
+            //meshInfo.attribMaskReq = req;
+            //meshInfo.bufferPerAttribRequired = false;
+            //meshInfo.isIndexed = true; // needs to be corrected, as we are using indexed mesh but not the index buffer
+            //meshInfo.isPrimitiveRestartEnabled = false;
+            //meshInfo.primitive = prim;
+            //meshInfo.overrideColor = true;
 
             //srand(10);
             float r = (float)(rand() % 10) / 10.0f;
             float g = (float)(rand() % 10) / 10.0f;
             float b = (float)(rand() % 10) / 10.0f;
 
-            meshInfo.color = glm::vec4(r, g, b, 1.0f);
+            //meshInfo.color = glm::vec4(r, g, b, 1.0f);
 
-            MESH_TYPE meshType = MESH_TYPE::CUBE;
+            Core::ECS::Components::MESH_TYPE meshType = Core::ECS::Components::MESH_TYPE::CUBE;
+            Core::ECS::Components::Mesh * mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateBasicPrimitiveMesh(meshType, false);
+            boxHandles[i]->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
-            Mesh * mesh = MeshFactory::GetInstance()->CreateMesh(&meshInfo, &meshType);
-            boxHandles[i]->AddComponent<Mesh>(mesh);
+            boxHandles[i]->AddComponent<Core::ECS::Components::Material>(floorMat);
 
-            boxHandles[i]->AddComponent<Material>(floorMat);
-            MaterialFactory::GetInstance()->AddMeshIds(floorMat, mesh->componentId);
-            boxRenderer[i] = new MeshRenderer(mesh, floorMat, trfHandle.GetComponent());
-            boxHandles[i]->AddComponent<MeshRenderer>(boxRenderer[i]);
+            boxRenderer[i] = new Core::ECS::Components::MeshRenderer(mesh, floorMat, trfHandle.GetComponent());
+            boxHandles[i]->AddComponent<Core::ECS::Components::MeshRenderer>(boxRenderer[i]);
+
         }
-#endif
     }
 
     /*
@@ -236,13 +220,12 @@ SceneManagerScript::~SceneManagerScript()
     for (uint32_t i = 0; i < boxHandles.size(); i++)
     {
         {
-            //Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = boxHandles[i]->GetComponent<Core::ECS::Components::Mesh>();
-            ////MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
-            //mesh.DestroyComponent();
+            Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = boxHandles[i]->GetComponent<Core::ECS::Components::Mesh>();
+            Renderer::ResourceManagement::MeshFactory::GetInstance()->DestroyMesh(mesh.GetComponent());
+            mesh.DestroyComponent();
 
-            //Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = boxHandles[i]->GetComponent<Core::ECS::Components::Material>();
-            //mat.DestroyComponent();
-
+            Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = boxHandles[i]->GetComponent<Core::ECS::Components::Material>();
+            mat.DestroyComponent();
         }
         worldObj->DestroyEntity(boxHandles[i]);
     }
@@ -250,7 +233,7 @@ SceneManagerScript::~SceneManagerScript()
 
     {
         Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = floorHandle->GetComponent<Core::ECS::Components::Mesh>();
-        Renderer::ResourceManagement::MeshFactory::GetInstance()->DestroyMesh(mesh->componentId);
+        Renderer::ResourceManagement::MeshFactory::GetInstance()->DestroyMesh(mesh.GetComponent());
         mesh.DestroyComponent();
         Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = floorHandle->GetComponent<Core::ECS::Components::Material>();
         mat.DestroyComponent();

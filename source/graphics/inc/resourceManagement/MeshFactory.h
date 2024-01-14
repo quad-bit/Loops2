@@ -39,6 +39,7 @@ namespace Renderer
 
             static MeshFactory* instance;
             //std::map<Core::ECS::Components::Mesh*, Core::Utility::AttribStructBase*> meshToVertWrapperMap;
+            std::vector< Core::ECS::Components::Mesh*> m_meshList;
 
             uint32_t idCounter = 0;
             uint32_t GenerateMeshId() { return idCounter++; }
@@ -53,7 +54,7 @@ namespace Renderer
             //void FillMeshAttrib(Core::Utility::AttribStructBase* wrapper, Core::ECS::Components::MESH_TYPE* meshType, Core::ECS::Components::Mesh* mesh, const Core::Wrappers::MeshInfo* meshInfo);
 
             template<typename T>
-            void FillMeshData(Core::ECS::Components::Mesh* mesh);
+            void FillMeshData(Core::ECS::Components::Mesh* mesh, bool addIndices);
 
         public:
             void Init();
@@ -67,8 +68,8 @@ namespace Renderer
             //Core::ECS::Components::Mesh* CreateMesh(const Core::Wrappers::MeshInfo* meshInfo, Core::ECS::Components::MESH_TYPE* meshType);
             //old ====
 
-            Core::ECS::Components::Mesh* CreateBasicPrimitiveMesh(const Core::ECS::Components::MESH_TYPE& meshType);
-            void DestroyMesh(const uint32_t& meshId);
+            Core::ECS::Components::Mesh* CreateBasicPrimitiveMesh(const Core::ECS::Components::MESH_TYPE& meshType, bool isIndexed);
+            //void DestroyMesh(const uint32_t& meshId);
             void DestroyMesh(Core::ECS::Components::Mesh* mesh);
         };
     }
@@ -101,12 +102,30 @@ namespace Renderer
 //}
 
 template<typename T>
-inline void Renderer::ResourceManagement::MeshFactory::FillMeshData(Core::ECS::Components::Mesh* mesh)
+inline void Renderer::ResourceManagement::MeshFactory::FillMeshData(Core::ECS::Components::Mesh* mesh, bool addIndices)
 {
     T obj{};
 
-    mesh->m_positions = obj.positions;
-    mesh->m_colors = obj.colors;
-    mesh->m_indicies = obj.indices;
-    mesh->m_normals = obj.normals;
+    size_t numVertices = obj.indices.size();
+    mesh->m_positions.resize(numVertices);
+    mesh->m_colors.resize(numVertices);
+    mesh->m_normals.resize(numVertices);
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        mesh->m_positions[i] = obj.positions[obj.indices[i]];
+        mesh->m_colors[i] = glm::vec4(0.6, 0.2, 0.5, 1.0);
+    }
+
+    //mesh->m_positions = obj.positions;
+    //mesh->m_colors = obj.colors;
+    //mesh->m_normals = obj.normals;
+
+    for (int i = 0; i < numVertices; i++)
+    {
+        mesh->m_normals[i] = obj.normals[obj.indices[i / 6]];
+    }
+
+    if(addIndices)
+        mesh->m_indicies = obj.indices;
 }

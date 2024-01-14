@@ -727,7 +727,7 @@ namespace Core
             TRANSPARENT_LR
         };
 
-        enum VertexAttributes
+        enum VertexAttributeType
         {
             POSITION = 0,
             COLOR = 1,
@@ -760,6 +760,16 @@ namespace Core
             glm::vec4 color;
             bool overrideColor = false;
         };
+
+        // The buffer type bound at a binding
+        struct VertexBindingTypeInfo
+        {
+            Core::Enums::VertexAttributeType m_bindingType;
+            // Binding index represents the position at which the respective
+            // vertex buffer should be placed while calling vkCmdBindVertexBuffers
+            uint32_t m_index;
+        };
+
 
         struct Viewport
         {

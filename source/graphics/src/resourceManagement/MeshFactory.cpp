@@ -31,13 +31,10 @@ void Renderer::ResourceManagement::MeshFactory::Init()
 
 void Renderer::ResourceManagement::MeshFactory::DeInit()
 {
-    ASSERT_MSG_DEBUG(0, "Fix this");
-    /*std::map<Core::ECS::Components::Mesh *, Core::Utility::AttribStructBase *>::iterator it;
-
-    for (it = meshToVertWrapperMap.begin(); it != meshToVertWrapperMap.end(); it++)
+    for (auto& mesh : m_meshList)
     {
-        delete it->second;
-    }*/
+        delete mesh;
+    }
 }
 
 void Renderer::ResourceManagement::MeshFactory::Update()
@@ -270,7 +267,7 @@ Core::ECS::Components::Mesh * Renderer::ResourceManagement::MeshFactory::CreateM
 }
 #endif
 
-Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBasicPrimitiveMesh(const Core::ECS::Components::MESH_TYPE& meshType)
+Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBasicPrimitiveMesh(const Core::ECS::Components::MESH_TYPE& meshType, bool isIndexed)
 {
     Core::ECS::Components::Mesh* mesh = new Core::ECS::Components::Mesh();
     mesh->componentId = GenerateMeshId();
@@ -278,10 +275,10 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
     switch (meshType)
     {
     case Core::ECS::Components::MESH_TYPE::CUBE:
-        FillMeshData<Core::Math::CubeIndexed>(mesh);
+        FillMeshData<Core::Math::CubeIndexed>(mesh, isIndexed);
         break;
     case Core::ECS::Components::MESH_TYPE::QUAD:
-        FillMeshData<Core::Math::QuadIndexed>(mesh);
+        FillMeshData<Core::Math::QuadIndexed>(mesh, isIndexed);
         break;
     }
 
@@ -303,26 +300,33 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
 
     auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
     {
-        size_t memAlignedSize = VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(dataSize);
+        size_t memAlignedSize = dataSize;// VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(dataSize);
         VulkanInterfaceAlias::CopyBufferDataToMemory(bufferId, dataSize, memAlignedSize, data, 0, false);
     };
 
     //position buffer
     size_t dataSize = sizeof(glm::vec3) * mesh->m_positions.size();
     CreateBuffer(dataSize, mesh->m_positionBufferId, mesh->m_positionBufferMemoryId);
-    UploadData(mesh->m_positionBufferId, dataSize, mesh->m_indicies.data());
+    UploadData(mesh->m_positionBufferId, dataSize, mesh->m_positions.data());
 
     //color buffer
-    dataSize = sizeof(glm::vec4) * mesh->m_colors.size();
-    CreateBuffer(sizeof(glm::vec4) * mesh->m_colors.size(), mesh->m_colorBufferId, mesh->m_colorBufferMemoryId);
-    UploadData(mesh->m_indexBufferId, dataSize, mesh->m_indicies.data());
+    if (mesh->m_colors.size() > 0)
+    {
+        dataSize = sizeof(glm::vec4) * mesh->m_colors.size();
+        CreateBuffer(sizeof(glm::vec4) * mesh->m_colors.size(), mesh->m_colorBufferId, mesh->m_colorBufferMemoryId);
+        UploadData(mesh->m_colorBufferId, dataSize, mesh->m_colors.data());
+    }
 
     //normal buffer
-    dataSize = sizeof(glm::vec3) * mesh->m_normals.size();
-    CreateBuffer(sizeof(glm::vec3) * mesh->m_normals.size(), mesh->m_normalBufferId, mesh->m_normalBufferMemoryId);
-    UploadData(mesh->m_indexBufferId, dataSize, mesh->m_indicies.data());
+    if (mesh->m_normals.size() > 0)
+    {
+        dataSize = sizeof(glm::vec3) * mesh->m_normals.size();
+        CreateBuffer(sizeof(glm::vec3) * mesh->m_normals.size(), mesh->m_normalBufferId, mesh->m_normalBufferMemoryId);
+        UploadData(mesh->m_normalBufferId, dataSize, mesh->m_normals.data());
+    }
 
     //index buffer
+    if(mesh->m_indicies.size() > 0)
     {
         Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
         Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
@@ -338,90 +342,14 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
         UploadData(mesh->m_indexBufferId, info.dataSize, mesh->m_indicies.data());
     }
 
-
-    //if (meshInfo->bufferPerAttribRequired == false)
-    //{
-    //    Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
-    //    Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-    //    Core::Wrappers::BufferInfo info = {};
-    //    info.bufType = &bufferType;
-    //    info.memType = &memType;
-    //    info.memTypeCount = 1;
-    //    //info.data = wrapper->vertexData;
-    //    info.dataSize = wrapper->vertexDataSize;
-    //    //info.pGpuMem = new void*;
-    //    mesh->vertexBufferCount = numVertexBufferPerMesh;
-    //    mesh->vertexDataSizes = new size_t[mesh->vertexBufferCount];
-    //    mesh->vertexDataSizes[0] = (size_t)wrapper->vertexDataSize;
-
-    //    mesh->vertexBuffersIds = VulkanInterfaceAlias::CreateBuffers(&info, numVertexBufferPerMesh);
-    //    //mesh->pGpuMemVB = new void*[numVertexBufferPerMesh];
-    //    //mesh->pGpuMemVB[0] = info.pGpuMem;
-    //}
-    //else
-    //{
-    //    ASSERT_MSG_DEBUG(0, "individual buffers yet to be implemented.");
-    //}
-
-    ////index buffer
-    //if(wrapper->indexCount > 0)
-    //{
-    //    Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
-    //    Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-    //    Core::Wrappers::BufferInfo info = {};
-    //    info.bufType = &bufferType;
-    //    info.memType = &memType;
-    //    info.memTypeCount = 1;
-    //    //info.data = wrapper->indexData;
-    //    info.dataSize = wrapper->indexDataSize;
-    //    //info.pGpuMem = new void*;
-    //    mesh->indexCount = wrapper->indexCount;
-    //    mesh->indexBufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-    //    //mesh->pGpuMemIB = info.pGpuMem;
-    //    mesh->indexDataSize = (size_t)wrapper->indexDataSize;
-
-    //}
-    //else
-    //{
-    //    mesh->indexCount = 0;
-    //}
-
-    //// memory allocations for buffers
-    //{
-    //    uint32_t numMemory = mesh->vertexBufferCount;
-    //    std::vector<uint32_t> ids;
-    //    ids.push_back(mesh->vertexBuffersIds[0]);
-    //        
-    //    if (mesh->indexCount > 0)
-    //    {
-    //        ids.push_back(mesh->indexBufferId);
-    //        numMemory += 1;
-    //    }
-    //    mesh->memoryCount = numMemory;
-    //    mesh->memoryIds = VulkanInterfaceAlias::AllocateBufferMemory(ids.data(), (uint32_t)ids.size());
-    //}
-
-    //// copy data to buffer memory
-    //{
-    //    size_t memAlignedSize = wrapper->vertexDataSize;// apiInterface->GetMemoryAlignedDataSizeForBuffer(wrapper->vertexDataSize);
-    //    VulkanInterfaceAlias::CopyBufferDataToMemory(mesh->vertexBuffersIds[0], wrapper->vertexDataSize, memAlignedSize, wrapper->vertexData, 0, false);
-
-    //    if (mesh->indexCount > 0)
-    //    {
-    //        memAlignedSize = wrapper->indexDataSize;// apiInterface->GetMemoryAlignedDataSizeForBuffer(wrapper->indexDataSize);
-    //        VulkanInterfaceAlias::CopyBufferDataToMemory(mesh->indexBufferId, wrapper->indexDataSize, memAlignedSize, wrapper->indexData, 0, false);
-    //    }
-    //}
-
-    //meshToVertWrapperMap.insert({ mesh, wrapper });
-
+    m_meshList.push_back(mesh);
     return mesh;
 }
 
 
-void Renderer::ResourceManagement::MeshFactory::DestroyMesh(const uint32_t & meshId)
-{
-    ASSERT_MSG_DEBUG(0, "Fix this");
+//void Renderer::ResourceManagement::MeshFactory::DestroyMesh(const uint32_t & meshId)
+//{
+//    ASSERT_MSG_DEBUG(0, "Fix this");
 
     //std::map<Core::ECS::Components::Mesh *, Core::Utility::AttribStructBase *>::iterator it;
     //std::pair<Core::ECS::Components::Mesh *, Core::Utility::AttribStructBase *> obj;
@@ -438,7 +366,7 @@ void Renderer::ResourceManagement::MeshFactory::DestroyMesh(const uint32_t & mes
     //delete[] it->first->vertexBuffersIds;
     //delete[] it->first->memoryIds;
     //delete[] it->first->vertexDataSizes;
-}
+//}
 
 void Renderer::ResourceManagement::MeshFactory::DestroyMesh(Core::ECS::Components::Mesh* mesh)
 {
@@ -463,5 +391,5 @@ void Renderer::ResourceManagement::MeshFactory::DestroyMesh(Core::ECS::Component
         VulkanInterfaceAlias::FreeMemory(&mesh->m_indexBufferMemoryId, 1);
     }
 
-    delete mesh;
+    //delete mesh;
 }

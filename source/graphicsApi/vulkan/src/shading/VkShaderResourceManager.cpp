@@ -36,7 +36,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
     auto& vertexBindingList = wrapper.m_bindingList;
     auto& vertexAttribList = wrapper.m_attributeList;
 
-    std::vector<GfxVk::Shading::VertexBindingTypeInfo> bindingTypeInfo;
+    std::vector<Core::Wrappers::VertexBindingTypeInfo> bindingTypeInfo;
 
     if (taskDoc.HasMember("attributes"))
     {
@@ -55,7 +55,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             std::string attribType = attrib["attribType"].GetString();
             if (attribType == "POSITION")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ BindingType::POSITION, i });
+                taskWapper.m_bindingTypeInfo.push_back({Core::Enums::VertexAttributeType::POSITION, i });
 
                 attribInfo.location = POSITION_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -64,7 +64,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             }
             else if (attribType == "COLOR")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ BindingType::COLOR, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::COLOR, i });
 
                 attribInfo.location = COLOR_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -73,7 +73,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             }
             else if (attribType == "NORMAL")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ BindingType::NORMAL, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::NORMAL, i });
 
                 attribInfo.location = NORMAL_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -82,7 +82,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             }
             else if (attribType == "UV")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ BindingType::UV_0, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::UV0, i });
 
                 attribInfo.location = UV0_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32_SFLOAT;
@@ -94,10 +94,6 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
 
             vertexBindingList.push_back(bindingInfo);
             vertexAttribList.push_back(attribInfo);
-
-            /*uint32_t location = attrib["location"].GetInt();
-            std::string attribType = attrib["attribType"].GetString();
-            std::string dataType = attrib["dataType"].GetString();*/
         }
     }
 
@@ -156,6 +152,34 @@ void GfxVk::Shading::VkShaderResourceManager::CreateShaderInfoForTask(
         shaderStage.m_infoList.push_back(info);
         taskWapper.m_shaderModuleStateId = id;
     }
+}
+
+const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::GetTaskWrapper(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
+
+    if (it == m_perEffectResources.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    }
+
+    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
+        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
+
+    if (itt == it->techniqueList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    }
+
+    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
+        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
+
+    if (ittt == itt->m_taskList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Task mismatch");
+    }
+    return *ittt;
 }
 
 uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
@@ -1736,6 +1760,12 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::st
     }
 
     return ittt->m_shaderModuleStateId;
+}
+
+const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GfxVk::Shading::VkShaderResourceManager::GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    auto& taskWrapper = GetTaskWrapper(effectName, techniqueName, taskName);
+    return taskWrapper.m_bindingTypeInfo;
 }
 
 const VkPipelineVertexInputStateCreateInfo& GfxVk::Shading::VkShaderResourceManager::GetPipelineVertexInputInfo(uint32_t id)

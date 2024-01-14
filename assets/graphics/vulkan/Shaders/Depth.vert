@@ -15,10 +15,7 @@ layout(std140, set = 4, binding = 0) uniform Transform
     mat4 model;
 }transform;
 
-layout (location = 0) in vec4 pos;
-layout (location = 1) in vec4 inColor;
-
-layout (location = 0) out vec4 outColor;
+layout (location = 0) in vec3 pos;
 
 void main()
 {
@@ -29,7 +26,6 @@ void main()
         0.0f, 0.0f, 0.5f, 1.0f
     );
 
-   outColor = inColor;
    gl_Position = clip * view.projection * view.view * transform.model * vec4(pos.xyz, 1.0);
    vec3 cam = view.cameraPos; // so that spir cross does not ignore it
 }

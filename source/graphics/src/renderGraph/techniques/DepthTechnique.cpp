@@ -132,6 +132,8 @@ std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::Rende
 
 void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
 {
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)taskNodeBase.get())->GetTask();
+
     Renderer::RenderGraph::Tasks::DrawInfo drawInfo{};
     std::map<uint32_t, std::vector<uint32_t>> setIdMap;
 
@@ -157,15 +159,49 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
             meshInfo.m_indexCount = data.m_indexCount.value();
         }
 
-        Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
-        vertexInfo.bindingCount = 1;
+        auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(m_parentEffectName, m_name, taskObj->GetTaskName());
 
-        ASSERT_MSG_DEBUG(0, "Fix this");
-        //vertexInfo.bufferIds = data.m_vertexBufferId;
-        
+        Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
+        vertexInfo.bindingCount = 0;
         vertexInfo.firstBinding = 0;
-        vertexInfo.pOffsets = { 0 };
+        for (auto& bindingType : vertexBufferBindingTypeList)
+        {
+            vertexInfo.pOffsets.push_back({0});
+            vertexInfo.bindingCount++;
+
+            switch (bindingType.m_bindingType)
+            {
+            case Core::Enums::VertexAttributeType::POSITION:
+                vertexInfo.bufferIds.push_back(data.m_positionBufferId);
+                break;
+            case Core::Enums::VertexAttributeType::COLOR:
+                if (!data.m_colorBufferId.has_value())
+                    ASSERT_MSG_DEBUG(0, "No Color attrib in the json file");
+                vertexInfo.bufferIds.push_back(data.m_colorBufferId.value());
+                break;
+            case Core::Enums::VertexAttributeType::NORMAL:
+                if (!data.m_normalBufferId.has_value())
+                    ASSERT_MSG_DEBUG(0, "No Normal attrib in the json file");
+                vertexInfo.bufferIds.push_back(data.m_normalBufferId.value());
+                break;
+            /*case Core::Enums::VertexAttributeType::TANGENT:
+                vertexInfo.bufferIds.push_back(data.m_positionBufferId);
+                break;*/
+            }
+        }
         meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
+
+        //Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
+        //vertexInfo.bindingCount = 1;
+
+        //ASSERT_MSG_DEBUG(0, "Fix this");
+        ////vertexInfo.bufferIds = data.m_vertexBufferId;
+        //
+        //vertexInfo.firstBinding = 0;
+        //vertexInfo.pOffsets = { 0 };
+        //meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
+
+
         meshInfo.m_vertexCount = data.m_vertexCount;
 
         setIdMap[Core::Enums::ResourceSets::TRANSFORM].push_back(data.m_descriptorSetId);
@@ -236,6 +272,5 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
 
     iterate(minSetVal);
 
-    auto taskObj = ((Renderer::RenderGraph::TaskNode*)taskNodeBase.get())->GetTask();
     ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
 }

@@ -191,7 +191,7 @@ void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
             // CHECK THE ABOVE COMMENT, WHEN IMPLEMENTING SHADOWS
             UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
                 sizeof(Core::ECS::Components::LightUniform), memoryAlignedUniformSize, &obj,
-                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
+                std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
         
         }
 

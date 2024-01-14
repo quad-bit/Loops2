@@ -18,23 +18,15 @@ namespace GfxVk
             std::vector<Core::Wrappers::SetWrapper*> setWrappers;
         };
 
-        enum class BindingType
-        {
-            POSITION,
-            COLOR,
-            NORMAL,
-            UV_0,
-            UV_1
-        };
+        //enum class BindingType
+        //{
+        //    POSITION,
+        //    COLOR,
+        //    NORMAL,
+        //    UV_0,
+        //    UV_1
+        //};
 
-        // The buffer type bound at a binding
-        struct VertexBindingTypeInfo
-        {
-            BindingType m_bindingType;
-            // Binding index represents the position at which the respective
-            // vertex buffer should be place while calling vkCmdBindVertexBuffers
-            uint32_t m_index;
-        };
 
         struct TaskWrapper
         {
@@ -43,7 +35,7 @@ namespace GfxVk
             uint32_t m_shaderModuleStateId;
             std::vector<Core::Wrappers::SetWrapper*> m_setWrappers;
             uint32_t m_pipelineLayoutId;
-            std::vector<VertexBindingTypeInfo> m_bindingTypeInfo;
+            std::vector<Core::Wrappers::VertexBindingTypeInfo> m_bindingTypeInfo;
             std::optional<uint32_t> m_vertexInputStateId;
         };
 
@@ -156,6 +148,7 @@ namespace GfxVk
 
             void CreateVertexInfoForTask(const rapidjson::Value& taskDoc, GfxVk::Shading::TaskWrapper& taskWapper);
             void CreateShaderInfoForTask(const rapidjson::Value& taskDoc, GfxVk::Shading::TaskWrapper& taskWapper);
+            const GfxVk::Shading::TaskWrapper& GetTaskWrapper(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
 
             const char* shaderEntryName = "main";
 
@@ -189,6 +182,7 @@ namespace GfxVk
             uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
             uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
             uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
 
             const VkPipelineVertexInputStateCreateInfo& GetPipelineVertexInputInfo(uint32_t id);
             const std::vector<VkPipelineShaderStageCreateInfo>& GetPipelineShaderInfo(uint32_t id);

@@ -79,6 +79,7 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
         if (renderer->GetComponent()->geometry->m_indicies.size() > 0)
         {
             data.m_indexBufferId = renderer->GetComponent()->geometry->m_indexBufferId;
+            data.m_indexCount = renderer->GetComponent()->geometry->m_indicies.size();
         }
 
         m_transformDataList.push_back(data);
@@ -125,6 +126,8 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
     bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
     bufInfo.info.sharingConfig = resourceSharingConfig;
     bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
+    bufInfo.bufferIdList.resize(allocConfig.numResources);
+    bufInfo.bufferMemoryId.resize(allocConfig.numResources);
 
     Core::Utility::DescriptorSetBindingInfo bindingDescription;
     bindingDescription.m_bindingName = "Transform";

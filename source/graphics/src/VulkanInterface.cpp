@@ -1082,6 +1082,11 @@ uint32_t Renderer::Utility::VulkanInterface::GetShaderStateId(const std::string&
     return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetShaderStateId(effectName, techniqueName, taskName);
 }
 
+const std::vector<Core::Wrappers::VertexBindingTypeInfo>& Renderer::Utility::VulkanInterface::GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+{
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetVertexBindingTypeInfo(effectName, techniqueName, taskName);
+}
+
 std::vector<Core::Wrappers::SetWrapper*> Renderer::Utility::VulkanInterface::GetSetsForShaders(const std::vector<std::string>& shaderNames)
 {
     return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetSetsForShaders(shaderNames);
