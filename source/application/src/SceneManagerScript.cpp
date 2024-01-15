@@ -40,14 +40,14 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     //playerHandlerScript = new PlayerHandlerScript();
     //playerObject->AddComponent<Core::ECS::Components::Scriptable>(playerHandlerScript);
 
-    lightHandle = worldObj->CreateEntity("light");
-    Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<Core::ECS::Components::Transform>();
-    lightTrfHandle->SetLocalPosition(glm::vec3(19, 29, 0));
-    // light is using forward
-    lightTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(-60.0f), glm::radians(90.0), glm::radians(0.0f)));
+    //lightHandle = worldObj->CreateEntity("light");
+    //Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<Core::ECS::Components::Transform>();
+    //lightTrfHandle->SetLocalPosition(glm::vec3(19, 29, 0));
+    //// light is using forward
+    //lightTrfHandle->SetLocalEulerAngles(glm::vec3(glm::radians(-60.0f), glm::radians(90.0), glm::radians(0.0f)));
 
-    lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
-    lightHandle->AddComponent<Core::ECS::Components::Light>(lightComponent);
+    //lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
+    //lightHandle->AddComponent<Core::ECS::Components::Light>(lightComponent);
 
     Core::ECS::Components::Material *colMat, *floorMat , *wallMat;
 
@@ -287,23 +287,23 @@ void SceneManagerScript::Update(float dt)
 
     float theta = glm::radians((float)counter);
 
-    float radius = glm::distance(glm::vec3(0, 0, 0), lightHandle->GetTransform()->GetGlobalPosition());
-    float x = radius * glm::cos(theta);
-    float y = radius * glm::sin(theta);
+    //float radius = glm::distance(glm::vec3(0, 0, 0), lightHandle->GetTransform()->GetGlobalPosition());
+    //float x = radius * glm::cos(theta);
+    //float y = radius * glm::sin(theta);
 
-    //PLOGD << x << " " << y;
+    ////PLOGD << x << " " << y;
 
-    {
-        Core::ECS::Components::Transform * transform = lightHandle->GetTransform();
+    //{
+    //    Core::ECS::Components::Transform * transform = lightHandle->GetTransform();
 
-        float angle = Core::Math::lerp(prevAngle, currentAngle, dt);
-        prevAngle = currentAngle;
+    //    float angle = Core::Math::lerp(prevAngle, currentAngle, dt);
+    //    prevAngle = currentAngle;
 
-        transform->SetLocalPosition(glm::vec3(x, y, transform->GetLocalPosition().z));
+    //    transform->SetLocalPosition(glm::vec3(x, y, transform->GetLocalPosition().z));
 
-        transform->SetLocalEulerAngles(glm::vec3(theta, 
-            transform->GetLocalEulerAngles().y, theta * 2.0));
-    }
+    //    transform->SetLocalEulerAngles(glm::vec3(theta, 
+    //        transform->GetLocalEulerAngles().y, theta * 2.0));
+    //}
 }
 
 void SceneManagerScript::Render(float dt)

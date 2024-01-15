@@ -4,26 +4,6 @@
 #include <string>
 #include "renderGraph/effects/DepthPass.h"
 
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::ValidatePipeline()
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::CreateLogicalPasses()
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::CreatePassResources()
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::CreateRenderPasses()
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::CreateSynchronisations()
-//{
-//}
-
 Renderer::RenderGraph::Pipelines::DepthViewPipeline::DepthViewPipeline(
     Core::Utility::RenderData& renderData,
     const Core::WindowSettings& windowSettings, const std::string& name):
@@ -42,10 +22,3 @@ void Renderer::RenderGraph::Pipelines::DepthViewPipeline::CreatePipeline()
     m_graph->PrintGraph();
 }
 
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::DestroyPipeline()
-//{
-//}
-
-//void Renderer::RenderGraph::Pipelines::DepthViewPipeline::ExecutePipeline()
-//{
-//}

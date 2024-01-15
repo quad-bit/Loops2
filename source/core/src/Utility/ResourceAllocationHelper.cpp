@@ -16,10 +16,13 @@ std::vector<size_t> Core::Utility::CalculateOffsetsForDescInUniform(const size_t
 }
 
 
-bool Core::Utility::IsNewAllocationRequired(const GlobalResourceSharingConfig & resourceSharingConfig)
+bool Core::Utility::IsNewAllocationRequired(GlobalResourceSharingConfig & resourceSharingConfig)
 {
-    if (resourceSharingConfig.allocatedUniformCount % resourceSharingConfig.maxUniformPerResource == 0)
+    if (resourceSharingConfig.allocatedUniformCount == 0 || resourceSharingConfig.allocatedUniformCount >= resourceSharingConfig.maxUniformPerResource)
+    {
+        resourceSharingConfig.allocatedUniformCount = 0;
         return true;
+    }
     else
         return false;
 }

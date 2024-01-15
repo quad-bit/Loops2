@@ -28,7 +28,7 @@ void MeshRendererSystem::Init()
     allocConfig.numMemories = 1;
     allocConfig.numResources = 1;
 
-    resourceSharingConfig.maxUniformPerResource = 5;
+    resourceSharingConfig.maxUniformPerResource = 6; // keep it a multiple of numdesccriptorSets of allocConfig
     resourceSharingConfig.allocatedUniformCount = 0;
 
     size_t uniformSize = sizeof(Core::ECS::Components::TransformUniform);
@@ -78,8 +78,8 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
 
         if (renderer->GetComponent()->geometry->m_indicies.size() > 0)
         {
-            data.m_indexBufferId = renderer->GetComponent()->geometry->m_indexBufferId;
-            data.m_indexCount = renderer->GetComponent()->geometry->m_indicies.size();
+            data.m_indexBufferId = (uint32_t)(renderer->GetComponent()->geometry->m_indexBufferId);
+            data.m_indexCount = (uint32_t)(renderer->GetComponent()->geometry->m_indicies.size());
         }
 
         m_transformDataList.push_back(data);
@@ -126,8 +126,8 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
     bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
     bufInfo.info.sharingConfig = resourceSharingConfig;
     bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
-    bufInfo.bufferIdList.resize(allocConfig.numResources);
-    bufInfo.bufferMemoryId.resize(allocConfig.numResources);
+    //bufInfo.bufferIdList.resize(allocConfig.numResources);
+    //bufInfo.bufferMemoryId.resize(allocConfig.numResources);
 
     Core::Utility::DescriptorSetBindingInfo bindingDescription;
     bindingDescription.m_bindingName = "Transform";
@@ -150,8 +150,8 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
     else
     {
         // False : Assign the buffer id to this shaderResourceDescription
-        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0];
-        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0];
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList.push_back(std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0]);
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId.push_back(std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0]);
     }
 
     resourceSharingConfig.allocatedUniformCount += 1;
@@ -170,9 +170,11 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
         else
             bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[i];
 
-        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId,
-            sizeof(Core::ECS::Components::TransformUniform), memoryAlignedUniformSize, &obj,
-            std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[i], false);
+        auto dataSize = sizeof(Core::ECS::Components::TransformUniform);
+        auto& bufferLayoutInfo = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info;
+        auto offset = bufferLayoutInfo.offsetsForEachDescriptor[i];
+
+        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedUniformSize, &obj, offset, false);
     }
 
     // allocate descriptor sets

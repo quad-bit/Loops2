@@ -1,7 +1,7 @@
 {
     "Technique" : [
         {
-            "name": "low",
+            "name": "OpaqueUnlit",
             "lod_min": 10,
             "lod_max": 20,
             "tasks":
@@ -11,13 +11,13 @@
                     "shaders":
                     [
                         {
-                            "name": "ColorLighting.frag",
+                            "name": "Color.frag",
                             "type": "FRAGMENT",
                             "shaderPath": "",
                             "reflPath": ""
                         },
                         {
-                            "name": "PCN_Lighting.vert",
+                            "name": "PC.vert",
                             "type": "VERTEX",
                             "shaderPath": "",
                             "reflPath": ""
@@ -36,33 +36,8 @@
                             "location": 1,
                             "attribType": "COLOR",
                             "dataType": "vec4"
-                        },
-                        {
-                            "name": "inNormal",
-                            "location": 2,
-                            "attribType": "NORMAL",
-                            "dataType": "vec3"
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "name": "high",
-            "lod_min": 0,
-            "lod_max": 10,
-            "shaders":[
-                {
-                    "name": "ColorLighting.frag",
-                    "type": "FRAGMENT",
-                    "shaderPath": "",
-                    "reflPath": ""
-                },
-                {
-                    "name": "PCN_Lighting.vert",
-                    "type": "VERTEX",
-                    "shaderPath": "",
-                    "reflPath": ""
                 }
             ]
         }

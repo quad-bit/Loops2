@@ -5,7 +5,7 @@
 #include "Settings.h"
 #include "resourceManagement/Resource.h"
 #include "renderGraph/utility/Utils.h"
-
+#include "renderGraph/effects/Opaque.h"
 
 uint32_t g_resourceDistributionCount = 0;
 Core::Wrappers::ImageCreateInfo g_info{};
@@ -481,39 +481,13 @@ Renderer::RenderGraph::Pipelines::LowEndPipeline::LowEndPipeline(Core::Utility::
     //CreateTestPipeline(m_callbackUtility, m_graph.get(), m_effects);
 }
 
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::ValidatePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreateLogicalPasses(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePassResources(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreateRenderPasses(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreateSynchronisations(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::CompilePipeline(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}
-//
 void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
 {
-
+    std::unique_ptr<Renderer::RenderGraph::Effect> opaquePass =
+        std::make_unique<Renderer::RenderGraph::Effects::OpaquePass>(
+            m_renderData,
+            m_windowSettings,
+            *m_graph.get(), "OpaquePass", m_callbackUtility);
+    m_effects.push_back(std::move(opaquePass));
+    m_graph->PrintGraph();
 }
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::DestroyPipeline()
-//{
-//}
-//
-//void Renderer::RenderGraph::Pipelines::LowEndPipeline::ExecutePipeline(const Core::Utility::RenderData& renderData, Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph)
-//{
-//}

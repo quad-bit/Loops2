@@ -31,6 +31,7 @@ inc/renderGraph/pipelines/DepthViewPipeline.h
 inc/renderGraph/pipelines/LowEndPipeline.h
 
 inc/renderGraph/techniques/LambertianLit.h
+inc/renderGraph/techniques/OpaqueUnlit.h
 inc/renderGraph/techniques/DepthTechnique.h
 
 inc/renderGraph/tasks/RenderTask.h
@@ -51,6 +52,8 @@ src/renderGraph/pipelines/LowEndPipeline.cpp
 
 src/renderGraph/techniques/LambertianLit.cpp
 src/renderGraph/techniques/DepthTechnique.cpp
+src/renderGraph/techniques/OpaqueUnlit.cpp
+
 src/renderGraph/tasks/RenderTask.cpp
 src/renderGraph/tasks/ComputeTask.cpp
 src/renderGraph/tasks/TransferTask.cpp

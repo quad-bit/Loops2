@@ -313,7 +313,7 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
     if (mesh->m_colors.size() > 0)
     {
         dataSize = sizeof(glm::vec4) * mesh->m_colors.size();
-        CreateBuffer(sizeof(glm::vec4) * mesh->m_colors.size(), mesh->m_colorBufferId, mesh->m_colorBufferMemoryId);
+        CreateBuffer(dataSize, mesh->m_colorBufferId, mesh->m_colorBufferMemoryId);
         UploadData(mesh->m_colorBufferId, dataSize, mesh->m_colors.data());
     }
 
@@ -321,7 +321,7 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
     if (mesh->m_normals.size() > 0)
     {
         dataSize = sizeof(glm::vec3) * mesh->m_normals.size();
-        CreateBuffer(sizeof(glm::vec3) * mesh->m_normals.size(), mesh->m_normalBufferId, mesh->m_normalBufferMemoryId);
+        CreateBuffer(dataSize, mesh->m_normalBufferId, mesh->m_normalBufferMemoryId);
         UploadData(mesh->m_normalBufferId, dataSize, mesh->m_normals.data());
     }
 

@@ -97,6 +97,8 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
     bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
     bufInfo.info.sharingConfig = resourceSharingConfig;
     bufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
+    //bufInfo.bufferIdList.resize(allocConfig.numResources);
+    //bufInfo.bufferMemoryId.resize(allocConfig.numResources);
 
     Core::Utility::DescriptorSetBindingInfo bindingDescription;
     bindingDescription.m_bindingName = "View";
@@ -120,8 +122,8 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
     {
         // False : Assign the buffer id to this shaderResourceDescription
         // below logic works because we are using just one buffer for sharing/storage purpose
-        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0];
-        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId[0] = std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0];
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList.push_back(std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferIdList[0]);
+        std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferMemoryId.push_back(std::get<Core::Utility::BufferBindingInfo>(resDescriptionList[resDescriptionList.size() - 1].m_setBindings[0].m_bindingInfo).bufferMemoryId[0]);
     }
 
     resourceSharingConfig.allocatedUniformCount += 1;
@@ -130,7 +132,6 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
     obj.projectionMat = inputEvent->cam->GetProjectionMat();
     obj.viewMat = inputEvent->cam->GetViewMatrix();
     obj.cameraPos = *inputEvent->cam->GetPosition();
-
 
     //upload data to buffers
     for(uint32_t i = 0; i < allocConfig.numDescriptorSets; i++)
@@ -152,7 +153,6 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
 
     camToDescriptionMap.insert(std::pair<Core::ECS::Components::Camera *, Core::Utility::DescriptorSetInfo>(
     { inputEvent->cam , setDescription}));
-
 }
 
 Core::Utility::GlobalResourceAllocationConfig Engine::ECS::Systems::CameraSystem::GetAllocConfig() const

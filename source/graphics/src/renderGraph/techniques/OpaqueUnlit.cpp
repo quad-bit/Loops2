@@ -1,23 +1,38 @@
-#include "renderGraph/techniques/DepthTechnique.h"
-#include "Settings.h"
+#include "renderGraph/techniques/OpaqueUnlit.h"
 #include <VulkanInterface.h>
 #include <renderGraph/tasks/RenderTask.h>
 #include <renderGraph/tasks/TransferTask.h>
-#include <stack>
 
-void Renderer::RenderGraph::Techniques::DepthTechnique::CreateResources()
+void CreateTaskGraphNode(
+    const std::string& taskName,
+    const std::string& m_parentEffectName,
+    const std::string& m_name,
+    const Core::Wrappers::Rect2D& renderArea,
+    std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& taskNodeBase,
+    Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* graphNode,
+    Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+    const Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+    std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes)
+{
+    /*std::unique_ptr<Renderer::RenderGraph::Task> task = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, m_parentEffectName, m_name);
+    taskNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task), graphTraversal);
+    graphNode = graph.Push(taskNodeBase.get());
+    taskNodes.push_back(graphNode);*/
+}
+
+
+void Renderer::RenderGraph::Techniques::OpaqueUnlit::CreateResources()
 {
     Core::Enums::ImageType type{ Core::Enums::ImageType::IMAGE_TYPE_2D };
     std::vector<Core::Enums::ImageUsage> usages{
-        Core::Enums::ImageUsage::USAGE_SAMPLED_BIT,
-        Core::Enums::ImageUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        Core::Enums::ImageUsage::USAGE_TRANSFER_SRC_BIT };
+        Core::Enums::ImageUsage::USAGE_DEPTH_STENCIL_ATTACHMENT_BIT };
 
     Core::Wrappers::ImageCreateInfo info{};
     info.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
     info.m_depth = 1;
     info.m_format = VulkanInterfaceAlias::FindBestDepthFormat();
     info.m_height = m_renderHeight;
+    info.m_width = m_renderWidth;
     info.m_imageType = type;
     info.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
     info.m_layers = 1;
@@ -25,18 +40,23 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::CreateResources()
     info.m_sampleCount = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
     info.m_usages = usages;
     info.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
-    info.m_width = m_renderWidth;
 
     m_depthAttachments = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameImageFunc(
         info, std::vector<std::string>({ "Depth_0", "Depth_1", "Depth_2" }));
 
-    depthInputRes = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_depthAttachments, "DepthInputNode", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
-    depthResInputNode = m_graph.Push(depthInputRes.get());
-    m_resourceNodes.push_back(depthResInputNode);
+    m_depthInputNodeBase = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_depthAttachments, "DepthInputNode", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+    m_depthInputGraphNode = m_graph.Push(m_depthInputNodeBase.get());
+    m_resourceNodes.push_back(m_depthInputGraphNode);
 
-    depthOutputRes = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_depthAttachments, "DepthOutputNode", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
-    depthResOutputNode = m_graph.Push(depthOutputRes.get());
-    m_resourceNodes.push_back(depthResOutputNode);
+    m_backBufferImages = m_callbackUtility.m_resourceCreationCallback.GetSwapchainImagesFunc();
+
+    m_colorInputNodeBase = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_backBufferImages, "ColorInputNode", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+    m_colorInputGraphNode = m_graph.Push(m_colorInputNodeBase.get());
+    m_resourceNodes.push_back(m_colorInputGraphNode);
+
+    m_colorOutputNodeBase = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_backBufferImages, "ColorOutputNode", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
+    m_colorOutputGraphNode = m_graph.Push(m_colorOutputNodeBase.get());
+    m_resourceNodes.push_back(m_colorOutputGraphNode);
 
     Core::Wrappers::Rect2D g_renderArea{};
     g_renderArea.lengthX = m_renderWidth;
@@ -44,45 +64,23 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::CreateResources()
     g_renderArea.offsetX = 0;
     g_renderArea.offsetY = 0;
 
-    task = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("DepthPassRenderTask", g_renderArea, m_parentEffectName, m_name);
-    taskNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task), m_callbackUtility.m_graphTraversalCallback);
-    taskNode = m_graph.Push(taskNodeBase.get());
-    m_taskNodes.push_back(taskNode);
+    m_opaqueRenderTask = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>("OpaqueRenderTask", g_renderArea, m_parentEffectName, m_name);
+    m_renderTaskNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(m_opaqueRenderTask), m_callbackUtility.m_graphTraversalCallback);
+    m_renderTaskGraphNode = m_graph.Push(m_renderTaskNodeBase.get());
+    m_taskNodes.push_back(m_renderTaskGraphNode);
 
-    Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(m_graph, depthResInputNode, taskNode,
+    Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(m_graph, m_depthInputGraphNode, m_renderTaskGraphNode,
         Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY,
         Core::Enums::ImageLayout::LAYOUT_UNDEFINED);
 
-    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, taskNode, depthResOutputNode);
+    Renderer::RenderGraph::Utils::AddInputAsColorAttachment(m_graph, m_colorInputGraphNode, m_renderTaskGraphNode,
+        Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
+        Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR, 0);
 
-    transferTask = std::make_unique<Renderer::RenderGraph::Tasks::TransferTask>("CopyToBackBufferTask");
-    transferNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(transferTask), m_callbackUtility.m_graphTraversalCallback);
-    transferTaskNode = m_graph.Push(transferNodeBase.get());
-    m_taskNodes.push_back(transferTaskNode);
-
-    m_backBufferImages = m_callbackUtility.m_resourceCreationCallback.GetSwapchainImagesFunc();
-    transferInput = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_backBufferImages, "transferInput", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
-    transferInputNode = m_graph.Push(transferInput.get());
-    m_resourceNodes.push_back(transferInputNode);
-
-    transferOutput = std::make_unique<Renderer::RenderGraph::ResourceNode>(m_backBufferImages, "transferOutput", Renderer::ResourceManagement::ResourceType::IMAGE, m_callbackUtility.m_graphTraversalCallback);
-    transferOutputNode = m_graph.Push(transferOutput.get());
-    m_resourceNodes.push_back(transferOutputNode);
-
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, depthResOutputNode, transferTaskNode,
-        Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY,
-        Core::Enums::ImageLayout::LAYOUT_TRANSFER_SRC_OPTIMAL,
-        Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, transferInputNode, transferTaskNode,
-        Renderer::RenderGraph::Utils::ResourceMemoryUsage::WRITE_ONLY,
-        Core::Enums::ImageLayout::LAYOUT_TRANSFER_DST_OPTIMAL,
-        Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR);
-
-    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, transferTaskNode, transferOutputNode);
+    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_renderTaskGraphNode, m_colorOutputGraphNode);
 }
 
-Renderer::RenderGraph::Techniques::DepthTechnique::DepthTechnique(
+Renderer::RenderGraph::Techniques::OpaqueUnlit::OpaqueUnlit(
     Core::Utility::RenderData& renderData,
     const Core::WindowSettings& windowSettings,
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
@@ -96,23 +94,13 @@ Renderer::RenderGraph::Techniques::DepthTechnique::DepthTechnique(
     CreateResources();
 }
 
-Renderer::RenderGraph::Techniques::DepthTechnique::~DepthTechnique()
+Renderer::RenderGraph::Techniques::OpaqueUnlit::~OpaqueUnlit()
 {
 }
 
-std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::DepthTechnique::GetGraphOriginResourceNodes()
+void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
 {
-    return std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>();
-}
-
-std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::DepthTechnique::GetGraphEndResourceNodes()
-{
-    return std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>();
-}
-
-void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
-{
-    auto taskObj = ((Renderer::RenderGraph::TaskNode*)taskNodeBase.get())->GetTask();
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_renderTaskNodeBase.get())->GetTask();
 
     Renderer::RenderGraph::Tasks::DrawInfo drawInfo{};
     std::map<uint32_t, std::vector<uint32_t>> setIdMap;
@@ -146,7 +134,7 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
         vertexInfo.firstBinding = 0;
         for (auto& bindingType : vertexBufferBindingTypeList)
         {
-            vertexInfo.pOffsets.push_back({0});
+            vertexInfo.pOffsets.push_back({ 0 });
             vertexInfo.bindingCount++;
 
             switch (bindingType.m_bindingType)
@@ -164,9 +152,9 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
                     ASSERT_MSG_DEBUG(0, "No Normal attrib in the json file");
                 vertexInfo.bufferIds.push_back(data.m_normalBufferId.value());
                 break;
-            /*case Core::Enums::VertexAttributeType::TANGENT:
-                vertexInfo.bufferIds.push_back(data.m_positionBufferId);
-                break;*/
+                /*case Core::Enums::VertexAttributeType::TANGENT:
+                    vertexInfo.bufferIds.push_back(data.m_positionBufferId);
+                    break;*/
             }
         }
         meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
@@ -242,4 +230,14 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
     iterate(minSetVal);
 
     ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+}
+
+std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::OpaqueUnlit::GetGraphOriginResourceNodes()
+{
+    return { m_depthInputGraphNode, m_colorInputGraphNode };
+}
+
+std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::OpaqueUnlit::GetGraphEndResourceNodes()
+{
+    return { m_colorOutputGraphNode };
 }

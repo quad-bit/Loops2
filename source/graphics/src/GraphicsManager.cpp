@@ -61,8 +61,8 @@ void Renderer::GraphicsManager::Init()
     Renderer::ResourceManagement::MeshFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MaterialFactory::GetInstance()->Init();
 
-    //std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, m_windowSettings, "LowEndPipeline");
-    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::DepthViewPipeline>(m_renderData, m_windowSettings, "DepthView");
+    std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::LowEndPipeline>(m_renderData, m_windowSettings, "LowEndPipeline");
+    //std::unique_ptr<Renderer::RenderGraph::Pipeline> pipeline = std::make_unique<Renderer::RenderGraph::Pipelines::DepthViewPipeline>(m_renderData, m_windowSettings, "DepthView");
     m_renderGraphManager->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
         Renderer::RendererSettings::GetComputeQueueId(),

@@ -9,7 +9,7 @@ namespace Core
         std::vector<size_t> CalculateOffsetsForDescInUniform(const size_t& dataSizePerDescriptor, const GlobalResourceAllocationConfig& allocConfig,
             const GlobalResourceSharingConfig& resourceSharingConfig);
 
-        bool IsNewAllocationRequired(const GlobalResourceSharingConfig& resourceSharingConfig);
+        bool IsNewAllocationRequired(GlobalResourceSharingConfig& resourceSharingConfig);
 
         size_t GetDataSizeMeantForSharing(const size_t& sizeSingleDescriptor, const GlobalResourceAllocationConfig& allocConfig,
             const GlobalResourceSharingConfig& resourceSharingConfig);
