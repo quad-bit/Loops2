@@ -319,7 +319,8 @@ void Renderer::RenderGraph::RenderGraphManager::AssignResourceInfo()
         Core::Enums::ImageLayout expected) -> Core::Enums::LoadOperation
     {
         Core::Enums::LoadOperation load;
-        if (previous == Core::Enums::ImageLayout::LAYOUT_UNDEFINED)
+        if (previous == Core::Enums::ImageLayout::LAYOUT_UNDEFINED ||
+            previous == Core::Enums::ImageLayout::LAYOUT_PRESENT_SRC_KHR)
         {
             if (expected == Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL ||
                 expected == Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)

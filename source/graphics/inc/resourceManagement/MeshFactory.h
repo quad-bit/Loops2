@@ -69,6 +69,7 @@ namespace Renderer
             //old ====
 
             Core::ECS::Components::Mesh* CreateBasicPrimitiveMesh(const Core::ECS::Components::MESH_TYPE& meshType, bool isIndexed);
+            void AddMesh(Core::ECS::Components::Mesh* mesh);
             //void DestroyMesh(const uint32_t& meshId);
             void DestroyMesh(Core::ECS::Components::Mesh* mesh);
         };

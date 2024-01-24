@@ -15,12 +15,11 @@
 #include "ECS/Systems/MeshRendererSystem.h"
 #include "ECS/Systems/LightSystem.h"
 #include <ECS/Components/Light.h>
-#include <Utility/SceneLoader.h>
 
 Engine::ECS_Manager* Engine::ECS_Manager::instance = nullptr;
 Core::ECS::World * worldObj;
 
-void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::unique_ptr<Core::Utility::GltfLoader>& sceneLoader)
+void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader)
 {
     PLOGD << "ECS Manager Init";
 
@@ -52,12 +51,18 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
 
     worldObj->Init();
 
-    sceneLoader = std::make_unique<Core::Utility::GltfLoader>(worldObj);
+    m_sceneLoader = std::make_unique<Engine::Utility::GltfLoader>(worldObj);
+
+    std::vector<Core::ECS::EntityHandle*> entityList;
+    //sceneLoader->LoadGltf("Sponza\\gltf\\Sponza.gltf", entityList);
+    m_sceneLoader->LoadGltf("ABeautifulGame\\gltf\\ABeautifulGame.gltf", entityList);
 }
 
 void Engine::ECS_Manager::DeInit()
 {
     PLOGD << "ECS Manager DeInit";
+
+    m_sceneLoader.reset();
 
     Core::ECS::Events::EventBus::GetInstance()->DeInit();
     delete Core::ECS::Events::EventBus::GetInstance();

@@ -7,19 +7,23 @@
 #include "ECS/EntityHandle.h"
 #include "ECS/Components/Camera.h"
 #include <CorePrecompiled.h>
+#include <Settings.h>
+
+uint32_t windowWidth = 1024;
+uint32_t windowHeight = 1024;
 
 glm::vec2 CameraController::TransformMouse(const glm::vec2 & mouse)
 {
     glm::vec2 mouseScreenCoord = mouse;
     float x = 0.0f, y = 0.0f;
-    /*if (mouseScreenCoord.x > 0 && mouseScreenCoord.x < Settings::windowWidth &&
-        mouseScreenCoord.y > 0 && mouseScreenCoord.y < Settings::windowHeight)
+    if (mouseScreenCoord.x > 0 && mouseScreenCoord.x < windowWidth &&
+        mouseScreenCoord.y > 0 && mouseScreenCoord.y < windowHeight)
     {
-        x = Core::Math::RangeConversion<float>(mouseScreenCoord.x / Settings::windowWidth, -1, 1);
-        y = -Core::Math::RangeConversion<float>(mouseScreenCoord.y / Settings::windowHeight, -1, 1);
+        x = Core::Math::RangeConversion<float>(mouseScreenCoord.x / windowWidth, -1, 1);
+        y = -Core::Math::RangeConversion<float>(mouseScreenCoord.y / windowHeight, -1, 1);
 
         currentMousePos = glm::vec2(x, y);
-    }*/
+    }
     return glm::vec2(x, y);
 }
 
@@ -91,31 +95,30 @@ void CameraController::Init()
 
 void CameraController::Update(float dt)
 {
-    /*
-    if (*state == KeyState::PRESSED)
+    if (*state == Renderer::Windowing::KeyState::PRESSED)
     {
         prevMousePos = currentMousePos;
-        *state = KeyState::DOWN;
+        *state = Renderer::Windowing::KeyState::DOWN;
         mouseDelta = glm::vec2(0, 0);
         absDeltaX = 0.0;
         absDeltaY = 0.0;
         previousIntervaledMousePos = currentMousePos;
     }
-    else if (*state == KeyState::DOWN)
+    else if (*state == Renderer::Windowing::KeyState::DOWN)
     {
         switch (button)
         {
-        case MouseButtons::Left:
+        case Renderer::Windowing::MouseButtons::Left:
             Rotate();
             break;
 
-        case MouseButtons::Right:
+        case Renderer::Windowing::MouseButtons::Right:
             Revolve();
             break;
         }
 
         prevMousePos = currentMousePos;
-    }*/
+    }
 }
 
 void CameraController::DeInit()
@@ -124,56 +127,56 @@ void CameraController::DeInit()
 
 CameraController::CameraController() : Core::ECS::Components::Scriptable(true)
 {
-    /*EventBus::GetInstance()->Subscribe(this, &CameraController::KeyBoardEventHandler);
-    EventBus::GetInstance()->Subscribe(this, &CameraController::MouseDragEventHandler);
-    EventBus::GetInstance()->Subscribe(this, &CameraController::MouseButtonEventHandler);
-    state = new KeyState;*/
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe(this, &CameraController::KeyBoardEventHandler);
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe(this, &CameraController::MouseDragEventHandler);
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe(this, &CameraController::MouseButtonEventHandler);
+    state = new Renderer::Windowing::KeyState;
 }
 
 CameraController::~CameraController()
 {
     //delete state;
 }
-/*
-void CameraController::MouseDragEventHandler(MouseDragEvent * evt)
+
+void CameraController::MouseDragEventHandler(Renderer::Windowing::MouseDragEvent * evt)
 {
     //return;
     glm::vec2 mouseScreenCoord = glm::vec2(evt->x, evt->y);
     
-    if (mouseScreenCoord.x > 0 && mouseScreenCoord.x < Settings::windowWidth &&
-        mouseScreenCoord.y > 0 && mouseScreenCoord.y < Settings::windowHeight)
+    if (mouseScreenCoord.x > 0 && mouseScreenCoord.x < windowWidth &&
+        mouseScreenCoord.y > 0 && mouseScreenCoord.y < windowHeight)
     {
-        float x = MathUtil::RangeConversion<float>(mouseScreenCoord.x / Settings::windowWidth, -1, 1);
-        float y = -MathUtil::RangeConversion<float>(mouseScreenCoord.y / Settings::windowHeight, -1, 1);
+        float x = Core::Math::RangeConversion<float>(mouseScreenCoord.x / windowWidth, -1, 1);
+        float y = -Core::Math::RangeConversion<float>(mouseScreenCoord.y / windowHeight, -1, 1);
         
         currentMousePos = glm::vec2(x, y);
     }
 }
 
-void CameraController::MouseButtonEventHandler(MouseButtonEvent * evt)
+void CameraController::MouseButtonEventHandler(Renderer::Windowing::MouseButtonEvent * evt)
 {
     switch (evt->keyState)
     {
-    case KeyState::DOWN:
+    case Renderer::Windowing::KeyState::DOWN:
         PLOGD << "down";
         break;
 
-    case KeyState::PRESSED:
+    case Renderer::Windowing::KeyState::PRESSED:
         //PLOGD << "pressed";
-        *state = KeyState::PRESSED;
+        *state = Renderer::Windowing::KeyState::PRESSED;
         currentMousePos = TransformMouse( glm::vec2(evt->mouseX, evt->mouseY));
         button = evt->button;
         break;
 
-    case KeyState::RELEASED:
+    case Renderer::Windowing::KeyState::RELEASED:
         //PLOGD << "released";
-        *state = KeyState::RELEASED;
-        button = MouseButtons::None;
+        *state = Renderer::Windowing::KeyState::RELEASED;
+        button = Renderer::Windowing::MouseButtons::None;
         break;
     }
 }
 
-void CameraController::KeyBoardEventHandler(KeyInputEvent * evt)
+void CameraController::KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent * evt)
 {
     const char * keyname = evt->keyname;
 
@@ -184,8 +187,8 @@ void CameraController::KeyBoardEventHandler(KeyInputEvent * evt)
 
     switch (evt->keyState)
     {
-    case KeyState::DOWN:
-    case KeyState::PRESSED:
+    case Renderer::Windowing::KeyState::DOWN:
+    case Renderer::Windowing::KeyState::PRESSED:
         {
             Core::ECS::Components::Transform * trf = entityHandle->GetTransform();
             //move the camera
@@ -213,5 +216,3 @@ void CameraController::KeyBoardEventHandler(KeyInputEvent * evt)
         break;
     }
 }
-
-*/

@@ -48,6 +48,9 @@ namespace Core
             template<typename ComponentType>
             Core::ECS::ComponentHandle<ComponentType> GetComponent();
 
+            template<typename ComponentType>
+            bool HasComponent();
+
             ~EntityHandle()
             {
                 //std::cout << "entity handle deleted \n";
@@ -124,3 +127,8 @@ inline Core::ECS::ComponentHandle<ComponentType> Core::ECS::EntityHandle::GetCom
     return componentHandle;
 }
 
+template<typename ComponentType>
+inline bool Core::ECS::EntityHandle::HasComponent()
+{
+    return worldObj->CheckForComponentType<ComponentType>(entityObj);
+}

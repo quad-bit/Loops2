@@ -11,6 +11,8 @@ set(SourceList
     inc/ECS/Systems/MeshRendererSystem.h
     inc/ECS/Systems/ScriptableSystem.h
     inc/ECS/Systems/TransformSystem.h
+    inc/SceneLoader.h
+
     src/EngineManager.cpp
     src/ECS/SceneManager.cpp
     src/ECS/SceneGraphManager.cpp
@@ -20,6 +22,7 @@ set(SourceList
     src/ECS/Systems/MeshRendererSystem.cpp
     src/ECS/Systems/ScriptableSystem.cpp
     src/ECS/Systems/TransformSystem.cpp
+    src/SceneLoader.cpp
 )
 
 #create library
@@ -36,6 +39,7 @@ target_include_directories(${TARGET_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${TINYGLTF_INCLUDE_DIRS}
 )
 
 if (MSVC)

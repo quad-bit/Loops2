@@ -4,7 +4,7 @@
 #include <RenderData.h>
 #include <memory>
 #include <renderGraph/RenderGraphManager.h>
-#include <Utility/SceneLoader.h>
+#include "SceneLoader.h"
 
 namespace Renderer
 {
@@ -36,7 +36,7 @@ namespace Engine
         //std::unique_ptr<Renderer::RenderGraph::RenderGraphManager> m_renderGraphManager;
 
         Core::Wrappers::FrameInfo m_frameInfo;
-        std::unique_ptr<Core::Utility::GltfLoader> m_gltfLoader;
+        std::unique_ptr<Engine::Utility::GltfLoader> m_gltfLoader;
 
     public:
         void Init(const std::string& windowName = std::string{ "Test" },

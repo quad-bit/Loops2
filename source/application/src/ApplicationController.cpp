@@ -3,7 +3,7 @@
 #include <ECS/ECS_Setting.h>
 #include "SceneManagerScript.h"
 #include <ECS/EntityHandle.h>
-#include <Utility/SceneLoader.h>
+#include <SceneLoader.h>
 
 void ApplicationController::Init()
 {

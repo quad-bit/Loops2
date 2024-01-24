@@ -23,16 +23,19 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
 
     camHandle0 = worldObj->CreateEntity();
     camHandle0->GetEntity()->entityName = "MainCamera";
-    camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 35, 50));
-    camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(-27.0f), 0, 0));
+    camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 5, 50));
+    camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(-0.0f), 0, 0));
+
+    //camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 0.5, 1.5));
+    //camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(-27.0f), 0, 0));
 
     Core::ECS::Components::Camera * camera = new Core::ECS::Components::Camera(camHandle0->GetTransform(), 1024.0f/1024.0f);
     camHandle0->AddComponent<Core::ECS::Components::Camera>(camera);
 
     worldObj->SetMainCamera(camera->componentId);
 
-    //cameraController = new CameraController();
-    //camHandle0->AddComponent<Core::ECS::Components::Scriptable>(cameraController);
+    cameraController = new CameraController();
+    camHandle0->AddComponent<Core::ECS::Components::Scriptable>(cameraController);
 
     playerObject = worldObj->CreateEntity("playerObject");
     ASSERT_MSG_DEBUG(playerObject != nullptr, "Object not found");
@@ -140,8 +143,8 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
         float y = radius * glm::sin(glm::radians((float)phi)) * glm::sin(glm::radians((float)theta));
         float z = radius * glm::cos(glm::radians((float)phi));
         
-        trfHandle->SetLocalPosition(glm::vec3(x, y, z));
-        trfHandle->SetLocalScale(glm::vec3(1, 1, 1));
+        trfHandle->SetLocalPosition(glm::vec3(0, 10, 0));
+        trfHandle->SetLocalScale(glm::vec3(2, 2, 2));
         trfHandle->SetLocalEulerAngles(glm::vec3(0, glm::radians(-180.0), 0));
  
         {
@@ -253,7 +256,7 @@ SceneManagerScript::~SceneManagerScript()
     //lightHandle->RemoveComponent<Core::ECS::Components::Light>(lightComponent);
     //worldObj->DestroyEntity(lightHandle);
 
-    //delete cameraController;
+    delete cameraController;
     worldObj->DestroyEntity(camHandle0);
 
     /*playerObject->RemoveComponent<Core::ECS::Components::Scriptable>(playerHandlerScript);

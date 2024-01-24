@@ -171,19 +171,57 @@ glm::vec3 Core::ECS::Components::Transform::GetGlobalPosition()
 
 glm::vec3 Core::ECS::Components::Transform::GetGlobalEulerAngles()
 {
-    ASSERT_MSG_DEBUG(0, "Yet to be implemented");
+    glm::vec3 zero = glm::vec3(0, 0, 0);
+    glm::vec4 temp0 = localModelMatrix * Vec3ToVec4_0(zero);
+    glm::vec3 angle = Vec4ToVec3(temp0);
+
+    Core::ECS::Components::Transform* parentTransform = parent;
+
+    while (parentTransform != nullptr)
+    {
+        glm::vec4 temp = parentTransform->GetLocalModelMatrix() * Vec3ToVec4_0(angle);
+        angle = Vec4ToVec3(temp);
+
+        parentTransform = parentTransform->parent;
+    }
+
+    globalEulerAngle = angle;
+
     return globalEulerAngle;
 }
 
 glm::vec3 Core::ECS::Components::Transform::GetGlobalScale()
 {
-    ASSERT_MSG_DEBUG(0, "Yet to be implemented");
+    glm::vec3 one = glm::vec3(1, 1, 1);
+    glm::vec4 temp0 = localModelMatrix * Vec3ToVec4_0(one);
+    glm::vec3 scale = Vec4ToVec3(temp0);
+
+    Core::ECS::Components::Transform* parentTransform = parent;
+
+    while (parentTransform != nullptr)
+    {
+        glm::vec4 temp = parentTransform->GetLocalModelMatrix() * Vec3ToVec4_0(scale);
+        scale = Vec4ToVec3(temp);
+
+        parentTransform = parentTransform->parent;
+    }
+
+    globalScale = scale;
+
     return globalScale;
 }
 
 glm::mat4 Core::ECS::Components::Transform::GetGlobalModelMatrix()
 {
-    //ASSERT_MSG(0, "Yet to be implemented");
+    globalModelMatrix = localModelMatrix;
+
+    Core::ECS::Components::Transform* parentTransform = parent;
+    while (parentTransform != nullptr)
+    {
+        globalModelMatrix = parentTransform->GetLocalModelMatrix() * globalModelMatrix;
+        parentTransform = parentTransform->parent;
+    }
+
     return globalModelMatrix;
 }
 

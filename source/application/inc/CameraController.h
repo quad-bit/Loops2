@@ -3,12 +3,19 @@
 #include "ECS/Components/Scriptable.h"
 #include "ECS/Components/Camera.h"
 
-//#include "InputEvents.h"
+#include "ECS/Events/Event.h"
+#include "windowing/InputEvents.h"
 
-//struct MouseDragEvent;
-//struct KeyInputEvent;
-//struct MouseButtonEvent;
-//enum class KeyState;
+namespace Renderer
+{
+    namespace Windowing
+    {
+        struct MouseDragEvent;
+        struct KeyInputEvent;
+        struct MouseButtonEvent;
+        enum class KeyState;
+    }
+}
 
 class CameraController : public Core::ECS::Components::Scriptable
 {
@@ -22,10 +29,10 @@ private:
 
     glm::vec2 mouseDelta;
     bool mousePressed = false;
-    //KeyState * state;
+    Renderer::Windowing::KeyState * state;
     float absDeltaX;
     float absDeltaY;
-    //MouseButtons button;
+    Renderer::Windowing::MouseButtons button;
     glm::vec2 previousIntervaledMousePos;
 
     glm::vec2 TransformMouse(const glm::vec2 & mouse);
@@ -42,7 +49,7 @@ public:
     CameraController();
     virtual ~CameraController();
 
-    //void MouseDragEventHandler(MouseDragEvent * evt);
-    //void MouseButtonEventHandler(MouseButtonEvent * evt);
-    //void KeyBoardEventHandler(KeyInputEvent * evt);
+    void MouseDragEventHandler(Renderer::Windowing::MouseDragEvent * evt);
+    void MouseButtonEventHandler(Renderer::Windowing::MouseButtonEvent * evt);
+    void KeyBoardEventHandler(Renderer::Windowing::KeyInputEvent * evt);
 };

@@ -2,7 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 
-#define MAX_SETS_PER_POOL 100
+#define MAX_SETS_PER_POOL 200
 
 namespace GfxVk
 {

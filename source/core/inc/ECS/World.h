@@ -115,6 +115,15 @@ namespace Core
                 *handle = (manager->GetComponentHandle(e));
             }
 
+            template<typename ComponentType>
+            bool CheckForComponentType(Entity* e)
+            {
+                typedef Core::ECS::ComponentManager<ComponentType> componentManagerType;
+
+                componentManagerType* manager = (componentManagerType*)GetComponentManager<ComponentType>();
+                return manager->CheckForComponent(e);
+            }
+
             void Update(float dt, const Core::Wrappers::FrameInfo& m_frameInfo);
 
             void Render(float dt);

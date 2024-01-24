@@ -51,6 +51,7 @@ namespace Core
             ComponentManager();
             ComponentIndex AddComponent(ComponentType* componentType, Entity* entity);
             void RemoveComponent(Entity* entity);
+            bool CheckForComponent(Entity* entity);
             ComponentType* GetComponent(Entity* entity);
             ComponentHandle<ComponentType>* GetComponentHandle(Entity* entity);
             void iterateAll(std::function<void(ComponentType* componentType)> lambda);
@@ -128,6 +129,12 @@ inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Core::EC
     entityMapObj->UpdateMap(lastEntity, &ind);
 
     componentDataObj.size--;
+}
+
+template<typename ComponentType>
+inline bool Core::ECS::ComponentManager<ComponentType>::CheckForComponent(Entity* entity)
+{
+    return entityMapObj->DoesComponentExist(entity);
 }
 
 template<typename ComponentType>

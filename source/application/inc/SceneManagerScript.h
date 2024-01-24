@@ -38,7 +38,7 @@ private:
 
     std::vector<Core::ECS::EntityHandle*> boxHandles;
     std::vector<Core::ECS::Components::MeshRenderer*> boxRenderer;
-    const uint32_t numBoxes = 10;
+    const uint32_t numBoxes = 0;
 
     float prevAngle, currentAngle;
 

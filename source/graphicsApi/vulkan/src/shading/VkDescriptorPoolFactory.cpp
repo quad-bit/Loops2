@@ -66,7 +66,7 @@ const uint32_t GfxVk::Shading::VkDescriptorPoolFactory::CreateDescritorPool()
     poolWrapper.poolSizeCount = 6;
 
     VkDescriptorPoolSize * poolSize = new VkDescriptorPoolSize[poolWrapper.poolSizeCount];
-    poolSize[0].descriptorCount = 50;
+    poolSize[0].descriptorCount = 200;
     poolSize[0].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
     poolSize[1].descriptorCount = 100;

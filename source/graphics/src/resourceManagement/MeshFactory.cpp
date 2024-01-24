@@ -346,6 +346,73 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
     return mesh;
 }
 
+void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::Mesh* mesh)
+{
+    mesh->componentId = GenerateMeshId();
+
+    ASSERT_MSG_DEBUG(mesh->m_positions.size() > 0, "Positions missing");
+
+    auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
+    {
+        Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
+        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
+        Core::Wrappers::BufferInfo info = {};
+        info.bufType = &bufferType;
+        info.memType = &memType;
+        info.memTypeCount = 1;
+        info.dataSize = dataSize;
+
+        bufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
+        memId = *VulkanInterfaceAlias::AllocateBufferMemory(&bufferId, 1);
+    };
+
+    auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
+    {
+        size_t memAlignedSize = dataSize;// VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(dataSize);
+        VulkanInterfaceAlias::CopyBufferDataToMemory(bufferId, dataSize, memAlignedSize, data, 0, false);
+    };
+
+    //position buffer
+    size_t dataSize = sizeof(glm::vec3) * mesh->m_positions.size();
+    CreateBuffer(dataSize, mesh->m_positionBufferId, mesh->m_positionBufferMemoryId);
+    UploadData(mesh->m_positionBufferId, dataSize, mesh->m_positions.data());
+
+    //color buffer
+    if (mesh->m_colors.size() > 0)
+    {
+        dataSize = sizeof(glm::vec4) * mesh->m_colors.size();
+        CreateBuffer(dataSize, mesh->m_colorBufferId, mesh->m_colorBufferMemoryId);
+        UploadData(mesh->m_colorBufferId, dataSize, mesh->m_colors.data());
+    }
+
+    //normal buffer
+    if (mesh->m_normals.size() > 0)
+    {
+        dataSize = sizeof(glm::vec3) * mesh->m_normals.size();
+        CreateBuffer(dataSize, mesh->m_normalBufferId, mesh->m_normalBufferMemoryId);
+        UploadData(mesh->m_normalBufferId, dataSize, mesh->m_normals.data());
+    }
+
+    //index buffer
+    if (mesh->m_indicies.size() > 0)
+    {
+        Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
+        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
+        Core::Wrappers::BufferInfo info = {};
+        info.bufType = &bufferType;
+        info.memType = &memType;
+        info.memTypeCount = 1;
+        info.dataSize = sizeof(uint32_t) * mesh->m_indicies.size();
+
+        mesh->m_indexBufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
+        mesh->m_indexBufferMemoryId = *VulkanInterfaceAlias::AllocateBufferMemory(&mesh->m_indexBufferId, 1);
+
+        UploadData(mesh->m_indexBufferId, info.dataSize, mesh->m_indicies.data());
+    }
+
+    m_meshList.push_back(mesh);
+}
+
 
 //void Renderer::ResourceManagement::MeshFactory::DestroyMesh(const uint32_t & meshId)
 //{

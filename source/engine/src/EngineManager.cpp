@@ -40,7 +40,6 @@ void Engine::EngineManager::Init(const std::string& windowName,
     ECS_Manager::GetInstance()->Init(m_renderData, m_gltfLoader);
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
-
 }
 
 void Engine::EngineManager::DeInit()

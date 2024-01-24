@@ -4,6 +4,7 @@
 #include "ECS_Setting.h"
 #include "Entity.h"
 #include <assert.h>
+#include <optional>
 
 namespace Core
 {
@@ -21,6 +22,18 @@ namespace Core
             std::map<Entity*, ComponentIndex> entityToIndex;
 
         public:
+
+            bool DoesComponentExist(Entity* e)
+            {
+                std::map<Entity*, ComponentIndex>::iterator it = entityToIndex.find(e);
+
+                if (it == entityToIndex.end())
+                {
+                    return false;
+                }
+                return true;
+            }
+
             ComponentIndex& GetComponentIndex(Entity* e)
             {
                 std::map<Entity*, ComponentIndex>::iterator it = entityToIndex.find(e);

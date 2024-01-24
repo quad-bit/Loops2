@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RenderData.h>
+#include <SceneLoader.h>
 
 namespace Core
 {
@@ -22,15 +23,15 @@ namespace Core
         template<typename T>
         class ComponentManager;
     }
-
-    namespace Utility
-    {
-        class GltfLoader;
-    }
 }
 
 namespace Engine
 {
+    namespace Utility
+    {
+        class GltfLoader;
+    }
+
     class ECS_Manager
     {
     private:
@@ -40,6 +41,7 @@ namespace Engine
 
         static ECS_Manager* instance;
         //Core::Utility::RenderData m_renderData;
+        std::unique_ptr<Engine::Utility::GltfLoader> m_sceneLoader;
 
     public:
         Core::ECS::ComponentManager<Core::ECS::Components::Transform>* transformManager;
@@ -60,7 +62,7 @@ namespace Engine
         Core::ECS::ComponentManager<Core::ECS::Components::Light>* lightManager;
         Core::ECS::System* lightSystem;
 
-        void Init(Core::Utility::RenderData& renderData, std::unique_ptr<Core::Utility::GltfLoader>& sceneLoader);
+        void Init(Core::Utility::RenderData& renderData, std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader);
         void DeInit();
         void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo);
         void Render(float dt);
