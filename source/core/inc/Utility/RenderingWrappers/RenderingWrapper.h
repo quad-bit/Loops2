@@ -716,7 +716,7 @@ namespace Core
         {
             CAMERA = 0,
             LIGHT = 1,
-            SURFACE = 3, //Left 2 for future use
+            MATERIAL = 3, //Left 2 for future use
             TRANSFORM = 4
         };
 

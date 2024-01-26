@@ -59,6 +59,9 @@ namespace Core
             template<typename ComponentType>
             void RemoveComponent(ComponentType* componentType, Entity* entityObj);
 
+            template<typename ComponentType>
+            std::vector<EntityHandle*> GetEntities(ComponentType* componentType);
+
             void UpdateEntityMask(Entity* entity, ComponentMask oldMask);
 
             void AddSystem(System* system, COMPONENT_TYPE componentType);
@@ -171,6 +174,13 @@ inline void Core::ECS::World::RemoveComponent(ComponentType * componentType, Ent
     entityMasks[entityObj].RemoveComponent<ComponentType>();
 
     UpdateEntityMask(entityObj, oldMask);
+}
+
+template<typename ComponentType>
+std::vector<Core::ECS::EntityHandle*> Core::ECS::World::GetEntities(ComponentType* componentType)
+{
+    Core::ECS::ComponentManager<ComponentType>* manager = GetComponentManager<ComponentType>();
+    manager-> (entityObj);
 }
 
 template<typename ComponentType>

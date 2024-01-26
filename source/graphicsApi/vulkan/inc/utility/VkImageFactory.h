@@ -32,16 +32,19 @@ namespace GfxVk
             uint32_t GetId();
 
             std::map<uint32_t, ImageWrapper> m_imageList, m_swapchainImageList;
+            uint32_t m_transferQueueId;
 
         public:
-            void Init(uint32_t swapBufferCount);
+            void Init(uint32_t swapBufferCount, uint32_t transferQueueId);
             void DeInit();
             void Update();
             static VkImageFactory* GetInstance();
             ~VkImageFactory();
 
             uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name);
-            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
+            uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name, bool createView = false);
+            uint32_t CreateImage(void* buffer, size_t bufferSize, const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
+
             void CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId);
             void DestroyImage(uint32_t imageId, bool freeImageMemory);
 

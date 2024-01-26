@@ -636,6 +636,11 @@ uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::I
     return GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(imageInfo, name);
 }
 
+uint32_t Renderer::Utility::VulkanInterface::CreateImage(void* buffer, size_t bufferSize, const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name)
+{
+    return GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(buffer, bufferSize, imageInfo, name);
+}
+
 void Renderer::Utility::VulkanInterface::DestroyImage(uint32_t imageId, bool freeImageMemory)
 {
     GfxVk::Utility::VkImageFactory::GetInstance()->DestroyImage(imageId, freeImageMemory);

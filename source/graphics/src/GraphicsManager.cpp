@@ -25,6 +25,7 @@
 #include <utility/VkImageFactory.h>
 #include <VkRenderPassFactory.h>
 #include <pipeline/VulkanGraphicsPipelineFactory.h>
+#include <VkSamplerFactory.h>
 
 #include <resourceManagement/UniformFactory.h>
 #include <resourceManagement/MeshFactory.h>
@@ -52,7 +53,8 @@ void Renderer::GraphicsManager::Init()
         Renderer::RendererSettings::GetComputeQueueId(),
         Renderer::RendererSettings::GetTransferQueueId());
     GfxVk::Sync::VkSynchroniserFactory::GetInstance()->Init();
-    GfxVk::Utility::VkImageFactory::GetInstance()->Init(Core::Settings::m_swapBufferCount);
+    GfxVk::Utility::VkImageFactory::GetInstance()->Init(Core::Settings::m_swapBufferCount, Renderer::RendererSettings::GetTransferQueueId());
+    GfxVk::Shading::VkSamplerFactory::GetInstance()->Init();
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
     GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->Init(m_windowSettings);
 
@@ -102,6 +104,9 @@ void Renderer::GraphicsManager::DeInit()
 
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->DeInit();
     delete GfxVk::Renderpass::VkRenderPassFactory::GetInstance();
+
+    GfxVk::Shading::VkSamplerFactory::GetInstance()->DeInit();
+    delete GfxVk::Shading::VkSamplerFactory::GetInstance();
 
     GfxVk::Utility::VkImageFactory::GetInstance()->DeInit();
     delete GfxVk::Utility::VkImageFactory::GetInstance();

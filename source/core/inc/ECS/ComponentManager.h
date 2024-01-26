@@ -55,7 +55,7 @@ namespace Core
             ComponentType* GetComponent(Entity* entity);
             ComponentHandle<ComponentType>* GetComponentHandle(Entity* entity);
             void iterateAll(std::function<void(ComponentType* componentType)> lambda);
-
+            std::vector<Entity*> GetEntities(ComponentType* componentType);
             ~ComponentManager();
         };
     }
@@ -106,29 +106,73 @@ inline Core::ECS::ComponentIndex Core::ECS::ComponentManager<ComponentType>::Add
 template<>
 inline Core::ECS::ComponentIndex Core::ECS::ComponentManager<Core::ECS::Components::Material>::AddComponent(Core::ECS::Components::Material * componentType, Entity * entity)
 {
-    Core::ECS::ComponentIndex ind = componentDataObj.size;
-    componentDataObj.data->at(ind) = componentType;
+    // find if material exists
 
-    entityMapObj->AddToMap(entity, &ind);
-    componentDataObj.size++;
+    auto it = componentDataObj.data->end();
+
+    //if (componentDataObj.size > 1)
+    {
+        /*it = std::find_if(componentDataObj.data->begin() + 1, componentDataObj.data->begin() + componentDataObj.size,
+            [=](Core::ECS::Components::Material* e)
+        {
+            if (e == nullptr)
+                return false;
+            return e->componentId == componentType->componentId; 
+        });*/
+    }
+
+    bool found = false;
+    Core::ECS::ComponentIndex ind;
+
+    for (uint32_t i = 1; i < componentDataObj.size; i++)
+    {
+        if (componentDataObj.data->at(i)->componentId == componentType->componentId)
+        {
+            found = true;
+            ind = i;
+            break;
+        }
+    }
+
+    if (found)
+    {
+        entityMapObj->AddToMap(entity, &ind);
+    }
+    else
+    {
+        ind = componentDataObj.size;
+        componentDataObj.data->at(ind) = componentType;
+
+        entityMapObj->AddToMap(entity, &ind);
+        componentDataObj.size++;
+    }
 
     return ind;
 }
 
 template<typename ComponentType>
-inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Core::ECS::Entity * e)
+std::vector<Core::ECS::Entity*> Core::ECS::ComponentManager<ComponentType>::GetEntities(ComponentType* componentType)
 {
     Core::ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(e);
-    Core::ECS::ComponentIndex lastIndex = componentDataObj.size - 1;
+    return entityMapObj->GetEntities(ind);
+}
 
-    componentDataObj.data->at(ind) = componentDataObj.data->at(lastIndex);
+template<typename ComponentType>
+inline void Core::ECS::ComponentManager<ComponentType>::RemoveComponent(Core::ECS::Entity * e)
+{
+    if (componentDataObj.size > 1)
+    {
+        Core::ECS::ComponentIndex ind = entityMapObj->GetComponentIndex(e);
+        Core::ECS::ComponentIndex lastIndex = componentDataObj.size;
 
-    Entity * lastEntity = entityMapObj->GetEntity(&lastIndex);
+        componentDataObj.data->at(ind) = componentDataObj.data->at(lastIndex);
+        componentDataObj.size--;
+    }
+    //auto lastEntities = entityMapObj->GetEntities(lastIndex);
 
     entityMapObj->RemoveFromMap(e);
-    entityMapObj->UpdateMap(lastEntity, &ind);
+    //entityMapObj->UpdateMap(lastEntities, &ind);
 
-    componentDataObj.size--;
 }
 
 template<typename ComponentType>

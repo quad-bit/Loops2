@@ -36,6 +36,15 @@ namespace Core
             uint32_t m_descriptorSetId;
         };
 
+        /// <summary>
+        /// Will capture the texture info per object
+        /// </summary>
+        struct MaterialData
+        {
+            uint32_t m_unlitDescriptorSetId;
+            std::optional<uint32_t> m_litDescriptorSetId;
+        };
+
         // Will get collected under the effect type/name set in the material
         struct TransformData
         {

@@ -29,26 +29,35 @@ namespace Core
             public:
                 glm::vec4 m_color;
                 bool m_enableInstancing = false;
-                //std::vector<Texture> m_textures; // main color map
                 glm::vec2 m_mainTextureScale;
                 glm::vec2 m_mainTextureOffset;
 
                 std::optional<std::string> m_effectName;
-                EffectType m_effectType;
+                std::vector<EffectType> m_effectTypes;
 
-            
+                std::optional<uint32_t> m_baseColorTextureId;
+                std::optional<uint32_t> m_baseColorSamplerId;
+
+                std::optional<uint32_t> m_normalTextureId;
+                std::string m_materialName;
+
                 Material(const std::string& effectName) :
                     m_effectName(effectName)
                 {
-                    m_effectType = EffectType::CUSTOM;
+                    m_effectTypes.push_back(EffectType::CUSTOM);
                     componentType = COMPONENT_TYPE::MATERIAL;
                 }
 
-                Material(const EffectType& effectType) :
-                    m_effectType(effectType)
+                Material(const std::vector<EffectType>& effectTypes) :
+                    m_effectTypes(effectTypes)
                 {
                     componentType = COMPONENT_TYPE::MATERIAL;
                 }
+
+                /*Material()
+                {
+                    componentType = COMPONENT_TYPE::MATERIAL;
+                }*/
             };
 
             //class Material : public Component<Material>

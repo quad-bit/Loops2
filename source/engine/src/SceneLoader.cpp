@@ -1,8 +1,8 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
-#define TINYGLTF_NO_STB_IMAGE
-#define TINYGLTF_NO_EXTERNAL_IMAGE
+//#define TINYGLTF_NO_STB_IMAGE
+//#define TINYGLTF_NO_EXTERNAL_IMAGE
 
 #include "ECS/ECS_Setting.h"
 #include "ECS/World.h"
@@ -12,6 +12,8 @@
 #include "resourceManagement/MeshFactory.h"
 #include "resourceManagement/MaterialFactory.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "VulkanInterface.h"
+#include "resourceManagement/UniformFactory.h"
 
 void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, const tinygltf::Model& input, Core::ECS::EntityHandle* parent)
 {
@@ -163,11 +165,11 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
             Renderer::ResourceManagement::MeshFactory::GetInstance()->AddMesh(mesh);
             entity->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
-            auto floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(Core::ECS::Components::EffectType::OPAQUE_E);
-            entity->AddComponent<Core::ECS::Components::Material>(floorMat);
+            auto mat = GetMaterial(input, glTFPrimitive.material);
+            entity->AddComponent<Core::ECS::Components::Material>(mat);
 
-            auto floorRenderer = new Core::ECS::Components::MeshRenderer(mesh, floorMat, transform);
-            entity->AddComponent<Core::ECS::Components::MeshRenderer>(floorRenderer);
+            auto renderer = new Core::ECS::Components::MeshRenderer(mesh, mat, transform);
+            entity->AddComponent<Core::ECS::Components::MeshRenderer>(renderer);
         }
     }
 
@@ -181,6 +183,137 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
             LoadNode(input.nodes[inputNode.children[i]], input, entity);
         }
     }
+}
+
+void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
+{
+    for (size_t i = 0; i < input.materials.size(); i++) {
+        // We only read the most basic properties required for our sample
+        tinygltf::Material glTFMaterial = input.materials[i];
+        auto mat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial({Core::ECS::Components::EffectType::OPAQUE_E});
+        mat->m_materialName = glTFMaterial.name;
+
+        // Get the base color factor
+        if (glTFMaterial.values.find("baseColorFactor") != glTFMaterial.values.end()) {
+            mat->m_color = glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
+        }
+
+        // Get base color texture index
+        if (glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()) {
+            mat->m_baseColorTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
+            mat->m_baseColorSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
+        }
+
+        //// Get the normal map texture index
+        //if (glTFMaterial.additionalValues.find("normalTexture") != glTFMaterial.additionalValues.end()) {
+        //    materials[i].normalTextureIndex = glTFMaterial.additionalValues["normalTexture"].TextureIndex();
+        //}
+        //// Get some additional material parameters that are used in this sample
+        //materials[i].alphaMode = glTFMaterial.alphaMode;
+        //materials[i].alphaCutOff = (float)glTFMaterial.alphaCutoff;
+        //materials[i].doubleSided = glTFMaterial.doubleSided;
+
+        m_materialMap.insert({ (int)i, mat });
+    }
+}
+
+Core::ECS::Components::Material* Engine::Utility::GltfLoader::GetMaterial(const tinygltf::Model& input, uint32_t materialIndex)
+{
+    if (m_materialMap.find(materialIndex) == m_materialMap.end())
+    {
+        ASSERT_MSG_DEBUG(0, "material not found");
+    }
+
+    return m_materialMap[materialIndex];
+}
+
+uint32_t Engine::Utility::GltfLoader::CreateTexture(const tinygltf::Model& input, int textureIndex, Core::Enums::Format imageFormat)
+{
+    auto& gltfTexture = input.textures[textureIndex];
+
+    tinygltf::Image gltfImage = input.images[gltfTexture.source];
+
+    unsigned char* buffer = nullptr;
+    size_t bufferSize = 0;
+
+    if (gltfImage.component == 3)
+    {
+        bufferSize = gltfImage.width * gltfImage.height * 4;
+        buffer = new unsigned char[bufferSize];
+
+        auto rgba = buffer;
+        auto rgb = &gltfImage.image[0];
+
+        for (uint32_t i = 0; i < gltfImage.width * gltfImage.height; ++i)
+        {
+            memcpy(rgba, rgb, sizeof(unsigned char) * 3);
+            rgba += 4;
+            rgb += 3;
+        }
+    }
+    else
+    {
+        buffer = &gltfImage.image[0];
+        bufferSize = gltfImage.image.size();
+    }
+
+    Core::Wrappers::ImageCreateInfo imageInfo = {};
+    imageInfo.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    imageInfo.m_depth = 1;
+    imageInfo.m_format = imageFormat;
+    imageInfo.m_height = gltfImage.height;
+    imageInfo.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
+    imageInfo.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
+    imageInfo.m_layers = 1;
+    imageInfo.m_mips = 1;
+    imageInfo.m_sampleCount = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
+    imageInfo.m_usages = { Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT, Core::Enums::ImageUsage::USAGE_SAMPLED_BIT };
+    imageInfo.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
+    imageInfo.m_width = gltfImage.width;
+
+    auto id = VulkanInterfaceAlias::CreateImage(buffer, bufferSize, imageInfo, gltfImage.name);
+    m_imageList.push_back(id);
+
+    return id;
+}
+
+void Engine::Utility::GltfLoader::LoadSamplers(const tinygltf::Model& input)
+{
+    // Not loading any info from gltf for samplers, for now.
+    // can take the filter valur from gltf
+
+    auto& samplers = input.samplers;
+
+    for (auto& sampler : samplers)
+    {
+        Core::Wrappers::SamplerCreateInfo info = {};
+        info.minFilter = Core::Enums::Filter::FILTER_NEAREST;
+        info.magFilter = Core::Enums::Filter::FILTER_NEAREST;
+        info.addressModeU = Core::Enums::SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        info.addressModeV = info.addressModeU;
+        info.addressModeW = info.addressModeU;
+        info.anisotropyEnable = false;
+        info.maxAnisotropy = 1.0f;
+        info.borderColor = Core::Enums::BorderColor::BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        info.unnormalizedCoordinates = false;
+        info.compareEnable = false;
+        info.compareOp = Core::Enums::CompareOp::COMPARE_OP_ALWAYS;
+        info.mipmapMode = Core::Enums::SamplerMipmapMode::SAMPLER_MIPMAP_MODE_NEAREST;
+        info.minLod = 0.0f;
+        info.maxLod = 0.0f;
+        info.mipLodBias = 0.0f;
+
+        uint32_t samplerId = VulkanInterfaceAlias::CreateSampler(info);
+        m_samplerList.push_back(samplerId);
+    }
+}
+
+uint32_t Engine::Utility::GltfLoader::GetSampler(uint32_t index)
+{
+    auto it = std::find_if(m_samplerList.begin(), m_samplerList.end(), [&index](const uint32_t& e) {return e == index;});
+    ASSERT_MSG_DEBUG(it != m_samplerList.end(), "sampler not found");
+
+    return *it;
 }
 
 Engine::Utility::GltfLoader::GltfLoader(Core::ECS::World* worldObj)
@@ -212,6 +345,9 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
         //glTFScene.loadImages(glTFInput);
         //glTFScene.loadMaterials(glTFInput);
         //glTFScene.loadTextures(glTFInput);
+
+        LoadSamplers(glTFInput);
+        LoadMaterials(glTFInput);
         const tinygltf::Scene& scene = glTFInput.scenes[0];
         for (size_t i = 0; i < scene.nodes.size(); i++) {
             const tinygltf::Node node = glTFInput.nodes[scene.nodes[i]];
@@ -252,5 +388,10 @@ Engine::Utility::GltfLoader::~GltfLoader()
             }
         }
         worldObj->DestroyEntity(handle);
+    }
+
+    for (auto& id : m_imageList)
+    {
+        VulkanInterfaceAlias::DestroyImage(id, true);
     }
 }

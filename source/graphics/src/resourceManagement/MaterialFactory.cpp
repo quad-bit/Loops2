@@ -62,11 +62,11 @@ Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::
     return mat;
 }
 
-Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const Core::ECS::Components::EffectType& effectType)
+Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const std::vector<Core::ECS::Components::EffectType>& effectTypes)
 {
     uint32_t matId = GetMatId();
 
-    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectType);
+    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectTypes);
     mat->componentId = matId;
 
     idToMaterialMap.insert(std::pair<uint32_t, Core::ECS::Components::Material*>(

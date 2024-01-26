@@ -51,7 +51,7 @@ namespace Renderer
             std::vector<uint32_t> GetMeshList(SetWrapper* setwrapper, const uint32_t& setWrapperCount);*/
 
             Core::ECS::Components::Material* CreateMaterial(const std::string& effectName);
-            Core::ECS::Components::Material* CreateMaterial(const Core::ECS::Components::EffectType & effectType);
+            Core::ECS::Components::Material* CreateMaterial(const std::vector<Core::ECS::Components::EffectType> & effectTypes);
         };
     }
 }

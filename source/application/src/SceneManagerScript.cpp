@@ -102,7 +102,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
         Core::ECS::Components::Mesh* mesh = Renderer::ResourceManagement::MeshFactory::GetInstance()->CreateBasicPrimitiveMesh(meshType, false);
         floorHandle->AddComponent<Core::ECS::Components::Mesh>(mesh);
 
-        floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(Core::ECS::Components::EffectType::OPAQUE_E);
+        floorMat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial({Core::ECS::Components::EffectType::OPAQUE_E});
         floorHandle->AddComponent<Core::ECS::Components::Material>(floorMat);
 
         floorRenderer = new Core::ECS::Components::MeshRenderer(mesh, floorMat, floorTrfHandle.GetComponent());

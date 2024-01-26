@@ -48,7 +48,7 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
         Core::ECS::ComponentHandle<Core::ECS::Components::MeshRenderer> * renderer;
         Core::ECS::ComponentHandle<Core::ECS::Components::Transform> * transform;
         worldObj->Unpack(entity, &renderer, &transform);
-        
+
         Core::ECS::Components::Transform * transformObj = transform->GetComponent();
         Core::ECS::Components::TransformUniform obj = {};
         obj.modelMat = transformObj->GetGlobalModelMatrix();
