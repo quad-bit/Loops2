@@ -293,18 +293,19 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::GetSet
                         for (uint32_t i = 0; i < setDescription.m_numBindings; i++)
                         {
                             if (e->bindingWrapperList[i].bindingObj.descriptorType != setDescription.m_setBindings[i].m_resourceType)
-                                return false;
+                                break;
 
                             if (e->bindingWrapperList[i].bindingObj.binding != setDescription.m_setBindings[i].m_bindingNumber)
-                                return false;
+                                break;
 
                             if (e->bindingWrapperList[i].memberList.size() != setDescription.m_setBindings[i].m_numElements)
-                                return false;
+                                break;
 
                             if (e->bindingWrapperList[i].bindingName != setDescription.m_setBindings[i].m_bindingName)
-                                return false;
+                                break;
+
+                            return true;
                         }
-                        return true;
                     }
                     return false;
                 });

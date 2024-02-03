@@ -3,23 +3,26 @@
 #include <renderGraph/tasks/RenderTask.h>
 #include <renderGraph/tasks/TransferTask.h>
 
-void CreateTaskGraphNode(
-    const std::string& taskName,
-    const std::string& m_parentEffectName,
-    const std::string& m_name,
-    const Core::Wrappers::Rect2D& renderArea,
-    std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& taskNodeBase,
-    Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* graphNode,
-    Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
-    const Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
-    std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes)
+namespace
 {
-    /*std::unique_ptr<Renderer::RenderGraph::Task> task = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, m_parentEffectName, m_name);
-    taskNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task), graphTraversal);
-    graphNode = graph.Push(taskNodeBase.get());
-    taskNodes.push_back(graphNode);*/
-}
+    void CreateTaskGraphNode(
+        const std::string& taskName,
+        const std::string& m_parentEffectName,
+        const std::string& m_name,
+        const Core::Wrappers::Rect2D& renderArea,
+        std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& taskNodeBase,
+        Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* graphNode,
+        Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+        const Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+        std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes)
+    {
+        /*std::unique_ptr<Renderer::RenderGraph::Task> task = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, m_parentEffectName, m_name);
+        taskNodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(task), graphTraversal);
+        graphNode = graph.Push(taskNodeBase.get());
+        taskNodes.push_back(graphNode);*/
 
+    }
+}
 
 void Renderer::RenderGraph::Techniques::OpaqueUnlit::CreateResources()
 {
@@ -98,140 +101,6 @@ Renderer::RenderGraph::Techniques::OpaqueUnlit::~OpaqueUnlit()
 {
 }
 
-void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
-{
-    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_renderTaskNodeBase.get())->GetTask();
-
-    Renderer::RenderGraph::Tasks::DrawInfo drawInfo{};
-    std::map<uint32_t, std::vector<uint32_t>> setIdMap;
-
-    uint32_t minSetVal = Core::Enums::ResourceSets::CAMERA, maxSetVal = Core::Enums::ResourceSets::TRANSFORM;
-    for (uint32_t i = minSetVal; i < maxSetVal; i++)
-    {
-        setIdMap.insert({ i, {} });
-    }
-
-    setIdMap[Core::Enums::ResourceSets::CAMERA].push_back(m_renderData.m_cameraData[0].m_descriptorSetId);
-
-    auto& transformData = m_renderData.m_transformData;
-    for (auto& data : transformData)
-    {
-        Renderer::RenderGraph::Tasks::MeshDrawInfo meshInfo{};
-        if (data.m_indexBufferId.has_value())
-        {
-            Core::Wrappers::IndexBufferBindingInfo indexInfo{};
-            indexInfo.bufferId = data.m_indexBufferId.value();
-            indexInfo.indexType = Core::Enums::IndexType::INDEX_TYPE_UINT32;
-            indexInfo.offset = 0;
-            meshInfo.m_indexBufferInfo = indexInfo;
-            meshInfo.m_indexCount = data.m_indexCount.value();
-        }
-
-        auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(m_parentEffectName, m_name, taskObj->GetTaskName());
-
-        Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
-        vertexInfo.bindingCount = 0;
-        vertexInfo.firstBinding = 0;
-        for (auto& bindingType : vertexBufferBindingTypeList)
-        {
-            vertexInfo.pOffsets.push_back({ 0 });
-            vertexInfo.bindingCount++;
-
-            switch (bindingType.m_bindingType)
-            {
-            case Core::Enums::VertexAttributeType::POSITION:
-                vertexInfo.bufferIds.push_back(data.m_positionBufferId);
-                break;
-            case Core::Enums::VertexAttributeType::COLOR:
-                if (!data.m_colorBufferId.has_value())
-                    ASSERT_MSG_DEBUG(0, "No Color attrib in the json file");
-                vertexInfo.bufferIds.push_back(data.m_colorBufferId.value());
-                break;
-            case Core::Enums::VertexAttributeType::NORMAL:
-                if (!data.m_normalBufferId.has_value())
-                    ASSERT_MSG_DEBUG(0, "No Normal attrib in the json file");
-                vertexInfo.bufferIds.push_back(data.m_normalBufferId.value());
-                break;
-                /*case Core::Enums::VertexAttributeType::TANGENT:
-                    vertexInfo.bufferIds.push_back(data.m_positionBufferId);
-                    break;*/
-            }
-        }
-        meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
-
-        meshInfo.m_vertexCount = data.m_vertexCount;
-
-        setIdMap[Core::Enums::ResourceSets::TRANSFORM].push_back(data.m_descriptorSetId);
-        drawInfo.m_meshInfoList.push_back(meshInfo);
-    }
-
-    //setIdMap.insert({ 0, {2, 3} });
-    //setIdMap.insert({ 1, {5, 8, 10} });
-    //setIdMap.insert({ 2, {12, 15} });
-    //setIdMap.insert({ 3, {} });
-    //setIdMap.insert({ 4, {17, 21, 25, 26} });
-
-    uint32_t totalSetCount = (uint32_t)Core::Enums::ResourceSets::TRANSFORM + 1;
-    uint32_t bindCount = 0, firstSet = totalSetCount;
-    std::vector<int> idList;
-    std::function<void(uint32_t)> iterate;
-
-    auto& meshInfoList = drawInfo.m_meshInfoList;
-
-    uint32_t index = 0;
-    iterate = [&iterate, &setIdMap, &maxSetVal, &idList, &bindCount, &firstSet, &meshInfoList, &index](uint32_t setVal)
-    {
-        if (setVal > maxSetVal)
-            return;
-
-        auto FillStack = [&iterate, &setIdMap, &maxSetVal, &idList, &bindCount, &firstSet, &meshInfoList, &index](int id, uint32_t setVal)
-        {
-            idList.push_back(id);
-            bindCount++;
-            firstSet--;
-            iterate(setVal + 1);
-
-            if (setVal == maxSetVal)
-            {
-                /*for (auto& id : idList)
-                    std::cout << id << " ";
-                std::cout << "\t" << bindCount << "\t" << firstSet << "\n";*/
-
-                Core::Wrappers::DescriptorSetBindingInfo info{};
-                info.descriptorSetIds = idList;
-                info.firstSet = firstSet;
-                info.dynamicOffsetCount = 0;
-                info.numSetsToBind = bindCount;
-                info.pDynamicOffsets = nullptr;
-                info.pipelineBindPoint = Core::Enums::PipelineType::GRAPHICS;
-
-                meshInfoList[index++].m_descriptorInfo = info;
-            }
-
-            bindCount = 0;
-
-            firstSet = maxSetVal + 1;
-            idList.erase(idList.end() - 1);
-        };
-
-        if (setIdMap[setVal].size() == 0)
-        {
-            FillStack(-1, setVal);
-        }
-        else
-        {
-            for (auto& id : setIdMap[setVal])
-            {
-                FillStack(id, setVal);
-            }
-        }
-    };
-
-    iterate(minSetVal);
-
-    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
-}
-
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::OpaqueUnlit::GetGraphOriginResourceNodes()
 {
     return { m_depthInputGraphNode, m_colorInputGraphNode };
@@ -241,3 +110,122 @@ std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::Rende
 {
     return { m_colorOutputGraphNode };
 }
+
+
+void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
+{
+    Renderer::RenderGraph::Tasks::DrawInfo drawInfo{};
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_renderTaskNodeBase.get())->GetTask();
+
+    std::map<Core::Enums::ResourceSets, std::map<uint32_t, Renderer::RenderGraph::SetInfo>> setInfoMap;
+
+    // Filtering =====================================
+    std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>> filteredDataList;
+
+    /*std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)> camFilter =
+    [](uint32_t index, void* data, const Core::Enums::ResourceSets& setType) -> bool
+    {
+        if (index == 0)
+            return true;
+        else
+            return false;
+    };
+
+    std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)> matFilter =
+    [this](uint32_t index, void* data, const Core::Enums::ResourceSets& setType) -> bool
+    {
+        auto matData = static_cast<Core::Utility::MaterialData*>(data);
+        if (matData->m_effectType == Core::ECS::Components::EffectType::OPAQUE_E &&
+            matData->m_techniqueName == m_name)
+        {
+            return true;
+        }
+        return false;
+    };*/
+
+    /*auto Filter = [&filteredDataList](void* data, uint32_t count, uint32_t stride,
+        const Core::Enums::ResourceSets& setType,
+        const std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)>& filterFunc)
+    {
+        for (uint32_t i = 0; i < count; i++)
+        {
+            if (filterFunc(i, data, setType))
+            {
+                auto pair = std::pair(i, data);
+                if (filteredDataList.find(setType) == filteredDataList.end())
+                {
+                    filteredDataList.insert({ setType, {{pair}} });
+                }
+                else
+                {
+                    filteredDataList[setType].push_back(pair);
+                }
+            }
+
+            data = static_cast<char*>(data) + stride;
+        }
+    };*/
+
+    /*Filter((void*)m_renderData.m_cameraData.data(), m_renderData.m_cameraData.size(),
+        sizeof(Core::Utility::CameraData), Core::Enums::CAMERA, Renderer::RenderGraph::CameraFilter,
+        filteredDataList, setInfoMap);*/
+
+    FilterInfo camFilterInfo{};
+    camFilterInfo.m_data = (void*)m_renderData.m_cameraData.data();
+    camFilterInfo.m_dataCount = m_renderData.m_cameraData.size();
+    camFilterInfo.m_setType = Core::Enums::CAMERA;
+    camFilterInfo.m_stride = sizeof(Core::Utility::CameraData);
+    Filter(camFilterInfo, Renderer::RenderGraph::CameraFilter, filteredDataList, setInfoMap);
+
+    FilterInfo matFilterInfo{};
+    matFilterInfo.m_data = (void*)m_renderData.m_materialData.data();
+    matFilterInfo.m_dataCount = m_renderData.m_materialData.size();
+    matFilterInfo.m_setType = Core::Enums::MATERIAL;
+    matFilterInfo.m_stride = sizeof(Core::Utility::MaterialData);
+    matFilterInfo.m_next = (void*)&m_name;
+    Filter(matFilterInfo, Renderer::RenderGraph::MaterialFilter, filteredDataList, setInfoMap);
+
+    // as child indicies are available for transform in mat and there are no filtering params 
+    // in transform at this moment
+    auto& matDataList = filteredDataList[Core::Enums::MATERIAL];
+    for (auto& matData : matDataList)
+    {
+        auto mat = static_cast<Core::Utility::MaterialData*>(matData.second);
+        auto& transformIndicies = mat->m_childSetIndicies;
+
+        for (auto index : transformIndicies)
+        {
+            auto pair = std::pair(index, (void*)&m_renderData.m_transformData[index]);
+            if (filteredDataList.find(Core::Enums::TRANSFORM) == filteredDataList.end())
+            {
+                filteredDataList.insert({ Core::Enums::TRANSFORM, {{pair}} });
+            }
+            else
+            {
+                filteredDataList[Core::Enums::TRANSFORM].push_back(pair);
+            }
+
+            CreateDrawInfo(m_renderData.m_transformData[index],
+                m_parentEffectName, m_name, taskObj->GetTaskName(),
+                drawInfo);
+
+            SetInfo setInfo{};
+            setInfo.m_setValue = Core::Enums::TRANSFORM;
+            setInfo.m_descriptorSetId = m_renderData.m_transformData[index].m_descriptorSetId;
+
+            if (setInfoMap.find(Core::Enums::TRANSFORM) == setInfoMap.end())
+            {
+                setInfoMap.insert({ Core::Enums::TRANSFORM, { { index, setInfo } } });
+            }
+            else
+            {
+                setInfoMap[Core::Enums::TRANSFORM].insert({ index, setInfo });
+            }
+        }
+    }
+
+    CreateSetInfo(setInfoMap, drawInfo);
+
+    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+}
+

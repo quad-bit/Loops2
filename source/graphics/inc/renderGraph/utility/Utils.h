@@ -194,8 +194,6 @@ namespace Renderer
 
             void DestroyPerFrameImageResource(const std::vector<uint32_t>& imageIds, std::vector<uint32_t>& memIds);
             void DestroyPerFrameBufferResource(const std::vector<uint32_t>& bufferIds, std::vector<uint32_t>& memIds);
-
-            
         }
     }
 }

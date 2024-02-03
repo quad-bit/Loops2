@@ -55,6 +55,7 @@ namespace Engine
 
         Core::ECS::ComponentManager<Core::ECS::Components::Mesh>* meshManager;
         Core::ECS::ComponentManager<Core::ECS::Components::Material>* materialManager;
+        Core::ECS::System* materialSystem;
 
         Core::ECS::ComponentManager<Core::ECS::Components::MeshRenderer>* meshRendererManager;
         Core::ECS::System* meshRendererSystem;

@@ -42,6 +42,7 @@ inc/renderGraph/tasks/PresentationTask.h
 
 src/renderGraph/RenderGraphManager.cpp
 src/renderGraph/Pipeline.cpp
+src/renderGraph/Technique.cpp
 src/renderGraph/utility/Utils.cpp
 
 src/renderGraph/effects/Opaque.cpp

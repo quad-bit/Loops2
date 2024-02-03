@@ -90,7 +90,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     }
 #endif
 
-    floorHandle = worldObj->CreateEntity("floor");
+    /*floorHandle = worldObj->CreateEntity("floor");
     Core::ECS::ComponentHandle<Core::ECS::Components::Transform> floorTrfHandle = floorHandle->GetComponent<Core::ECS::Components::Transform>();
     floorTrfHandle->SetLocalPosition(glm::vec3(0, -20, 0));
     floorTrfHandle->SetLocalScale(glm::vec3(200, 200, 1));
@@ -107,7 +107,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
 
         floorRenderer = new Core::ECS::Components::MeshRenderer(mesh, floorMat, floorTrfHandle.GetComponent());
         floorHandle->AddComponent<Core::ECS::Components::MeshRenderer>(floorRenderer);
-    }
+    }*/
 
     auto seed = 4;// Timer::GetInstance()->GetSeconds();
     PLOGD << "Seed : " << seed;
@@ -220,7 +220,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
 
 SceneManagerScript::~SceneManagerScript()
 {
-    for (uint32_t i = 0; i < boxHandles.size(); i++)
+    /*for (uint32_t i = 0; i < boxHandles.size(); i++)
     {
         {
             Core::ECS::ComponentHandle<Core::ECS::Components::Mesh> mesh = boxHandles[i]->GetComponent<Core::ECS::Components::Mesh>();
@@ -241,7 +241,7 @@ SceneManagerScript::~SceneManagerScript()
         Core::ECS::ComponentHandle<Core::ECS::Components::Material> mat = floorHandle->GetComponent<Core::ECS::Components::Material>();
         mat.DestroyComponent();
     }
-    worldObj->DestroyEntity(floorHandle);
+    worldObj->DestroyEntity(floorHandle);*/
 
 #if (debugMeshForLight)
     {

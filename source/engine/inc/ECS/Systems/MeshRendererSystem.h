@@ -42,14 +42,19 @@ private:
     uint32_t numDescriptorsPerBinding;
     size_t memoryAlignedUniformSize;;
     std::vector<Core::Utility::TransformData>& m_transformDataList;
-    std::map<std::string, std::vector<Core::Utility::TransformData>>& m_perEffectTransformData;
+    std::vector<Core::Utility::MaterialData>& m_materialDataList;
+    //std::map<std::string, std::vector<Core::Utility::TransformData>>& m_perEffectTransformData;
 
 public:
     virtual void Init() override;
     virtual void DeInit() override;
     virtual void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo) override;
 
-    MeshRendererSystem(std::vector<Core::Utility::TransformData>&, std::map<std::string, std::vector<Core::Utility::TransformData>>&);
+    MeshRendererSystem(
+        std::vector<Core::Utility::TransformData>& transformData,
+        std::vector<Core::Utility::MaterialData>& materialData/*,
+        std::map<std::string, std::vector<Core::Utility::TransformData>>& perEffectTrfData*/);
+
     virtual ~MeshRendererSystem();
 
     void HandleMeshRendererAddition(Core::ECS::Events::MeshRendererAdditionEvent * inputEvent);

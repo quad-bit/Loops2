@@ -715,7 +715,8 @@ namespace Core
         enum ResourceSets
         {
             CAMERA = 0,
-            LIGHT = 1,
+            UNKNOWN = 1,
+            LIGHT = 2,
             MATERIAL = 3, //Left 2 for future use
             TRANSFORM = 4
         };

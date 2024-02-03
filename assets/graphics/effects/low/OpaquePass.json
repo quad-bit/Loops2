@@ -40,6 +40,53 @@
                     ]
                 }
             ]
+        },
+        {
+            "name": "OpaqueTexturedUnlit",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "OpaqueRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "UnlitTextured.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "UnlitTextured.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "pos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inColor",
+                            "location": 1,
+                            "attribType": "COLOR",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inTexCoord",
+                            "location": 3,
+                            "attribType": "UV_0",
+                            "dataType": "vec2"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

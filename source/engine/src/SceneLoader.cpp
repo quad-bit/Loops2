@@ -14,6 +14,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "VulkanInterface.h"
 #include "resourceManagement/UniformFactory.h"
+#include <utility>
+
 
 void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, const tinygltf::Model& input, Core::ECS::EntityHandle* parent)
 {
@@ -190,18 +192,21 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
     for (size_t i = 0; i < input.materials.size(); i++) {
         // We only read the most basic properties required for our sample
         tinygltf::Material glTFMaterial = input.materials[i];
-        auto mat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial({Core::ECS::Components::EffectType::OPAQUE_E});
-        mat->m_materialName = glTFMaterial.name;
+
+        auto& name = glTFMaterial.name;
+
+        glm::vec4 color{};
+        std::optional<uint32_t> baseTextureId, baseSamplerId, normalTextureId;
 
         // Get the base color factor
         if (glTFMaterial.values.find("baseColorFactor") != glTFMaterial.values.end()) {
-            mat->m_color = glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
+            color = glm::make_vec4(glTFMaterial.values["baseColorFactor"].ColorFactor().data());
         }
 
         // Get base color texture index
         if (glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()) {
-            mat->m_baseColorTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
-            mat->m_baseColorSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
+            baseTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
+            baseSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
         }
 
         //// Get the normal map texture index
@@ -212,6 +217,29 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
         //materials[i].alphaMode = glTFMaterial.alphaMode;
         //materials[i].alphaCutOff = (float)glTFMaterial.alphaCutoff;
         //materials[i].doubleSided = glTFMaterial.doubleSided;
+
+        std::string tech = "OpaqueUnlit";
+
+        if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt)
+        {
+            tech = "OpaqueTexturedUnlit";
+        }
+        else if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt && normalTextureId != std::nullopt)
+        {
+
+        }
+
+        auto effectType = std::pair<Core::ECS::Components::EffectType, std::string>{ Core::ECS::Components::EffectType::OPAQUE_E, tech };
+        Core::ECS::Components::MaterialCreateInfo info{
+            color,
+            effectType,
+            baseTextureId,
+            baseSamplerId,
+            normalTextureId,
+            name
+        };
+
+        auto mat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(info);
 
         m_materialMap.insert({ (int)i, mat });
     }

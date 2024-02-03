@@ -6,6 +6,7 @@
 #include <map>
 #include "Math/MathUtil.h"
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
+#include <ECS/Components/Material.h>
 #include <optional>
 
 namespace Core
@@ -34,6 +35,8 @@ namespace Core
             glm::vec3 m_cameraPosition;
             glm::mat4 m_viewMat, m_projectionMat;
             uint32_t m_descriptorSetId;
+            //point to the next resourceSet indicies 
+            std::vector<uint32_t> childSetIndicies;
         };
 
         /// <summary>
@@ -41,11 +44,23 @@ namespace Core
         /// </summary>
         struct MaterialData
         {
-            uint32_t m_unlitDescriptorSetId;
-            std::optional<uint32_t> m_litDescriptorSetId;
+            uint32_t m_materialComponentId;
+            // index into transform list for the associated object to be drawn by this material
+            std::vector<uint32_t> m_childSetIndicies;
+            std::optional<uint32_t> m_descriptorSetId;
+            std::vector<uint32_t> m_transformDescriptorList;
+            Core::ECS::Components::EffectType m_effectType;
+            std::string m_techniqueName;
         };
 
-        // Will get collected under the effect type/name set in the material
+        struct LightData
+        {
+            uint32_t m_descriptorSetId;
+            glm::vec3 m_position; // world position, will help with LOD or sorting
+            glm::mat4 m_modelMat;
+            std::vector<uint32_t> m_childSetIndicies;
+        };
+
         struct TransformData
         {
             uint32_t m_descriptorSetId;
@@ -65,20 +80,15 @@ namespace Core
             //friend bool operator<(const TransformData& l, const TransformData& r) { return l.id < r.id; }
         };
 
-        struct LightData
-        {
-            uint32_t m_descriptorSetId;
-            glm::vec3 m_position; // world position, will help with LOD or sorting
-            glm::mat4 m_modelMat;
-        };
-
         class RenderData
         {
         public:
             std::vector<CameraData> m_cameraData;
             std::vector<TransformData> m_transformData;
-            std::map<std::string, std::vector<TransformData>> m_perEffectTransformData;
+            //std::map<std::string, std::vector<TransformData>> m_perEffectTransformData;
             std::vector<LightData> m_lightData;
+            // material component id to materialdata
+            std::vector<MaterialData> m_materialData;
         };
     }
 }

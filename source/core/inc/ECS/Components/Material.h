@@ -5,6 +5,7 @@
 #include <vector>
 #include <optional>
 #include <string>
+#include <Platform/Assertion.h>
 
 namespace Core
 {
@@ -24,6 +25,41 @@ namespace Core
                 CUSTOM
             };
 
+            class Material;
+
+            class MaterialCreateInfo
+            {
+            private:
+                glm::vec4 m_color;
+                // effect and the technique
+                std::pair<EffectType, std::string> m_effectType;
+                std::optional<uint32_t> m_baseColorTextureId;
+                std::optional<uint32_t> m_baseColorSamplerId;
+                std::optional<uint32_t> m_normalTextureId;
+                std::string m_materialName;
+
+            public:
+                MaterialCreateInfo(
+                    const glm::vec4& color,
+                    const std::pair<EffectType, std::string>& effectTypes,
+                    const std::optional<uint32_t>& baseColorTextureId,
+                    const std::optional<uint32_t>& baseColorSamplerId,
+                    const std::optional<uint32_t>& normalTextureId,
+                    const std::string& materialName):
+                    m_color(color),
+                    m_effectType(effectTypes),
+                    m_baseColorTextureId(baseColorTextureId),
+                    m_baseColorSamplerId(baseColorSamplerId),
+                    m_normalTextureId(normalTextureId),
+                    m_materialName(materialName)
+                {
+                    //ASSERT_MSG_DEBUG(effectTypes.size() > 0, "need effects");
+                    ASSERT_MSG_DEBUG(!m_effectType.second.empty(), "need technique");
+                };
+
+                friend class Material;
+            };
+
             class Material : public Component<Material>
             {
             public:
@@ -33,7 +69,7 @@ namespace Core
                 glm::vec2 m_mainTextureOffset;
 
                 std::optional<std::string> m_effectName;
-                std::vector<EffectType> m_effectTypes;
+                std::pair<EffectType, std::string> m_effectType;
 
                 std::optional<uint32_t> m_baseColorTextureId;
                 std::optional<uint32_t> m_baseColorSamplerId;
@@ -41,23 +77,31 @@ namespace Core
                 std::optional<uint32_t> m_normalTextureId;
                 std::string m_materialName;
 
+                std::vector<uint32_t> m_descriptorSetIds;
+
                 Material(const std::string& effectName) :
                     m_effectName(effectName)
                 {
-                    m_effectTypes.push_back(EffectType::CUSTOM);
+                    //m_effectTypes.push_back(EffectType::CUSTOM);
                     componentType = COMPONENT_TYPE::MATERIAL;
                 }
 
-                Material(const std::vector<EffectType>& effectTypes) :
+                /*Material(const std::vector<std::pair<EffectType, std::string>>& effectTypes) :
                     m_effectTypes(effectTypes)
                 {
                     componentType = COMPONENT_TYPE::MATERIAL;
-                }
+                }*/
 
-                /*Material()
+                Material(const MaterialCreateInfo& info):
+                    m_color(info.m_color),
+                    m_effectType(info.m_effectType),
+                    m_baseColorTextureId(info.m_baseColorTextureId),
+                    m_baseColorSamplerId(info.m_baseColorSamplerId),
+                    m_normalTextureId(info.m_normalTextureId),
+                    m_materialName(info.m_materialName)
                 {
                     componentType = COMPONENT_TYPE::MATERIAL;
-                }*/
+                }
             };
 
             //class Material : public Component<Material>

@@ -55,7 +55,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             std::string attribType = attrib["attribType"].GetString();
             if (attribType == "POSITION")
             {
-                taskWapper.m_bindingTypeInfo.push_back({Core::Enums::VertexAttributeType::POSITION, i });
+                taskWapper.m_bindingTypeInfo.push_back({Core::Enums::VertexAttributeType::POSITION, POSITION_BINDING_LOCATION });
 
                 attribInfo.location = POSITION_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -64,7 +64,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             }
             else if (attribType == "COLOR")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::COLOR, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::COLOR, COLOR_BINDING_LOCATION });
 
                 attribInfo.location = COLOR_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -73,16 +73,16 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
             }
             else if (attribType == "NORMAL")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::NORMAL, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::NORMAL, NORMAL_BINDING_LOCATION });
 
                 attribInfo.location = NORMAL_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32B32_SFLOAT;
 
                 bindingInfo.stride = sizeof(glm::vec3);
             }
-            else if (attribType == "UV")
+            else if (attribType == "UV_0")
             {
-                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::UV0, i });
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::UV0, UV0_BINDING_LOCATION });
 
                 attribInfo.location = UV0_BINDING_LOCATION;
                 attribInfo.format = VK_FORMAT_R32G32_SFLOAT;
@@ -193,11 +193,13 @@ Core::Enums::DescriptorType StringToDescType(const char* str, const char * bindi
     if (!strcmp(str, "UNIFORM")) return Core::Enums::DescriptorType::UNIFORM_BUFFER;
     if (!strcmp(str, "SAMPLER"))
     {
-        const char * pch = strstr(bindingName, "combined_");
+        return Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER;
+
+        /*const char * pch = strstr(bindingName, "combined_");
         if (pch != NULL)
             return Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER;
         else
-            return Core::Enums::DescriptorType::SAMPLER;
+            return Core::Enums::DescriptorType::SAMPLER;*/
     }
 
     //if (!strcmp(str, "SAMPLED_IMAGE")) return DescriptorType::SAMPLED_IMAGE;
@@ -882,144 +884,6 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                             effectResource.techniqueList.push_back(technqueObj);
                         }
                     }
-                    /*
-                    if (techniqueDoc.HasMember("shaders"))
-                    {
-                        std::map<uint32_t, std::vector<Core::Wrappers::BindingWrapper>> setMap;
-                        std::vector<std::string> shaderNameList;
-
-                        uint32_t numUniform = 0;
-
-                        const Value& techniqueShaders = techniqueDoc["shaders"];
-                        CreateShaderInfoForTask(techniqueShaders, technqueObj);
-
-                        for (SizeType i = 0; i < techniqueShaders.Size(); i++)
-                        {
-                            const Value& effect = techniqueShaders[i];
-                            std::string shaderName = effect["name"].GetString();
-                            technqueObj.m_shaderNames.push_back(shaderName);
-
-                            std::string shaderTypeVal = effect["type"].GetString();
-                            shaderNameList.push_back(shaderName);
-
-                            std::string reflPath = VULKAN_ASSETS_PATH + std::string{ "/Reflections/" } + shaderName + std::string{ ".refl" };
-
-                            if (effect.HasMember("reflPath"))
-                            {
-                                std::string path = effect["reflPath"].GetString();
-                                if (!path.empty())
-                                {
-                                    reflPath = path;
-                                }
-                            }
-
-                            //printf("%s %s %s \n", shaderName.c_str(), shaderType.c_str(), reflPath.c_str());
-
-                            Document reflDoc = LoadJson(reflPath.c_str());
-                            bool hasDescriptors = reflDoc.HasMember("descriptor_sets");
-                            if (hasDescriptors)
-                            {
-                                const Value& reflFileDescSets = reflDoc["descriptor_sets"];
-                                numUniform = reflFileDescSets.Size();
-                            }
-                            else
-                                numUniform = 0;
-
-                            if (numUniform > 0)
-                            {
-                                const Value& reflFileDescSets = reflDoc["descriptor_sets"];
-
-                                for (SizeType dsIdx = 0; dsIdx < reflFileDescSets.Size(); dsIdx++)
-                                {
-                                    const Value& currentInputFromReflData = reflFileDescSets[dsIdx];
-
-                                    // this logic works only if the sets are kept in increasing order and 
-                                    // they are not repeating in a given shader, they can have multiple bindings.
-                                    int set = currentInputFromReflData["set"].GetInt();
-
-                                    // add binding to the binding list
-                                    Core::Wrappers::BindingWrapper wrapper = {};
-                                    wrapper.bindingObj.binding = currentInputFromReflData["binding"].GetInt();
-
-                                    int arraySize = currentInputFromReflData["ArraySize"].GetInt();
-                                    if (arraySize == 0)
-                                        wrapper.bindingObj.descriptorCount = 1;
-                                    else
-                                        wrapper.bindingObj.descriptorCount = arraySize;
-
-                                    wrapper.bindingName = currentInputFromReflData["name"].GetString();
-                                    wrapper.bindingObj.descriptorType = StringToDescType(currentInputFromReflData["type"].GetString(), wrapper.bindingName.c_str());
-
-                                    //add all members to block definition
-                                    const Value& reflBlockMembers = currentInputFromReflData["members"];
-                                    for (SizeType m = 0; m < reflBlockMembers.Size(); m++)
-                                    {
-                                        const Value& reflBlockMember = reflBlockMembers[m];
-
-                                        Core::Wrappers::UniformStructMember mem = {};
-                                        mem.offset = reflBlockMember["offset"].GetInt();
-                                        mem.size = reflBlockMember["size"].GetInt();
-
-                                        snprintf(mem.name, sizeof(mem.name), "%s", reflBlockMember["name"].GetString());
-
-                                        wrapper.memberList.push_back(mem);
-                                    }
-
-                                    Core::Enums::ShaderType shaderType;
-                                    if (shaderTypeVal == "FRAGMENT")
-                                        shaderType = Core::Enums::ShaderType::FRAGMENT;
-                                    else if (shaderTypeVal == "VERTEX")
-                                        shaderType = Core::Enums::ShaderType::VERTEX;
-                                    wrapper.bindingObj.stageFlags.push_back(shaderType);
-
-                                    if (setMap.find(set) == setMap.end())
-                                    {
-                                        setMap.insert(std::pair<uint32_t, std::vector<Core::Wrappers::BindingWrapper>>(set, std::vector{ wrapper }));
-                                    }
-                                    else
-                                    {
-                                        setMap[set].push_back(wrapper);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Create per effect resources
-                        auto CreatePerTechniqueResources = [&]()
-                        {
-                            std::vector<Core::Wrappers::SetWrapper*> setWrapperListPerTechnique;
-
-                            // Create descriptor set layout
-                            for (auto const& [key, val] : setMap)
-                            {
-                                Core::Wrappers::SetWrapper* setWrapper = CreateUniqueSetLayoutWrapper(val, effect.GetString(), shaderNameList, key);
-                                setWrapperListPerTechnique.push_back(setWrapper);
-                                technqueObj.m_setWrappers.push_back(setWrapper);
-
-                                if (m_perSetMap.find(key) == m_perSetMap.end())
-                                {
-                                    m_perSetMap.insert(std::pair<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>(key, std::vector{ setWrapper }));
-                                }
-                                else
-                                {
-                                    m_perSetMap[key].push_back(setWrapper);
-                                }
-                            }
-
-                            // Create pipeline layout
-                            technqueObj.m_pipelineLayoutId = CreatePipelineLayout(setWrapperListPerTechnique.data(), setWrapperListPerTechnique.size());
-                        };
-
-                        CreatePerTechniqueResources();
-                        effectResource.techniqueList.push_back(technqueObj);
-                    }
-                    else
-                    {
-                        ASSERT_MSG_DEBUG(0, "Shaders not found in effect file");
-                    }
-
-                    CreateVertexInfoForTask(techniqueDoc, technqueObj);
-                    */
                 }
                 m_perEffectResources.push_back(effectResource);
             }
@@ -1526,7 +1390,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
 
             case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
             {
-                imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                /*imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 
                 uint32_t numViews = (uint32_t)desc[k].imageBindingInfo.imageId.size();
                 VkImageView imageView;
@@ -1547,7 +1411,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
 
                 imageInfo.sampler = *sampler;
 
-                writeList[k].pImageInfo = &(imageInfo);
+                writeList[k].pImageInfo = &(imageInfo);*/
 
             }
             break;
@@ -1624,7 +1488,6 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
             {
                 imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 Core::Utility::ImageBindingInfo imgBindingInfo = std::get<Core::Utility::ImageBindingInfo>(desc.m_setBindings[k].m_bindingInfo);
-                Core::Utility::SamplerBindingInfo samplerBindingInfo = std::get<Core::Utility::SamplerBindingInfo>(desc.m_setBindings[k].m_bindingInfo);
 
                 uint32_t numViews = (uint32_t)imgBindingInfo.imageId.size();
                 VkImageView imageView;
@@ -1635,15 +1498,11 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                     imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[i]);
 
                 imageInfo.imageView = imageView;
+                imageInfo.sampler = *VkSamplerFactory::GetInstance()->GetSampler(imgBindingInfo.samplerId.value());
 
-                uint32_t numSamplers = (uint32_t)samplerBindingInfo.samplerId.size();
-                VkSampler* sampler;
-                if (numSamplers == 1)
-                    sampler = VkSamplerFactory::GetInstance()->GetSampler(samplerBindingInfo.samplerId[0]);
+                /*if (numSamplers == 1)
                 else
-                    sampler = VkSamplerFactory::GetInstance()->GetSampler(samplerBindingInfo.samplerId[i]);
-
-                imageInfo.sampler = *sampler;
+                    sampler = VkSamplerFactory::GetInstance()->GetSampler(samplerBindingInfo.samplerId[i]);*/
 
                 writeList[k].pImageInfo = &(imageInfo);
             }
@@ -1656,12 +1515,10 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
             default:
                 ASSERT_MSG_DEBUG(0, "Yet to be implemented");
             }
-
         }
 
         // update descriptor set
         vkUpdateDescriptorSets(DeviceInfo::GetLogicalDevice(), (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
-
     }
 }
 

@@ -8,6 +8,7 @@ set(SourceList
     inc/ECS/ECS_Manager.h
     inc/ECS/Systems/CameraSystem.h
     inc/ECS/Systems/LightSystem.h
+    inc/ECS/Systems/MaterialSystem.h
     inc/ECS/Systems/MeshRendererSystem.h
     inc/ECS/Systems/ScriptableSystem.h
     inc/ECS/Systems/TransformSystem.h
@@ -18,6 +19,7 @@ set(SourceList
     src/ECS/SceneGraphManager.cpp
     src/ECS/ECS_Manager.cpp
     src/ECS/Systems/CameraSystem.cpp
+    src/ECS/Systems/MaterialSystem.cpp
     src/ECS/Systems/LightSystem.cpp
     src/ECS/Systems/MeshRendererSystem.cpp
     src/ECS/Systems/ScriptableSystem.cpp

@@ -5,6 +5,8 @@
 #include <vector>
 #include <renderGraph/Task.h>
 #include <renderGraph/Graph.h>
+#include <renderGraph/tasks/RenderTask.h>
+#include <RenderData.h>
 
 namespace Renderer
 {
@@ -130,6 +132,46 @@ namespace Renderer
 
             }
         };
+
+        struct SetInfo
+        {
+            Core::Enums::ResourceSets m_setValue;
+            std::optional<uint32_t> m_descriptorSetId;
+            std::vector<SetInfo*> m_childrenSet;
+            uint32_t* m_childIndicies = nullptr;
+            uint32_t m_indiciesCount = 0;
+        };
+
+        void CreateDrawInfo(const Core::Utility::TransformData& data,
+            const std::string& effectName, const std::string& techName, const std::string& taskName,
+            RenderGraph::Tasks::DrawInfo& drawInfo);
+
+        void CreateSetInfo(std::map<Core::Enums::ResourceSets,
+            std::map<uint32_t, SetInfo>>& setInfoMap, RenderGraph::Tasks::DrawInfo& drawInfo);
+
+        struct FilterInfo
+        {
+            void* m_data;
+            uint32_t m_dataCount;
+            uint32_t m_stride;
+            Core::Enums::ResourceSets m_setType;
+            void* m_next = nullptr;
+        };
+
+
+        /*void Filter(void* data, uint32_t count, uint32_t stride,
+            const Core::Enums::ResourceSets& setType,
+            const std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)>& filterFunc,
+            std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
+            std::map<Core::Enums::ResourceSets, std::map<uint32_t, SetInfo>>& setMap);*/
+
+        void Filter(const FilterInfo& info,
+            const std::function<bool(uint32_t index, void* data, void* next)>& filterFunc,
+            std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
+            std::map<Core::Enums::ResourceSets, std::map<uint32_t, SetInfo>>& setMap);
+
+        bool CameraFilter(uint32_t index, void* data, void* next);
+        bool MaterialFilter(uint32_t index, void* data, void* next);
     }
 }
 

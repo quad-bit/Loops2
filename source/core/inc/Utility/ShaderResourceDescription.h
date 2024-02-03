@@ -47,12 +47,13 @@ namespace Core
             std::vector<uint32_t> imageId;
             std::vector<uint32_t> imageViewId;
             std::vector<uint32_t> memoryId;
+            std::optional<uint32_t> samplerId;
         };
 
-        struct SamplerBindingInfo
+        /*struct SamplerBindingInfo
         {
             std::vector<uint32_t> samplerId;
-        };
+        };*/
 
         // many bufs, many mem || 1 buf, many memory || 1 buf, 1 mem
         struct BufferBindingInfo
@@ -84,7 +85,7 @@ namespace Core
             // Might belong to multiple descriptor sets
             std::vector<uint32_t> descriptorSetIds;
 
-            SamplerBindingInfo samplerBindingInfo;
+            //SamplerBindingInfo samplerBindingInfo;
             ImageBindingInfo imageBindingInfo;
             BufferBindingInfo bufferBindingInfo;
         };
@@ -95,7 +96,7 @@ namespace Core
             uint32_t m_bindingNumber;
             uint32_t m_numElements;
             Core::Enums::DescriptorType m_resourceType;
-            std::variant<SamplerBindingInfo, ImageBindingInfo, BufferBindingInfo> m_bindingInfo;
+            std::variant<ImageBindingInfo, BufferBindingInfo> m_bindingInfo;
         };
 
         struct DescriptorSetInfo

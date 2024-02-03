@@ -5,6 +5,8 @@
 #include "ECS/Systems/TransformSystem.h"
 #include <ECS/Components/Scriptable.h>
 #include "ECS/Systems/ScriptableSystem.h"
+#include "ECS/Systems/MaterialSystem.h"
+
 #include <ECS/ECS_Setting.h>
 #include <ECS/Events/EventBus.h>
 #include <ECS/Components/Mesh.h>
@@ -42,12 +44,15 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
     cameraSystemObj = new Engine::ECS::Systems::CameraSystem(renderData.m_cameraData);
     worldObj->AddSystem(cameraSystemObj, Core::ECS::COMPONENT_TYPE::CAMERA);
 
-    meshRendererSystem = new MeshRendererSystem(renderData.m_transformData, renderData.m_perEffectTransformData);
-    worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
-
     lightSystem = new LightSystem(renderData.m_lightData);
     worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
     //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
+
+    materialSystem = new MaterialSystem(renderData.m_materialData);
+    worldObj->AddSystem(materialSystem, Core::ECS::COMPONENT_TYPE::MATERIAL);
+
+    meshRendererSystem = new MeshRendererSystem(renderData.m_transformData, renderData.m_materialData);
+    worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
 
     worldObj->Init();
 
@@ -69,6 +74,7 @@ void Engine::ECS_Manager::DeInit()
 
     worldObj->DeInit();
 
+    delete materialSystem;
     delete lightSystem;
     delete meshRendererSystem;
     delete cameraSystemObj;

@@ -42,12 +42,14 @@ void MeshRendererSystem::DeInit()
 void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 {
     m_transformDataList.clear();
-    m_perEffectTransformData.clear();
+    //m_perEffectTransformData.clear();
     for (auto & entity : registeredEntities)
     {
         Core::ECS::ComponentHandle<Core::ECS::Components::MeshRenderer> * renderer;
         Core::ECS::ComponentHandle<Core::ECS::Components::Transform> * transform;
-        worldObj->Unpack(entity, &renderer, &transform);
+        Core::ECS::ComponentHandle<Core::ECS::Components::Material>* material;
+
+        worldObj->Unpack(entity, &renderer, &transform, &material);
 
         Core::ECS::Components::Transform * transformObj = transform->GetComponent();
         Core::ECS::Components::TransformUniform obj = {};
@@ -82,9 +84,20 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
             data.m_indexCount = (uint32_t)(renderer->GetComponent()->geometry->m_indicies.size());
         }
 
+        auto& matComponentId = material->GetComponent()->componentId;
+        auto it = std::find_if(m_materialDataList.begin(), m_materialDataList.end(), [&](const Core::Utility::MaterialData& mat)
+        {return mat.m_materialComponentId == matComponentId; });
+
+        if (it == m_materialDataList.end())
+        {
+            ASSERT_MSG_DEBUG(0, "material not found");
+        }
+        it->m_transformDescriptorList.push_back(data.m_descriptorSetId);
+        it->m_childSetIndicies.push_back(m_transformDataList.size());
+
         m_transformDataList.push_back(data);
 
-        if (renderer->GetComponent()->material->m_effectName.has_value())
+        /*if (renderer->GetComponent()->material->m_effectName.has_value())
         {
             const std::string effectName = renderer->GetComponent()->material->m_effectName.value();
             if(m_perEffectTransformData.find(effectName) == m_perEffectTransformData.end())
@@ -95,12 +108,15 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
             {
                 m_perEffectTransformData[effectName].push_back(data);
             }
-        }
+        }*/
     }
 }
 
-MeshRendererSystem::MeshRendererSystem(std::vector<Core::Utility::TransformData>& transformData, std::map<std::string,std::vector<Core::Utility::TransformData>>& perEffectTrfData) : 
-    m_transformDataList(transformData), m_perEffectTransformData(perEffectTrfData)
+MeshRendererSystem::MeshRendererSystem(
+    std::vector<Core::Utility::TransformData>& transformData,
+    std::vector<Core::Utility::MaterialData>& materialData/*,
+    std::map<std::string,std::vector<Core::Utility::TransformData>>& perEffectTrfData*/) : 
+    m_transformDataList(transformData), m_materialDataList(materialData)/*, m_perEffectTransformData(perEffectTrfData)*/
 {
     signature.AddComponent<Core::ECS::Components::MeshRenderer>();
     signature.AddComponent<Core::ECS::Components::Mesh>();

@@ -13,6 +13,7 @@ namespace Core
             class Camera;
             class MeshRenderer;
             class Light;
+            class Material;
         }
     }
 }
@@ -41,13 +42,27 @@ namespace Core
                 Core::ECS::Components::Light* light;
             };
 
-            class DepthPassAttachmentCreationEvent : public Event
+            class MaterialCreationEvent : public Event
+            {
+            public:
+                Core::ECS::Components::Material* material;
+            };
+
+            class MaterialAdditionEvent : public Event
+            {
+            public:
+                Core::ECS::Components::Material* material;
+                Core::ECS::Entity* entity;
+            };
+
+
+            /*class DepthPassAttachmentCreationEvent : public Event
             {
             public:
                 std::vector<uint32_t> imageId;
                 std::vector<uint32_t> imageViewId;
                 std::vector<uint32_t> memoryId;
-            };
+            };*/
         }
     }
 }

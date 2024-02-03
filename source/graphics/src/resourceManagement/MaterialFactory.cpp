@@ -3,8 +3,8 @@
 #include "Platform/Assertion.h"
 //#include "ShaderFactory.h"
 #include "Utility/RenderingWrappers/RenderingWrapper.h"
-//#include "EventBus.h"
-//#include "MeshAdditionEvent.h"
+#include "ECS/Events/EventBus.h"
+#include "ECS/Events/ComponentAdditionEvent.h"
 
 Renderer::ResourceManagement::MaterialFactory* Renderer::ResourceManagement::MaterialFactory::instance = nullptr;
 
@@ -50,27 +50,54 @@ Renderer::ResourceManagement::MaterialFactory::~MaterialFactory()
 {
 }
 
-Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const std::string& effectName)
+//Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const std::string& effectName)
+//{
+//    uint32_t matId = GetMatId();
+//
+//    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectName);
+//    mat->componentId = matId;
+//
+//    idToMaterialMap.insert(std::pair<uint32_t, Core::ECS::Components::Material*>(
+//        { matId, mat }));
+//
+//    Core::ECS::Events::MaterialCreationEvent eve;
+//    eve.material = mat;
+//
+//    Core::ECS::Events::EventBus::GetInstance()->Publish(&eve);
+//
+//    return mat;
+//}
+
+//Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const std::vector<Core::ECS::Components::EffectType>& effectTypes)
+//{
+//    uint32_t matId = GetMatId();
+//
+//    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectTypes);
+//    mat->componentId = matId;
+//
+//    idToMaterialMap.insert(std::pair<uint32_t, Core::ECS::Components::Material*>(
+//        { matId, mat }));
+//
+//    Core::ECS::Events::MaterialCreationEvent eve;
+//    eve.material = mat;
+//    Core::ECS::Events::EventBus::GetInstance()->Publish(&eve);
+//
+//    return mat;
+//}
+
+Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const Core::ECS::Components::MaterialCreateInfo& info)
 {
     uint32_t matId = GetMatId();
 
-    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectName);
+    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(info);
     mat->componentId = matId;
 
     idToMaterialMap.insert(std::pair<uint32_t, Core::ECS::Components::Material*>(
         { matId, mat }));
-    return mat;
-}
 
-Core::ECS::Components::Material* Renderer::ResourceManagement::MaterialFactory::CreateMaterial(const std::vector<Core::ECS::Components::EffectType>& effectTypes)
-{
-    uint32_t matId = GetMatId();
-
-    Core::ECS::Components::Material* mat = new Core::ECS::Components::Material(effectTypes);
-    mat->componentId = matId;
-
-    idToMaterialMap.insert(std::pair<uint32_t, Core::ECS::Components::Material*>(
-        { matId, mat }));
+    Core::ECS::Events::MaterialCreationEvent eve;
+    eve.material = mat;
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&eve);
 
     return mat;
 }
