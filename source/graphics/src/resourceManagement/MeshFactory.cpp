@@ -393,6 +393,14 @@ void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::M
         UploadData(mesh->m_normalBufferId, dataSize, mesh->m_normals.data());
     }
 
+    //uv0 buffer
+    if (mesh->m_uv0.size() > 0)
+    {
+        dataSize = sizeof(glm::vec2) * mesh->m_uv0.size();
+        CreateBuffer(dataSize, mesh->m_uv0BufferId, mesh->m_uv0BufferMemoryId);
+        UploadData(mesh->m_uv0BufferId, dataSize, mesh->m_uv0.data());
+    }
+
     //index buffer
     if (mesh->m_indicies.size() > 0)
     {
@@ -456,6 +464,12 @@ void Renderer::ResourceManagement::MeshFactory::DestroyMesh(Core::ECS::Component
     {
         VulkanInterfaceAlias::DestroyBuffer(&mesh->m_indexBufferId, 1);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_indexBufferMemoryId, 1);
+    }
+
+    if (mesh->m_uv0.size() > 0)
+    {
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_uv0BufferId, 1);
+        VulkanInterfaceAlias::FreeMemory(&mesh->m_uv0BufferMemoryId, 1);
     }
 
     //delete mesh;

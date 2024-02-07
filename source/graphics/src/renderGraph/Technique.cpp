@@ -40,6 +40,11 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
                 ASSERT_MSG_DEBUG(0, "No Normal attrib in the json file");
             vertexInfo.bufferIds.push_back(data.m_normalBufferId.value());
             break;
+        case Core::Enums::VertexAttributeType::UV0:
+            if (!data.m_uv0BufferId.has_value())
+                ASSERT_MSG_DEBUG(0, "No UV0 attrib in the json file");
+            vertexInfo.bufferIds.push_back(data.m_uv0BufferId.value());
+            break;
             //case Core::Enums::VertexAttributeType::TANGENT:
             //    vertexInfo.bufferIds.push_back(data.m_positionBufferId);
             //    break;
@@ -105,7 +110,8 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
     */
 
 
-void Renderer::RenderGraph::CreateSetInfo(std::map<Core::Enums::ResourceSets, std::map<uint32_t, SetInfo>>& setInfoMap, RenderGraph::Tasks::DrawInfo& drawInfo)
+void Renderer::RenderGraph::CreateSetInfo(std::map<Core::Enums::ResourceSets,
+    std::map<uint32_t, SetInfo>>& setInfoMap, RenderGraph::Tasks::DrawInfo& drawInfo)
 {
     auto ConnectSets = [&setInfoMap]()
     {
@@ -127,10 +133,9 @@ void Renderer::RenderGraph::CreateSetInfo(std::map<Core::Enums::ResourceSets, st
                     auto begin = parent.second.m_childIndicies;
                     for (uint32_t i = 0; i < parent.second.m_indiciesCount; i++)
                     {
+                        auto test = &childMap[*begin];
                         parent.second.m_childrenSet.push_back(&childMap[*begin]);
                         begin++;
-
-                        ASSERT_MSG_DEBUG(0, "test  this");
                     }
                 }
                 else // link to all children
@@ -213,88 +218,6 @@ void Renderer::RenderGraph::CreateSetInfo(std::map<Core::Enums::ResourceSets, st
 
     CreateSetList(&setInfoMap[Core::Enums::CAMERA][0]);
 }
-//
-//void Renderer::RenderGraph::Filter(void* data, uint32_t count, uint32_t stride, const Core::Enums::ResourceSets& setType, const std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)>& filterFunc, std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList, std::map<Core::Enums::ResourceSets, std::map<uint32_t, SetInfo>>& setMap)
-//{
-//    // pointer test
-//    /*void* data = (void*)m_renderData.m_transformData.data();
-//    data = static_cast<char*>(data) + sizeof(Core::Utility::TransformData);
-//    auto test = static_cast<Core::Utility::TransformData*>(data);*/
-//
-//    for (uint32_t i = 0; i < count; i++)
-//    {
-//        if (filterFunc(i, data, setType))
-//        {
-//            auto pair = std::pair(i, data);
-//            bool insert = false;
-//            if (filteredDataList.find(setType) == filteredDataList.end())
-//            {
-//                filteredDataList.insert({ setType, {{pair}} });
-//                insert = true;
-//            }
-//            else
-//            {
-//                filteredDataList[setType].push_back(pair);
-//                insert = false;
-//            }
-//
-//            SetInfo setInfo{};
-//            setInfo.m_setValue = setType;
-//            switch (setType)
-//            {
-//            case Core::Enums::CAMERA:
-//            {
-//                auto cam = static_cast<Core::Utility::CameraData*>(data);
-//                setInfo.m_descriptorSetId = cam->m_descriptorSetId;
-//                if (cam->childSetIndicies.size() > 0)
-//                {
-//                    setInfo.m_childIndicies = cam->childSetIndicies.data();
-//                    setInfo.m_indiciesCount = cam->childSetIndicies.size();
-//                }
-//            }
-//            break;
-//            case Core::Enums::UNKNOWN:
-//                //setInfo.m_descriptorSetId = static_cast<Core::Utility::CameraData*>(data)->m_descriptorSetId;
-//                break;
-//            case Core::Enums::LIGHT:
-//                //setInfo.m_descriptorSetId = static_cast<Core::Utility::CameraData*>(data)->m_descriptorSetId;
-//                break;
-//            case Core::Enums::MATERIAL:
-//            {
-//                auto mat = static_cast<Core::Utility::MaterialData*>(data);
-//                if (mat->m_descriptorSetId.has_value())
-//                {
-//                    setInfo.m_descriptorSetId = mat->m_descriptorSetId.value();
-//                    if (mat->m_childSetIndicies.size() > 0)
-//                    {
-//                        setInfo.m_childIndicies = mat->m_childSetIndicies.data();
-//                        setInfo.m_indiciesCount = mat->m_childSetIndicies.size();
-//                    }
-//                }
-//            }
-//            break;
-//            case Core::Enums::TRANSFORM:
-//                setInfo.m_descriptorSetId = static_cast<Core::Utility::TransformData*>(data)->m_descriptorSetId;
-//                break;
-//            }
-//
-//            if (setInfo.m_descriptorSetId.has_value())
-//            {
-//                auto map = std::map<uint32_t, Renderer::RenderGraph::SetInfo>({ {i, setInfo} });
-//                if (insert)
-//                {
-//                    setMap.insert({ setType, map });
-//                }
-//                else
-//                {
-//                    setMap[setType].insert({ i, setInfo });
-//                }
-//            }
-//        }
-//
-//        data = static_cast<char*>(data) + stride;
-//    }
-//}
 
 void Renderer::RenderGraph::Filter(const FilterInfo& info,
     const std::function<bool(uint32_t index, void* data, void* next)>& filterFunc,
@@ -408,10 +331,33 @@ bool Renderer::RenderGraph::MaterialFilter(uint32_t index, void* data, void* nex
     return false;
 }
 
-//bool Renderer::RenderGraph::CameraFilter(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)
-//{
-//    if (index == 0)
-//        return true;
-//    else
-//        return false;
-//}
+void Renderer::RenderGraph::CreateResourceNode(const std::string& nodeName,
+    const std::vector<ResourceAlias*>& imageList,
+    std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& resourceNodes,
+    Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+    GraphNodeWrapper& resourceNode)
+{
+    resourceNode.m_nodeBase = std::make_unique<Renderer::RenderGraph::ResourceNode>(imageList, nodeName, Renderer::ResourceManagement::ResourceType::IMAGE, graphTraversal);
+    resourceNode.m_graphNode = graph.Push(resourceNode.m_nodeBase.get());
+    resourceNodes.push_back(resourceNode.m_graphNode);
+}
+
+void Renderer::RenderGraph::CreateTaskGraphNode(const std::string& taskName,
+    const std::string& parentEffectName, const std::string& techName,
+    const Core::Wrappers::Rect2D& renderArea,
+    Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+    std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
+    GraphNodeWrapper& taskNode)
+{
+    auto m_opaqueRenderTask = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, parentEffectName, techName);
+    taskNode.m_nodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(m_opaqueRenderTask), graphTraversal);
+    taskNode.m_graphNode = graph.Push(taskNode.m_nodeBase.get());
+    taskNodes.push_back(taskNode.m_graphNode);
+}
+
+std::string Renderer::RenderGraph::Technique::GetNodeName(const std::string& name)
+{
+    return name + "_" + m_name;
+}

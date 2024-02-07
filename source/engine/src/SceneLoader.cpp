@@ -205,7 +205,8 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
 
         // Get base color texture index
         if (glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()) {
-            baseTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
+            //baseTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
+            baseTextureId = GetTexture(glTFMaterial.values["baseColorTexture"].TextureIndex());
             baseSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
         }
 
@@ -255,54 +256,63 @@ Core::ECS::Components::Material* Engine::Utility::GltfLoader::GetMaterial(const 
     return m_materialMap[materialIndex];
 }
 
-uint32_t Engine::Utility::GltfLoader::CreateTexture(const tinygltf::Model& input, int textureIndex, Core::Enums::Format imageFormat)
+void Engine::Utility::GltfLoader::LoadTextures(const tinygltf::Model& input)
 {
-    auto& gltfTexture = input.textures[textureIndex];
-
-    tinygltf::Image gltfImage = input.images[gltfTexture.source];
-
-    unsigned char* buffer = nullptr;
-    size_t bufferSize = 0;
-
-    if (gltfImage.component == 3)
+    const auto imageFormat = Core::Enums::Format::B8G8R8A8_UNORM;
+    uint32_t textureIndex = 0;
+    for (auto& gltfTexture : input.textures)
     {
-        bufferSize = gltfImage.width * gltfImage.height * 4;
-        buffer = new unsigned char[bufferSize];
+        tinygltf::Image gltfImage = input.images[gltfTexture.source];
 
-        auto rgba = buffer;
-        auto rgb = &gltfImage.image[0];
+        unsigned char* buffer = nullptr;
+        size_t bufferSize = 0;
 
-        for (uint32_t i = 0; i < gltfImage.width * gltfImage.height; ++i)
+        if (gltfImage.component == 3)
         {
-            memcpy(rgba, rgb, sizeof(unsigned char) * 3);
-            rgba += 4;
-            rgb += 3;
+            bufferSize = gltfImage.width * gltfImage.height * 4;
+            buffer = new unsigned char[bufferSize];
+
+            auto rgba = buffer;
+            auto rgb = &gltfImage.image[0];
+
+            for (uint32_t i = 0; i < gltfImage.width * gltfImage.height; ++i)
+            {
+                memcpy(rgba, rgb, sizeof(unsigned char) * 3);
+                rgba += 4;
+                rgb += 3;
+            }
         }
+        else
+        {
+            buffer = &gltfImage.image[0];
+            bufferSize = gltfImage.image.size();
+        }
+
+        Core::Wrappers::ImageCreateInfo imageInfo = {};
+        imageInfo.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        imageInfo.m_depth = 1;
+        imageInfo.m_format = imageFormat;
+        imageInfo.m_height = gltfImage.height;
+        imageInfo.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
+        imageInfo.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
+        imageInfo.m_layers = 1;
+        imageInfo.m_mips = 1;
+        imageInfo.m_sampleCount = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
+        imageInfo.m_usages = { Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT, Core::Enums::ImageUsage::USAGE_SAMPLED_BIT };
+        imageInfo.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
+        imageInfo.m_width = gltfImage.width;
+
+        auto id = VulkanInterfaceAlias::CreateImage(buffer, bufferSize, imageInfo, gltfImage.name);
+        m_imageList.insert({ textureIndex++, id });
     }
-    else
-    {
-        buffer = &gltfImage.image[0];
-        bufferSize = gltfImage.image.size();
-    }
+}
 
-    Core::Wrappers::ImageCreateInfo imageInfo = {};
-    imageInfo.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    imageInfo.m_depth = 1;
-    imageInfo.m_format = imageFormat;
-    imageInfo.m_height = gltfImage.height;
-    imageInfo.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
-    imageInfo.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;
-    imageInfo.m_layers = 1;
-    imageInfo.m_mips = 1;
-    imageInfo.m_sampleCount = Core::Enums::Samples::SAMPLE_COUNT_1_BIT;
-    imageInfo.m_usages = { Core::Enums::ImageUsage::USAGE_TRANSFER_DST_BIT, Core::Enums::ImageUsage::USAGE_SAMPLED_BIT };
-    imageInfo.m_viewType = Core::Enums::ImageViewType::IMAGE_VIEW_TYPE_2D;
-    imageInfo.m_width = gltfImage.width;
+uint32_t Engine::Utility::GltfLoader::GetTexture(int textureIndex)
+{
+    auto it = m_imageList.find(textureIndex);
+    ASSERT_MSG_DEBUG( it != m_imageList.end(), "image not found");
 
-    auto id = VulkanInterfaceAlias::CreateImage(buffer, bufferSize, imageInfo, gltfImage.name);
-    m_imageList.push_back(id);
-
-    return id;
+    return it->second;
 }
 
 void Engine::Utility::GltfLoader::LoadSamplers(const tinygltf::Model& input)
@@ -375,6 +385,7 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
         //glTFScene.loadTextures(glTFInput);
 
         LoadSamplers(glTFInput);
+        LoadTextures(glTFInput);
         LoadMaterials(glTFInput);
         const tinygltf::Scene& scene = glTFInput.scenes[0];
         for (size_t i = 0; i < scene.nodes.size(); i++) {
@@ -418,8 +429,8 @@ Engine::Utility::GltfLoader::~GltfLoader()
         worldObj->DestroyEntity(handle);
     }
 
-    for (auto& id : m_imageList)
+    for (auto& pair : m_imageList)
     {
-        VulkanInterfaceAlias::DestroyImage(id, true);
+        VulkanInterfaceAlias::DestroyImage(pair.second, true);
     }
 }

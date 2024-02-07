@@ -78,6 +78,11 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
             data.m_colorBufferId = renderer->GetComponent()->geometry->m_colorBufferId;
         }
 
+        if (renderer->GetComponent()->geometry->m_uv0.size() > 0)
+        {
+            data.m_uv0BufferId = renderer->GetComponent()->geometry->m_uv0BufferId;
+        }
+
         if (renderer->GetComponent()->geometry->m_indicies.size() > 0)
         {
             data.m_indexBufferId = (uint32_t)(renderer->GetComponent()->geometry->m_indexBufferId);

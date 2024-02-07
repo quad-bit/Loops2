@@ -37,8 +37,10 @@ namespace Engine
             void LoadMaterials(const tinygltf::Model& input);
             Core::ECS::Components::Material* GetMaterial(const tinygltf::Model& input, uint32_t materialIndex);
 
-            std::vector<uint32_t> m_imageList;
-            uint32_t CreateTexture(const tinygltf::Model& input, int textureIndex, Core::Enums::Format imageFormat);
+            //gltf index to internal image index
+            std::map<uint32_t, uint32_t> m_imageList;
+            void LoadTextures(const tinygltf::Model& input);
+            uint32_t GetTexture(int textureIndex);
 
             // samplers get destroyed automatically
             std::vector<uint32_t> m_samplerList;

@@ -152,6 +152,10 @@ namespace GfxVk
 
             const char* shaderEntryName = "main";
 
+            const EffectResources& FindEffect(const std::vector<EffectResources>& list, const std::string& name) const;
+            const TechniqueWrapper& FindTechnique(const std::vector<TechniqueWrapper>& list, const std::string& name) const;
+            const TaskWrapper& FindTask(const std::vector<TaskWrapper>& taskList, const std::string& taskName) const;
+
         public:
             void Init();
             void Init(const std::string& pipelineFilePath);

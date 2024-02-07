@@ -156,7 +156,7 @@ void GfxVk::Shading::VkShaderResourceManager::CreateShaderInfoForTask(
 
 const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::GetTaskWrapper(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
 {
-    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
         [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
 
     if (it == m_perEffectResources.end())
@@ -179,7 +179,13 @@ const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::GetT
     {
         ASSERT_MSG_DEBUG(0, "Task mismatch");
     }
-    return *ittt;
+    return *ittt;*/
+
+    auto& effect = FindEffect(m_perEffectResources, effectName);
+    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
+    auto& task = FindTask(tech.m_taskList, taskName);
+
+    return task;
 }
 
 uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
@@ -480,6 +486,43 @@ const VkDescriptorSet& GfxVk::Shading::VkShaderResourceManager::GetDescriptorSet
     return m_idToSetMap[id];
 }
 
+
+const GfxVk::Shading::EffectResources& GfxVk::Shading::VkShaderResourceManager::FindEffect(const std::vector<EffectResources>& list, const std::string& name) const
+{
+    auto it = std::find_if(list.begin(), list.end(),
+        [&](const EffectResources& res) { return res.m_effectName.find(name) != std::string::npos; });
+
+    if (it == list.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    }
+    return *it;
+}
+
+const GfxVk::Shading::TechniqueWrapper& GfxVk::Shading::VkShaderResourceManager::FindTechnique(const std::vector<TechniqueWrapper>& list, const std::string& name) const
+{
+    auto it = std::find_if(list.begin(), list.end(),
+        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == name; });
+
+    if (it == list.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    }
+
+    return *it;
+}
+
+const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::FindTask(const std::vector<TaskWrapper>& taskList, const std::string& taskName) const
+{
+    auto it = std::find_if(taskList.begin(), taskList.end(),
+        [&](const TaskWrapper& wrapper) { return taskName.find(wrapper.m_name) != std::string::npos; });
+
+    if (it == taskList.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Task mismatch");
+    }
+    return *it;
+}
 
 void GfxVk::Shading::VkShaderResourceManager::Init()
 {
@@ -1534,36 +1577,42 @@ std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GfxVk::Shading::Vk
 
 uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
 {
-    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
-        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
+    //auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+    //    [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
 
-    if (it == m_perEffectResources.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Effect mismatch");
-    }
+    //if (it == m_perEffectResources.end())
+    //{
+    //    ASSERT_MSG_DEBUG(0, "Effect mismatch");
+    //}
 
-    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
-        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
+    //auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
+    //    [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
 
-    if (itt == it->techniqueList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Technique mismatch");
-    }
+    //if (itt == it->techniqueList.end())
+    //{
+    //    ASSERT_MSG_DEBUG(0, "Technique mismatch");
+    //}
 
-    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
-        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
+    //auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
+    //    [&](const TaskWrapper& wrapper) { return /*wrapper.m_name == */taskName.find(wrapper.m_name) != std::string::npos; });
 
-    if (ittt == itt->m_taskList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Task mismatch");
-    }
+    //if (ittt == itt->m_taskList.end())
+    //{
+    //    ASSERT_MSG_DEBUG(0, "Task mismatch");
+    //}
 
-    return ittt->m_vertexInputStateId.value();
+    //return ittt->m_vertexInputStateId.value();
+
+    auto& effect = FindEffect(m_perEffectResources, effectName);
+    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
+    auto& task = FindTask(tech.m_taskList, taskName);
+
+    return task.m_vertexInputStateId.value();
 }
 
 uint32_t GfxVk::Shading::VkShaderResourceManager::GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
 {
-    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
         [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
 
     if (it == m_perEffectResources.end())
@@ -1587,12 +1636,18 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetPipelineLayoutId(const std:
         ASSERT_MSG_DEBUG(0, "Task mismatch");
     }
 
-    return ittt->m_pipelineLayoutId;
+    return ittt->m_pipelineLayoutId;*/
+
+    auto& effect = FindEffect(m_perEffectResources, effectName);
+    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
+    auto& task = FindTask(tech.m_taskList, taskName);
+
+    return task.m_pipelineLayoutId;
 }
 
 uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
 {
-    auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
+    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
         [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
 
     if (it == m_perEffectResources.end())
@@ -1616,7 +1671,13 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::st
         ASSERT_MSG_DEBUG(0, "Task mismatch");
     }
 
-    return ittt->m_shaderModuleStateId;
+    return ittt->m_shaderModuleStateId;*/
+
+    auto& effect = FindEffect(m_perEffectResources, effectName);
+    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
+    auto& task = FindTask(tech.m_taskList, taskName);
+
+    return task.m_shaderModuleStateId;
 }
 
 const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GfxVk::Shading::VkShaderResourceManager::GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)

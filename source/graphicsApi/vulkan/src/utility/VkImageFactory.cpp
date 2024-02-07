@@ -221,6 +221,23 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(void* buffer, size_t buffer
             1,
             &bufferCopyRegion
         );
+
+        list.clear();
+        imgBarrier.dstAccessMask = 0;
+        imgBarrier.dstStageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
+        imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        imgBarrier.srcAccessMask = 0;
+        imgBarrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+        list.push_back(imgBarrier);
+
+        dependencyInfo.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencyInfo.imageMemoryBarrierCount = list.size();
+        dependencyInfo.pImageMemoryBarriers = list.data();
+        dependencyInfo.pNext = nullptr;
+        dependencyInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+
+        vkCmdPipelineBarrier2(cmdBuffer, &dependencyInfo);
     }
 
     vkEndCommandBuffer(cmdBuffer);

@@ -71,6 +71,7 @@ namespace Core
             uint32_t m_positionBufferId;
             std::optional<uint32_t> m_colorBufferId;
             std::optional<uint32_t> m_normalBufferId;
+            std::optional<uint32_t> m_uv0BufferId;
             std::optional<uint32_t> m_tangentBufferId;
 
             uint32_t m_vertexCount;

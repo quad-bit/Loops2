@@ -27,35 +27,7 @@ namespace Renderer
             std::string m_parentEffectName;
 
             virtual void CreateResources(){}
-
-            //void CreateVulkanPipeline()
-            //{
-            //    for (auto& taskNode : m_taskNodes)
-            //    {
-            //        auto task = static_cast<Renderer::RenderGraph::TaskNode*>(taskNode->GetNodeData())->GetTask();
-
-            //        if (task->GetTaskType() == Renderer::RenderGraph::TaskType::RENDER_TASK)
-            //        {
-            //            // Three lying in vkShaderResourceManager
-            //            // Vertex input Create info
-            //            auto vertexInputId = VulkanInterfaceAlias::GetVertexInputStateId(m_parentEffectName,
-            //                m_name, task->GetTaskName());
-            //            // Shader module info
-            //            auto shaderInputId = VulkanInterfaceAlias::GetShaderStateId(m_parentEffectName,
-            //            m_name, task->GetTaskName());
-            //            // pipelineLayout
-            //            auto pipelineLayoutId = VulkanInterfaceAlias::GetPipelineLayoutId(m_parentEffectName,
-            //                m_name, task->GetTaskName());
-
-            //            // The rest need to be configured
-
-            //        }
-            //        else if (task->GetTaskType() == Renderer::RenderGraph::TaskType::COMPUTE_TASK)
-            //        {
-
-            //        }
-            //    }
-            //}
+            std::string GetNodeName(const std::string& name);
 
         public:
             typedef Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase> graphNodeAlias;
@@ -97,7 +69,7 @@ namespace Renderer
                 {
                     auto taskNode = (TaskNode*)node->GetNodeData();
                     auto name = taskNode->GetTask()->GetTaskName();
-                    return name == taskName;
+                    return name.find(taskName) != std::string::npos;
                 });
 
                 if (it == m_taskNodes.end())
@@ -112,7 +84,7 @@ namespace Renderer
                 auto it = std::find_if(m_resourceNodes.begin(), m_resourceNodes.end(), [&](Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* node)
                 {
                     auto resourcesNode = (ResourceNode*)node->GetNodeData();
-                    auto name = resourcesNode->GetNodeName();
+                    auto& name = resourcesNode->GetNodeName();
                     return name == resourceName;
                 });
 
@@ -123,14 +95,25 @@ namespace Renderer
                 return *it;
             }
 
+            const std::vector<ResourceAlias*>& GetResource(const graphNodeAlias* resourceNode) const
+            {
+                //ASSERT_MSG_DEBUG( resourceNode->node->GetNodeType() != Renderer::RenderGraph::
+                auto& resource = ((ResourceNode*)resourceNode->node)->GetResource();
+                return resource;
+            }
+
             // technique origin and ends nodes
             virtual std::vector<graphNodeAlias*> GetGraphOriginResourceNodes() = 0;
             virtual std::vector<graphNodeAlias*> GetGraphEndResourceNodes() = 0;
-            
-            virtual void SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
-            {
 
-            }
+            virtual void SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
+            {}
+        };
+
+        struct GraphNodeWrapper
+        {
+            std::unique_ptr<Renderer::RenderGraph::Utils::RenderGraphNodeBase> m_nodeBase;
+            Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>* m_graphNode;
         };
 
         struct SetInfo
@@ -158,13 +141,6 @@ namespace Renderer
             void* m_next = nullptr;
         };
 
-
-        /*void Filter(void* data, uint32_t count, uint32_t stride,
-            const Core::Enums::ResourceSets& setType,
-            const std::function<bool(uint32_t index, void* data, const Core::Enums::ResourceSets& setType)>& filterFunc,
-            std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
-            std::map<Core::Enums::ResourceSets, std::map<uint32_t, SetInfo>>& setMap);*/
-
         void Filter(const FilterInfo& info,
             const std::function<bool(uint32_t index, void* data, void* next)>& filterFunc,
             std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
@@ -172,6 +148,81 @@ namespace Renderer
 
         bool CameraFilter(uint32_t index, void* data, void* next);
         bool MaterialFilter(uint32_t index, void* data, void* next);
+
+        void CreateResourceNode(
+            const std::string& nodeName, const std::vector<ResourceAlias*>& imageList,
+            std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& resourceNodes,
+            Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+            Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+            GraphNodeWrapper& resourceNode
+        );
+
+        void CreateTaskGraphNode(
+            const std::string& taskName,
+            const std::string& parentEffectName,
+            const std::string& techName,
+            const Core::Wrappers::Rect2D& renderArea,
+            Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+            Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+            std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
+            GraphNodeWrapper& taskNode
+        );
+
+        template < typename ParentType, typename ChildType, Core::Enums::ResourceSets setType>
+        void Pick(std::vector<std::pair<uint32_t, void*>>& parentList,
+            std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
+            std::map<Core::Enums::ResourceSets, std::map<uint32_t, Renderer::RenderGraph::SetInfo>>& setInfoMap,
+            void* childData, uint32_t dataCount, uint32_t stride,
+            std::optional<std::function<void(void*, void*)>> additionalFunc, void* funcData
+        )
+        {
+            // as child indicies are available for transform in mat and there are no filtering params 
+            // in transform at this moment
+            for (auto& data : parentList)
+            {
+                auto parentData = static_cast<ParentType*>(data.second);
+                auto& childIndicies = parentData->m_childSetIndicies;
+
+                void* dataPtr = childData;
+                for (auto index : childIndicies)
+                {
+                    dataPtr = static_cast<char*>(childData) + stride * index;
+
+                    auto childData = static_cast<ChildType*>(dataPtr);
+
+                    auto pair = std::pair(index, dataPtr);
+                    //auto pair = std::pair(index, (void*)&m_renderData.m_transformData[index]);
+                    if (filteredDataList.find(setType) == filteredDataList.end())
+                    {
+                        filteredDataList.insert({ setType, {{pair}} });
+                    }
+                    else
+                    {
+                        filteredDataList[setType].push_back(pair);
+                    }
+
+                    //CreateDrawInfo(*test, m_parentEffectName, m_name, taskObj->GetTaskName(), drawInfo);
+                    if (additionalFunc.has_value())
+                    {
+                        auto& func = additionalFunc.value();
+                        func(childData, funcData);
+                    }
+
+                    Renderer::RenderGraph::SetInfo setInfo{};
+                    setInfo.m_setValue = setType;
+                    setInfo.m_descriptorSetId = static_cast<ChildType*>(dataPtr)->m_descriptorSetId;
+
+                    if (setInfoMap.find(setType) == setInfoMap.end())
+                    {
+                        setInfoMap.insert({ setType, { { index, setInfo } } });
+                    }
+                    else
+                    {
+                        setInfoMap[setType].insert({ index, setInfo });
+                    }
+                }
+            }
+        }
     }
 }
 

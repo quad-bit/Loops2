@@ -77,7 +77,7 @@ namespace Core
                 uint32_t m_normalBufferId, m_normalBufferMemoryId;
                 uint32_t m_tangentBufferId, m_tangentBufferMemoryId;
                 uint32_t m_indexBufferId, m_indexBufferMemoryId;
-
+                uint32_t m_uv0BufferId, m_uv0BufferMemoryId;
                 // store bufferid and mem id per attrib
                 //std::map<Core::Enums::VertexAttributes, VertexBufferInfoWrapper> m_vertexGpuDataMap;
 
