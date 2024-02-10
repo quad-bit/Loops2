@@ -48,7 +48,7 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
     worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
     //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
 
-    materialSystem = new MaterialSystem(renderData.m_materialData);
+    materialSystem = new MaterialSystem(renderData.m_materialData, renderData.m_skyboxData);
     worldObj->AddSystem(materialSystem, Core::ECS::COMPONENT_TYPE::MATERIAL);
 
     meshRendererSystem = new MeshRendererSystem(renderData.m_transformData, renderData.m_materialData);

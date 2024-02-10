@@ -29,6 +29,9 @@ namespace Renderer
             virtual void CreateResources(){}
             std::string GetNodeName(const std::string& name);
 
+            Core::Utility::TechniqueId m_techniqueId;
+            Core::Utility::EffectInfo m_effectInfo;
+
         public:
             typedef Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase> graphNodeAlias;
 
@@ -44,9 +47,15 @@ namespace Renderer
                 Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
                 const std::string& name,
                 Utils::CallbackUtility& funcs,
-                const std::string& effectName) :
-                m_graph(graph), m_name(name), m_callbackUtility(funcs), m_parentEffectName(effectName)
-            {}
+                const std::string& effectName,
+                const Core::Utility::EffectInfo& effectInfo) :
+                m_graph(graph), m_name(name), 
+                m_callbackUtility(funcs), m_parentEffectName(effectName),
+                m_effectInfo(effectInfo)
+            {
+                auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+                m_techniqueId = VulkanInterfaceAlias::GetTechniqueId(effectId, m_name);
+            }
 
             virtual ~Technique()
             {

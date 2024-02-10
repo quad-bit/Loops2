@@ -150,7 +150,7 @@ add_library(${TARGET_NAME}
 )
 add_library(Loops::${TARGET_NAME} ALIAS ${TARGET_NAME})
 
-target_link_libraries(${TARGET_NAME} PUBLIC glfw glm::glm plog::plog)
+target_link_libraries(${TARGET_NAME} PUBLIC glfw glm::glm plog::plog KTX::ktx)
 target_include_directories(${TARGET_NAME}
     PUBLIC
         $<INSTALL_INTERFACE:inc>

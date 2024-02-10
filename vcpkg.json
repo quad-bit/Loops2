@@ -8,6 +8,9 @@
             "name": "tinygltf"
         },
         {
+            "name": "ktx"
+        },
+        {
             "name": "cli11",
             "version>=":"2.2.0"
         },

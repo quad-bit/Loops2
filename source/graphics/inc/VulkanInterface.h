@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include <optional>
+#include <Utility/ShaderResourceDescription.h>
 
 //using namespace std;
 namespace Core
@@ -78,27 +79,11 @@ namespace Renderer
 
             Core::Enums::Format FindBestDepthFormat();
 
-            //void SetupPresentationEngine(Core::Wrappers::VkImageInfo info);
-            //void CreateRenderTarget(Core::Wrappers::VkImageInfo* info, Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count, bool defaultTarget,
-            //    uint32_t* ids);
-            //void CreateDefaultRenderTarget(Core::Wrappers::VkImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t& count, uint32_t* ids);
-            //deprecated.
-            //void DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget);
-            //deprecated.
-            //void DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget);
-
-            //std::vector<uint32_t> CreateImage(const std::vector<Core::Wrappers::ImageInfo>& info);
-
-            //void DestroyAttachment(uint32_t* ids, bool* destroyImageView, bool* freeImageMemory, const uint32_t& count);
-            //void FreeAttachmentMemory(uint32_t* imageIds, const uint32_t& count);
-            //void DestroySwapChainImageViews(uint32_t* ids, const uint32_t& count);
-
-            //void CreateImageView(Core::Wrappers::ImageViewInfo* viewInfo, uint32_t& count);
-
             void CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId);
             uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
             uint32_t CreateImage(void* buffer, size_t bufferSize, const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
             void DestroyImage(uint32_t imageId, bool freeImageMemory);
+            uint32_t CreateCubemap(const std::string& path, const std::string& imageName);
 
             void CreateRenderPass(
                 const Core::Wrappers::RenderPassAttachmentInfo* renderpassAttachmentList, const uint32_t& attachmentCount,
@@ -165,24 +150,28 @@ namespace Renderer
             void BindImageMemory(const uint32_t& imageId, const uint32_t& memId, const size_t& offset);
 
             void GetShaderIds(char** shaderName, Core::Enums::ShaderType* type, uint32_t* id, const uint32_t& shaderCount);
-            void CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper);
-            void CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& InputAssemblyWrapper);
-            void CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper);
-            void CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper);
-            void CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper);
-            void CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper);
-            void CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper);
-            void CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper);
-            void CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper);
-            void CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper);
+            uint32_t CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper);
+            uint32_t CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& InputAssemblyWrapper);
+            uint32_t CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper);
+            uint32_t CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper);
+            uint32_t CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper);
+            uint32_t CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper);
+            uint32_t CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper);
+            uint32_t CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper);
+            uint32_t CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper);
+            uint32_t CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper);
             void CreatePipeline(Core::Wrappers::PipelineCreateInfo* info, const uint32_t& pipelineCount, uint32_t* pipelineId);
             uint32_t CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info);
             //uint32_t CreatePipeline(uint32_t pipelineId);
 
-            uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            const Core::Utility::EffectId& GetEffectId(const std::string& effectName);
+            const Core::Utility::TechniqueId& GetTechniqueId(const Core::Utility::EffectId& effectId, const std::string& techName);
+            const Core::Utility::TaskId& GetTaskId(const Core::Utility::EffectId& effectId, const Core::Utility::TechniqueId& techId, const std::string& taskName);
+
+            uint32_t GetVertexInputStateId(const Core::Utility::TaskId& taskId);
+            uint32_t GetPipelineLayoutId(const Core::Utility::TaskId& taskId);
+            uint32_t GetShaderStateId(const Core::Utility::TaskId& taskId);
+            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const Core::Utility::TaskId& taskId);
 
             std::vector<Core::Wrappers::SetWrapper*> GetSetsForShaders(const std::vector<std::string>& shaderNames);
             uint32_t CreatePipelineLayout(Core::Wrappers::SetWrapper** setWrapperList, const size_t& numSets);
@@ -194,6 +183,7 @@ namespace Renderer
             Core::Enums::Samples GetMaxUsableSampleCount();
 
             uint32_t CreateSampler(const Core::Wrappers::SamplerCreateInfo& info);
+            uint32_t CreateCubemapSampler();
 
             uint32_t CreateBarrier(
                 const std::vector<Core::Wrappers::ImageBarrier2>& imageBarriers,

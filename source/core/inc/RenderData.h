@@ -49,8 +49,8 @@ namespace Core
             std::vector<uint32_t> m_childSetIndicies;
             std::optional<uint32_t> m_descriptorSetId;
             std::vector<uint32_t> m_transformDescriptorList;
-            Core::ECS::Components::EffectType m_effectType;
-            std::string m_techniqueName;
+            Core::Utility::EffectId m_effectId;
+            Core::Utility::TechniqueId m_techniqueId;
         };
 
         struct LightData
@@ -90,6 +90,7 @@ namespace Core
             std::vector<LightData> m_lightData;
             // material component id to materialdata
             std::vector<MaterialData> m_materialData;
+            MaterialData m_skyboxData;
         };
     }
 }

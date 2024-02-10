@@ -19,8 +19,9 @@ namespace Renderer
                 LambertianLit(Core::Utility::RenderData& renderData,
                 Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
                 Renderer::RenderGraph::Utils::CallbackUtility& funcs,
-                const std::string& effectName) :
-                Technique(graph, "LambertianLit", funcs, effectName), m_renderData(renderData)
+                const std::string& effectName,
+                const Core::Utility::EffectInfo& effectInfo) :
+                Technique(graph, "LambertianLit", funcs, effectName, effectInfo), m_renderData(renderData)
                 {
                     // Create resource node
                 }

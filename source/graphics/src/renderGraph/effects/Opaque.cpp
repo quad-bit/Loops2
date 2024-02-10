@@ -9,19 +9,26 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     Renderer::RenderGraph::Utils::CallbackUtility& funcs):
     Effect(graph, name, funcs), m_renderData(renderData), m_windowSettings(windowSettings)
 {
+    auto effectId = VulkanInterfaceAlias::GetEffectId(name);
+    Core::Utility::EffectId techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "OpaqueUnlit");
+    Core::Utility::EffectInfo info{ effectId, techId };
+
     std::unique_ptr<Renderer::RenderGraph::Technique> unlitTech =
         std::make_unique<Renderer::RenderGraph::Techniques::OpaqueUnlit>(
             m_renderData, m_windowSettings,
-            graph, m_callbackUtility, "OpaqueUnlit", m_name);
+            graph, m_callbackUtility, "OpaqueUnlit", m_name, info);
 
     auto unlitOutputs = unlitTech->GetGraphEndResourceNodes();
     auto& depthImages = unlitTech->GetResource(unlitOutputs[0]);
     auto& colorImages = unlitTech->GetResource(unlitOutputs[1]);
 
+    techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "OpaqueTexturedUnlit");
+    Core::Utility::EffectInfo info2{ effectId, techId };
+
     std::unique_ptr<Renderer::RenderGraph::Technique> unlitTexturedTech =
         std::make_unique<Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit>(
             m_renderData, m_windowSettings,
-            graph, m_callbackUtility, "OpaqueTexturedUnlit", m_name, colorImages);
+            graph, m_callbackUtility, "OpaqueTexturedUnlit", m_name, colorImages, depthImages, info2);
     
     auto unlitTexturedTaskNode = unlitTexturedTech->GetTaskNode("OpaqueRenderTask");
 

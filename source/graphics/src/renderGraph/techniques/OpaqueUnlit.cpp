@@ -72,8 +72,9 @@ Renderer::RenderGraph::Techniques::OpaqueUnlit::OpaqueUnlit(
     const Core::WindowSettings& windowSettings,
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::Utils::CallbackUtility& funcs, const std::string& name,
-    const std::string& effectName) :
-    Technique(graph, name, funcs, effectName),
+    const std::string& effectName,
+    const Core::Utility::EffectInfo& effectInfo) :
+    Technique(graph, name, funcs, effectName, effectInfo),
     m_renderData(renderData),
     m_renderWidth(windowSettings.m_renderWidth),
     m_renderHeight(windowSettings.m_renderHeight)
@@ -117,9 +118,10 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
     matFilterInfo.m_dataCount = m_renderData.m_materialData.size();
     matFilterInfo.m_setType = Core::Enums::MATERIAL;
     matFilterInfo.m_stride = sizeof(Core::Utility::MaterialData);
-    matFilterInfo.m_next = (void*)&m_name;
+    matFilterInfo.m_next = (void*)&m_effectInfo;
     Filter(matFilterInfo, Renderer::RenderGraph::MaterialFilter, filteredDataList, setInfoMap);
 
+    // Pick =============================
     struct PickInfo
     {
         const std::string& m_parentEffectName;
@@ -140,8 +142,6 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
         {
         }
     };
-
-    // Pick =============================
 
     auto taskName = taskObj->GetTaskName();
     PickInfo pickInfo(m_parentEffectName, m_name, taskName, drawInfo);

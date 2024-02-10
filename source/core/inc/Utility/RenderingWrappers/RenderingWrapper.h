@@ -802,6 +802,8 @@ namespace Core
                 Core::Enums::Samples        m_sampleCount;
                 Core::Enums::ImageLayout    m_initialLayout;
                 std::vector<Core::Enums::ImageUsage> m_usages;
+                // for cubemaps
+                std::optional<uint32_t>     m_arrayLayers;
             };
 
             struct ImageViewCreateInfo

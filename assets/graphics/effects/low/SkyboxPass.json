@@ -1,0 +1,39 @@
+{
+    "Technique" : [
+        {
+            "name": "Skybox",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "SkyboxRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "Skybox.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "Skybox.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "inPos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

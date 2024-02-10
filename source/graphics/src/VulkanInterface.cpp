@@ -646,6 +646,11 @@ void Renderer::Utility::VulkanInterface::DestroyImage(uint32_t imageId, bool fre
     GfxVk::Utility::VkImageFactory::GetInstance()->DestroyImage(imageId, freeImageMemory);
 }
 
+uint32_t Renderer::Utility::VulkanInterface::CreateCubemap(const std::string& path, const std::string& imageName)
+{
+    return GfxVk::Utility::VkImageFactory::GetInstance()->CreateCubeMap(path, imageName);
+}
+
 void Renderer::Utility::VulkanInterface::CreateRenderPass(
     const Core::Wrappers::RenderPassAttachmentInfo* renderpassAttachmentList, const uint32_t & attachmentCount,
     const Core::Wrappers::SubpassInfo* subpassList, const uint32_t & subpassCount,
@@ -1012,54 +1017,54 @@ void Renderer::Utility::VulkanInterface::GetShaderIds(char ** shaderName, Core::
     GfxVk::Shading::VkShaderFactory::GetInstance()->GetShaderIds(shaderName, type, id, shaderCount);
 }
 
-void Renderer::Utility::VulkanInterface::CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateVertexInputState(const Core::Utility::VertexInputWrapper& vertexInputWrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateVertexInputState(vertexInputWrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateVertexInputState(vertexInputWrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& inputAssemblyWrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateInputAssemblyState(const Core::Utility::InputAssemblyWrapper& inputAssemblyWrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateInputAssemblyState(inputAssemblyWrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateInputAssemblyState(inputAssemblyWrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateShaderState(const Core::Utility::ShaderStateWrapper& shaderStateWrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateShaderState(shaderStateWrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateShaderState(shaderStateWrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateTessellationState(const Core::Utility::TessellationStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateTessellationState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateTessellationState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateViewportState(const Core::Utility::ViewPortStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateViewportState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateViewportState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateRasterisationState(const Core::Utility::RasterizationStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateRasterisationState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateRasterisationState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateDepthStencilState(const Core::Utility::DepthStencilStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateDepthStencilState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateDepthStencilState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateColorBlendState(const Core::Utility::ColorBlendStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateColorBlendState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateColorBlendState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateMultiSampleState(const Core::Utility::MultiSampleStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateMultiSampleState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateMultiSampleState(wrapper);
 }
 
-void Renderer::Utility::VulkanInterface::CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper)
+uint32_t Renderer::Utility::VulkanInterface::CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper)
 {
-    GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateDynamicState(wrapper);
+    return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreateDynamicState(wrapper);
 }
 
 void Renderer::Utility::VulkanInterface::CreatePipeline(Core::Wrappers::PipelineCreateInfo * info, const uint32_t & pipelineCount, uint32_t * pipelineId)
@@ -1072,24 +1077,39 @@ uint32_t Renderer::Utility::VulkanInterface::CreatePipeline(const Core::Wrappers
     return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreatePipeline(info);
 }
 
-uint32_t Renderer::Utility::VulkanInterface::GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::EffectId& Renderer::Utility::VulkanInterface::GetEffectId(const std::string& effectName)
 {
-    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetVertexInputStateId(effectName, techniqueName, taskName);
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetEffectId(effectName);
 }
 
-uint32_t Renderer::Utility::VulkanInterface::GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::TechniqueId& Renderer::Utility::VulkanInterface::GetTechniqueId(const Core::Utility::EffectId& effectId, const std::string& techName)
 {
-    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayoutId(effectName, techniqueName, taskName);
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetTechniqueId(effectId, techName);
 }
 
-uint32_t Renderer::Utility::VulkanInterface::GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::TaskId& Renderer::Utility::VulkanInterface::GetTaskId(const Core::Utility::EffectId& effectId, const Core::Utility::TechniqueId& techId, const std::string& taskName)
 {
-    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetShaderStateId(effectName, techniqueName, taskName);
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetTaskId(effectId, techId, taskName);
 }
 
-const std::vector<Core::Wrappers::VertexBindingTypeInfo>& Renderer::Utility::VulkanInterface::GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+uint32_t Renderer::Utility::VulkanInterface::GetVertexInputStateId(const Core::Utility::TaskId& taskId)
 {
-    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetVertexBindingTypeInfo(effectName, techniqueName, taskName);
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetVertexInputStateId(taskId);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::GetPipelineLayoutId(const Core::Utility::TaskId& taskId)
+{
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayoutId(taskId);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::GetShaderStateId(const Core::Utility::TaskId& taskId)
+{
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetShaderStateId(taskId);
+}
+
+const std::vector<Core::Wrappers::VertexBindingTypeInfo>& Renderer::Utility::VulkanInterface::GetVertexBindingTypeInfo(const Core::Utility::TaskId& taskId)
+{
+    return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetVertexBindingTypeInfo(taskId);
 }
 
 std::vector<Core::Wrappers::SetWrapper*> Renderer::Utility::VulkanInterface::GetSetsForShaders(const std::vector<std::string>& shaderNames)
@@ -1132,6 +1152,11 @@ Core::Enums::Samples Renderer::Utility::VulkanInterface::GetMaxUsableSampleCount
 uint32_t Renderer::Utility::VulkanInterface::CreateSampler(const Core::Wrappers::SamplerCreateInfo & info)
 {
     return GfxVk::Shading::VkSamplerFactory::GetInstance()->CreateSampler(info);
+}
+
+uint32_t Renderer::Utility::VulkanInterface::CreateCubemapSampler()
+{
+    return GfxVk::Shading::VkSamplerFactory::GetInstance()->CreateCubemapSampler();
 }
 
 uint32_t Renderer::Utility::VulkanInterface::CreateBarrier(

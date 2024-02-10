@@ -70,12 +70,6 @@ namespace Core
             uint32_t resParentId; // not getting used
             Core::ECS::COMPONENT_TYPE parentType; // not getting used
 
-            //size_t dataSizePerDescriptorAligned;
-            //size_t dataSizePerDescriptor; // sizeOf(Uniform Struct)
-            //std::vector<size_t> offsetsForEachDescriptor; // offset in memory, for buffer/image sharing
-            //GlobalResourceSharingConfig sharingConfig;
-            //GlobalResourceAllocationConfig allocationConfig;
-
             Core::Enums::DescriptorType resourceType;
             uint32_t set;
             uint32_t binding;
@@ -105,6 +99,32 @@ namespace Core
             uint32_t m_numBindings;
             std::vector<DescriptorSetBindingInfo> m_setBindings;
             std::vector<uint32_t> m_descriptorSetIds;
+        };
+
+        typedef uint32_t EffectId;
+        typedef uint32_t TechniqueId;
+        typedef uint32_t TaskId;
+
+        class EffectInfo
+        {
+        private:
+            EffectId m_effectId;
+            TechniqueId m_techId;
+
+        public:
+            EffectInfo(const Core::Utility::EffectId& effectId,
+                const Core::Utility::TechniqueId& techId) : m_effectId(effectId), m_techId(techId)
+            {}
+
+            const Core::Utility::EffectId& GetEffectId() const
+            {
+                return m_effectId;
+            }
+
+            const Core::Utility::EffectId& GetTechniqueId() const
+            {
+                return m_techId;
+            }
         };
     }
 }

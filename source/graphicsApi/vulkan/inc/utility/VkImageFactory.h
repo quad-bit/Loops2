@@ -44,6 +44,7 @@ namespace GfxVk
             uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const Core::Wrappers::ImageViewCreateInfo& viewInfo, const std::string& name);
             uint32_t CreateImage(const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name, bool createView = false);
             uint32_t CreateImage(void* buffer, size_t bufferSize, const Core::Wrappers::ImageCreateInfo& imageInfo, const std::string& name);
+            uint32_t CreateCubeMap(const std::string& path, const std::string& imageName);
 
             void CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId);
             void DestroyImage(uint32_t imageId, bool freeImageMemory);

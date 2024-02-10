@@ -37,6 +37,8 @@ namespace Renderer
                 std::optional<uint32_t> m_graphicsPipelineId;
                 DrawInfo m_drawInfo;
 
+                Core::Utility::TaskId m_taskId;
+
             public:
                 std::optional<uint32_t> m_vertexInputStateId;
                 std::optional<uint32_t> m_shaderStateId;
@@ -57,17 +59,18 @@ namespace Renderer
                 {
                     m_drawInfo = {};
 
+                    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+                    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techniqueName);
+                    m_taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, m_name);
+
                     // Vertex input Create info
-                    m_vertexInputStateId = VulkanInterfaceAlias::GetVertexInputStateId(effectName,
-                        techniqueName, m_name);
+                    m_vertexInputStateId = VulkanInterfaceAlias::GetVertexInputStateId(m_taskId);
 
                     // Shader module info
-                    m_shaderStateId = VulkanInterfaceAlias::GetShaderStateId(effectName,
-                        techniqueName, m_name);
+                    m_shaderStateId = VulkanInterfaceAlias::GetShaderStateId(m_taskId);
 
                     // pipelineLayout
-                    m_pipelineLayoutId = VulkanInterfaceAlias::GetPipelineLayoutId(effectName,
-                        techniqueName, m_name);
+                    m_pipelineLayoutId = VulkanInterfaceAlias::GetPipelineLayoutId(m_taskId);
 
                     m_inputAssemblyStateId = PIPELINE_STATE_DEFAULT_INDEX;
                     m_tesselationStateId = PIPELINE_STATE_DEFAULT_INDEX;
@@ -77,6 +80,16 @@ namespace Renderer
                     m_blendingStateId = PIPELINE_STATE_DEFAULT_INDEX;
                     m_dynamicStateId = PIPELINE_STATE_DEFAULT_INDEX;
                     m_viewportStateId = PIPELINE_STATE_DEFAULT_INDEX;
+                }
+
+                void SetDepthStencilStateId(uint32_t id)
+                {
+                    m_depthStencilStateId = id;
+                }
+
+                void SetRasterisationStateId(uint32_t id)
+                {
+                    m_rasterizationStateId = id;
                 }
 
                 void AssignRenderingInfo(std::vector<Core::Wrappers::RenderingInfo>& renderingInfo)

@@ -23,8 +23,10 @@ Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::OpaqueTexturedUnlit(
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::Utils::CallbackUtility& funcs, const std::string& name,
     const std::string& effectName,
-    const std::vector<ResourceAlias*>& colorImages) :
-    Technique(graph, name, funcs, effectName),
+    const std::vector<ResourceAlias*>& colorImages,
+    const std::vector<ResourceAlias*>& depthImages,
+    const Core::Utility::EffectInfo& effectInfo) :
+    Technique(graph, name, funcs, effectName, effectInfo),
     m_renderData(renderData),
     m_renderWidth(windowSettings.m_renderWidth),
     m_renderHeight(windowSettings.m_renderHeight)
@@ -33,9 +35,12 @@ Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::OpaqueTexturedUnlit(
     CreateResourceNode(GetNodeName("ColorOutputNode"), colorImages,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
         m_colorOutput);
+    CreateResourceNode(GetNodeName("DepthOutputNode"), depthImages,
+        m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
+        m_depthOutput);
 
     Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_colorOutput.m_graphNode);
-
+    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_depthOutput.m_graphNode);
 }
 
 Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::~OpaqueTexturedUnlit()
@@ -49,7 +54,7 @@ std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::Rende
 
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::GetGraphEndResourceNodes()
 {
-    return { m_colorOutput.m_graphNode };
+    return { m_depthOutput.m_graphNode, m_colorOutput.m_graphNode};
 }
 
 void Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
@@ -74,7 +79,7 @@ void Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::SetupFrame(const Co
     matFilterInfo.m_dataCount = m_renderData.m_materialData.size();
     matFilterInfo.m_setType = Core::Enums::MATERIAL;
     matFilterInfo.m_stride = sizeof(Core::Utility::MaterialData);
-    matFilterInfo.m_next = (void*)&m_name;
+    matFilterInfo.m_next = (void*)&m_effectInfo;
     Filter(matFilterInfo, Renderer::RenderGraph::MaterialFilter, filteredDataList, setInfoMap);
 
     struct PickInfo

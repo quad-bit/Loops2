@@ -156,36 +156,12 @@ void GfxVk::Shading::VkShaderResourceManager::CreateShaderInfoForTask(
 
 const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::GetTaskWrapper(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
 {
-    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
-        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
-
-    if (it == m_perEffectResources.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Effect mismatch");
-    }
-
-    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
-        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
-
-    if (itt == it->techniqueList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Technique mismatch");
-    }
-
-    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
-        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
-
-    if (ittt == itt->m_taskList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Task mismatch");
-    }
-    return *ittt;*/
-
-    auto& effect = FindEffect(m_perEffectResources, effectName);
+    /*auto& effect = FindEffect(m_perEffectResources, effectName);
     auto& tech = FindTechnique(effect.techniqueList, techniqueName);
-    auto& task = FindTask(tech.m_taskList, taskName);
+    auto& task = FindTask(tech.m_taskList, taskName);*/
 
-    return task;
+    ASSERT_MSG_DEBUG(0, "check this");
+    return m_taskMap.at(0);
 }
 
 uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
@@ -247,6 +223,21 @@ uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputID()
 uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateID()
 {
     return m_shaderStateWrapperIdCounter++;
+}
+
+Core::Utility::EffectId GfxVk::Shading::VkShaderResourceManager::GetEffectId()
+{
+    return m_effectIdCounter++;
+}
+
+Core::Utility::TechniqueId GfxVk::Shading::VkShaderResourceManager::GetTechniqueId()
+{
+    return m_techniqueIdCounter++;
+}
+
+Core::Utility::TaskId GfxVk::Shading::VkShaderResourceManager::GetTaskId()
+{
+    return m_taskIdCounter++;
 }
 
 void GfxVk::Shading::VkShaderResourceManager::CreateUniqueSetLayoutWrapper(std::vector<Core::Wrappers::BindingWrapper> & bindingList, std::string shaderName, uint32_t set)
@@ -487,41 +478,63 @@ const VkDescriptorSet& GfxVk::Shading::VkShaderResourceManager::GetDescriptorSet
 }
 
 
-const GfxVk::Shading::EffectResources& GfxVk::Shading::VkShaderResourceManager::FindEffect(const std::vector<EffectResources>& list, const std::string& name) const
+const GfxVk::Shading::EffectWrapper& GfxVk::Shading::VkShaderResourceManager::FindEffect(const std::string& name) const
 {
-    auto it = std::find_if(list.begin(), list.end(),
-        [&](const EffectResources& res) { return res.m_effectName.find(name) != std::string::npos; });
-
-    if (it == list.end())
+    bool found = false;
+    Core::Utility::EffectId id = 0;
+    for (auto& pair : m_effectMap)
     {
-        ASSERT_MSG_DEBUG(0, "Effect mismatch");
+        if (pair.second.m_effectName.find(name) != std::string::npos)
+        {
+            found = true;
+            id = pair.first;
+            break;
+        }
     }
-    return *it;
+
+    ASSERT_MSG_DEBUG(found == true, "Effect mismatch");
+    return m_effectMap.at(id);
 }
 
-const GfxVk::Shading::TechniqueWrapper& GfxVk::Shading::VkShaderResourceManager::FindTechnique(const std::vector<TechniqueWrapper>& list, const std::string& name) const
+const GfxVk::Shading::TechniqueWrapper& GfxVk::Shading::VkShaderResourceManager::FindTechnique(const Core::Utility::EffectId& parentEffectId, const std::string& name) const
 {
-    auto it = std::find_if(list.begin(), list.end(),
-        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == name; });
-
-    if (it == list.end())
+    auto& parentEffect = m_effectMap.at(parentEffectId);
+    bool found = false;
+    Core::Utility::TechniqueId id = 0;
+    for (auto& techId : parentEffect.m_techniqueList)
     {
-        ASSERT_MSG_DEBUG(0, "Technique mismatch");
+        if (m_techniqueMap.at(techId).techniqueName == name)
+        {
+            found = true;
+            id = techId;
+            break;
+        }
     }
 
-    return *it;
+    ASSERT_MSG_DEBUG(found == true, "tech mismatch");
+    return m_techniqueMap.at(id);
 }
 
-const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::FindTask(const std::vector<TaskWrapper>& taskList, const std::string& taskName) const
+const GfxVk::Shading::TaskWrapper& GfxVk::Shading::VkShaderResourceManager::FindTask(const Core::Utility::EffectId& parentEffectId,
+    const Core::Utility::TechniqueId& parentTechniqueId, const std::string& taskName) const
 {
-    auto it = std::find_if(taskList.begin(), taskList.end(),
-        [&](const TaskWrapper& wrapper) { return taskName.find(wrapper.m_name) != std::string::npos; });
+    auto& parentEffect = m_effectMap.at(parentEffectId);
+    auto& techParent = m_techniqueMap.at(parentTechniqueId);
 
-    if (it == taskList.end())
+    bool found = false;
+    Core::Utility::TechniqueId id = 0;
+    for (auto& taskId : techParent.m_taskList)
     {
-        ASSERT_MSG_DEBUG(0, "Task mismatch");
+        if (taskName.find(m_taskMap.at(taskId).m_name) != std::string::npos)
+        {
+            found = true;
+            id = taskId;
+            break;
+        }
     }
-    return *it;
+
+    ASSERT_MSG_DEBUG(found == true, "task mismatch");
+    return m_taskMap.at(id);
 }
 
 void GfxVk::Shading::VkShaderResourceManager::Init()
@@ -753,29 +766,29 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
             printf("%s \n", effectPath.c_str());
 
             Document effectDoc = LoadJson(effectPath.c_str());
-            EffectResources effectResource;
-            effectResource.m_effectName = effect.GetString();
+            EffectWrapper effectWrapper(GetEffectId());
+            effectWrapper.m_effectName = effect.GetString();
 
             if (effectDoc.HasMember("Technique"))
             {
                 const Value& techniques = effectDoc["Technique"];
                 for (SizeType i = 0; i < techniques.Size(); i++)
                 {
-                    TechniqueWrapper technqueObj = {};
+                    TechniqueWrapper techniqueWrapper(GetTechniqueId());
                     const Value& techniqueDoc = techniques[i];
                     if (techniqueDoc.HasMember("name"))
                     {
-                        technqueObj.techniqueName = techniqueDoc["name"].GetString();
+                        techniqueWrapper.techniqueName = techniqueDoc["name"].GetString();
                     }
 
                     if (techniqueDoc.HasMember("lod_min"))
                     {
-                        technqueObj.lodMin = techniqueDoc["lod_min"].GetInt();
+                        techniqueWrapper.lodMin = techniqueDoc["lod_min"].GetInt();
                     }
 
                     if (techniqueDoc.HasMember("lod_max"))
                     {
-                        technqueObj.lodMax= techniqueDoc["lod_max"].GetInt();
+                        techniqueWrapper.lodMax= techniqueDoc["lod_max"].GetInt();
                     }
 
                     if (techniqueDoc.HasMember("tasks"))
@@ -783,7 +796,7 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                         const Value& techniqueTasks = techniqueDoc["tasks"];
                         for (SizeType i = 0; i < techniqueTasks.Size(); i++)
                         {
-                            GfxVk::Shading::TaskWrapper taskWrapper{};
+                            GfxVk::Shading::TaskWrapper taskWrapper(GetTaskId());
                             const Value& taskDoc = techniqueTasks[i];
                             if (taskDoc.HasMember("name"))
                                 taskWrapper.m_name = taskDoc["name"].GetString();
@@ -923,12 +936,17 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                                 ASSERT_MSG_DEBUG(0, "Shaders not found in effect file");
                             }
                             CreateVertexInfoForTask(taskDoc, taskWrapper);
-                            technqueObj.m_taskList.push_back(taskWrapper);
-                            effectResource.techniqueList.push_back(technqueObj);
+
+                            m_taskMap.insert({ taskWrapper.m_taskId, taskWrapper });
+                            techniqueWrapper.m_taskList.push_back(taskWrapper.m_taskId);
+                     /*       effectWrapper.m_techniqueList.push_back(techniqueWrapper.m_techniqueId);
+                            m_techniqueMap.insert({ techniqueWrapper.m_techniqueId, techniqueWrapper });*/
                         }
                     }
+                    m_techniqueMap.insert({ techniqueWrapper.m_techniqueId, techniqueWrapper });
+                    effectWrapper.m_techniqueList.push_back(techniqueWrapper.m_techniqueId);
                 }
-                m_perEffectResources.push_back(effectResource);
+                m_effectMap.insert({ effectWrapper.m_effectId, effectWrapper });
             }
         }
     }
@@ -1119,18 +1137,6 @@ void GfxVk::Shading::VkShaderResourceManager::GetSetLayouts(Core::Wrappers::SetW
             // if not create a dummy set layout and add it to the list
             else
             {
-                //VkDescriptorSetLayoutCreateInfo info = {};
-                //info.bindingCount = 0;
-                //info.pBindings = nullptr;
-                //info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-
-                //VkDescriptorSetLayout setLayout;
-                //ErrorCheck(vkCreateDescriptorSetLayout(
-                //    DeviceInfo::GetLogicalDevice(),
-                //    &info,
-                //    DeviceInfo::GetAllocationCallback(),
-                //    &setLayout
-                //));
                 layoutList.push_back(m_fillerSetLayout);
                 //m_fillerSetLayouts.push_back(setLayout);
                 setValueList.push_back(-1);
@@ -1139,61 +1145,6 @@ void GfxVk::Shading::VkShaderResourceManager::GetSetLayouts(Core::Wrappers::SetW
     }
 
     return;
-    /*
-    uint32_t setValue = 0; 
-
-    for (uint32_t i = 0; i < (uint32_t)setValues.size(); i++)
-    {
-        uint32_t diff = setValues[i] - setValue;
-        if (diff > 1)
-        {
-            // Create new diff * layouts
-            for (uint32_t i = 0; i < diff - 1; i++)
-            {
-                VkDescriptorSetLayoutBinding obj = {};
-                obj.binding = 0;
-                obj.descriptorCount = 0;
-                obj.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                obj.pImmutableSamplers = nullptr;
-                obj.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-
-                VkDescriptorSetLayoutCreateInfo info = {};
-                info.bindingCount = 0;
-                info.pBindings = nullptr;
-                info.sType= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-
-                VkDescriptorSetLayout setLayout;
-                ErrorCheck(vkCreateDescriptorSetLayout(
-                    DeviceInfo::GetLogicalDevice(),
-                    &info,
-                    DeviceInfo::GetAllocationCallback(),
-                    &setLayout
-                ));
-                layoutList.push_back(setLayout);
-                m_fillerSetLayouts.push_back(setLayout);
-                //setValue += 1;
-            }
-        }
-//        else
-        {
-            for (uint32_t i = 0; i < numSets; i++)
-            {
-                SetWrapper * wrapper = m_setWrapperList[i];
-
-                if (m_idToSetLayoutMap.find(wrapper->descriptorSetLayoutId) == m_idToSetLayoutMap.end())
-                {
-                    ASSERT_MSG(0, "Id mismatch");
-                }
-                else if(setValues[i] == wrapper->setValue)
-                {
-                    layoutList.push_back(*m_idToSetLayoutMap[wrapper->descriptorSetLayoutId]);
-                    break;
-                }
-            }
-            setValue = setValues[i];
-        }
-    }
-    */
 }
 
 std::vector<VkDescriptorSet> GfxVk::Shading::VkShaderResourceManager::GetDescriptors(uint32_t * ids, const uint32_t & count, const uint32_t & pipelineLayoutId)
@@ -1299,85 +1250,6 @@ uint32_t * GfxVk::Shading::VkShaderResourceManager::AllocateDescriptorSets(Core:
 
     return ids;
 }
-/*
-// meant for single binding descriptor sets, should get deprecated
-void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(ShaderBindingDescription * desc)
-{
-    VkDescriptorType descriptorType = UnwrapDescriptorType(desc->resourceType);
-
-    uint32_t numWrites = (uint32_t)desc->descriptorSetIds.size();
-    uint32_t numDescriptors = numWrites;
-
-    std::vector<VkDescriptorBufferInfo> bufferInfoList;
-    std::vector<VkDescriptorImageInfo> imageInfoList;
-
-    switch (descriptorType)
-    {
-    case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-    {
-        uint32_t numBuffers = desc->bufferBindingInfo.bufferIdList.size();
-        uint32_t bufferId;
-
-        if (numBuffers > 1)
-        {
-            ASSERT_MSG(numWrites != numBuffers, "Num writes != num buffers");
-        }
-
-        for (uint32_t i = 0; i < numWrites; i++)
-        {
-            VkBuffer * buf;
-
-            if (numBuffers == 1)
-                buf = VkBufferFactory::GetInstance()->GetBuffer(desc->bufferBindingInfo.bufferIdList[0]);
-            else
-                buf = VkBufferFactory::GetInstance()->GetBuffer(desc->bufferBindingInfo.bufferIdList[i]);
-
-            VkDescriptorBufferInfo info = {};
-            info.buffer = *buf;
-            info.offset = desc->bufferBindingInfo.info.offsetsForEachDescriptor[i];
-            info.range = desc->bufferBindingInfo.info.dataSizePerDescriptorAligned;
-            bufferInfoList.push_back(info);
-        }
-    }
-    break;
-
-    case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-        for (uint32_t i = 0; i < numWrites; i++)
-        {
-            //VkDescriptorImageInfo info = {};
-            //info.imageLayout = ;
-            //info.imageView = ;
-            //info.sampler = ;
-            //imageInfoList.push_back(info);
-        }
-        break;
-
-    case VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER:
-        ASSERT_MSG_DEBUG(0, "Yet to be implemented");
-        break;
-
-    default:
-        ASSERT_MSG_DEBUG(0, "Yet to be implemented");
-    }
-
-    std::vector<VkWriteDescriptorSet> writeList;
-
-    for (uint32_t i = 0; i < numWrites; i++)
-    {
-        VkWriteDescriptorSet write = {};
-        write.descriptorCount = 1; //since linking only one binding of a set
-        write.descriptorType = descriptorType;
-        write.dstArrayElement = 0;
-        write.dstBinding = desc->binding;
-        write.pBufferInfo = &bufferInfoList[i];
-        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = GetDescriptorSet(desc->descriptorSetIds[i]);
-        writeList.push_back(write);
-    }
-
-    vkUpdateDescriptorSets(DeviceInfo::GetLogicalDevice(), (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
-}
-*/
 
 void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Utility::ShaderBindingDescription * desc, const uint32_t & numBindings)
 {
@@ -1575,115 +1447,22 @@ std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GfxVk::Shading::Vk
     return &m_perSetMap;
 }
 
-uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::EffectId& GfxVk::Shading::VkShaderResourceManager::GetEffectId(const std::string& effectName) const
 {
-    //auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
-    //    [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
-
-    //if (it == m_perEffectResources.end())
-    //{
-    //    ASSERT_MSG_DEBUG(0, "Effect mismatch");
-    //}
-
-    //auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
-    //    [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
-
-    //if (itt == it->techniqueList.end())
-    //{
-    //    ASSERT_MSG_DEBUG(0, "Technique mismatch");
-    //}
-
-    //auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
-    //    [&](const TaskWrapper& wrapper) { return /*wrapper.m_name == */taskName.find(wrapper.m_name) != std::string::npos; });
-
-    //if (ittt == itt->m_taskList.end())
-    //{
-    //    ASSERT_MSG_DEBUG(0, "Task mismatch");
-    //}
-
-    //return ittt->m_vertexInputStateId.value();
-
-    auto& effect = FindEffect(m_perEffectResources, effectName);
-    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
-    auto& task = FindTask(tech.m_taskList, taskName);
-
-    return task.m_vertexInputStateId.value();
+    auto& effect = FindEffect(effectName);
+    return effect.m_effectId;
 }
 
-uint32_t GfxVk::Shading::VkShaderResourceManager::GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::TechniqueId& GfxVk::Shading::VkShaderResourceManager::GetTechniqueId(const Core::Utility::EffectId& effectId, const std::string& techniqueName) const
 {
-    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
-        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
-
-    if (it == m_perEffectResources.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Effect mismatch");
-    }
-
-    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
-        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
-
-    if (itt == it->techniqueList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Technique mismatch");
-    }
-
-    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
-        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
-
-    if (ittt == itt->m_taskList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Task mismatch");
-    }
-
-    return ittt->m_pipelineLayoutId;*/
-
-    auto& effect = FindEffect(m_perEffectResources, effectName);
-    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
-    auto& task = FindTask(tech.m_taskList, taskName);
-
-    return task.m_pipelineLayoutId;
+    auto& tech = FindTechnique(effectId, techniqueName);
+    return tech.m_techniqueId;
 }
 
-uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
+const Core::Utility::TaskId& GfxVk::Shading::VkShaderResourceManager::GetTaskId(const Core::Utility::EffectId& effectId, const Core::Utility::TechniqueId& techniqueId, const std::string& taskName) const
 {
-    /*auto it = std::find_if(m_perEffectResources.begin(), m_perEffectResources.end(),
-        [&](const EffectResources& res) { return res.m_effectName.find(effectName) != std::string::npos; });
-
-    if (it == m_perEffectResources.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Effect mismatch");
-    }
-
-    auto itt = std::find_if(it->techniqueList.begin(), it->techniqueList.end(),
-        [&](const TechniqueWrapper& wrapper) { return wrapper.techniqueName == techniqueName; });
-
-    if (itt == it->techniqueList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Technique mismatch");
-    }
-
-    auto ittt = std::find_if(itt->m_taskList.begin(), itt->m_taskList.end(),
-        [&](const TaskWrapper& wrapper) { return wrapper.m_name == taskName; });
-
-    if (ittt == itt->m_taskList.end())
-    {
-        ASSERT_MSG_DEBUG(0, "Task mismatch");
-    }
-
-    return ittt->m_shaderModuleStateId;*/
-
-    auto& effect = FindEffect(m_perEffectResources, effectName);
-    auto& tech = FindTechnique(effect.techniqueList, techniqueName);
-    auto& task = FindTask(tech.m_taskList, taskName);
-
-    return task.m_shaderModuleStateId;
-}
-
-const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GfxVk::Shading::VkShaderResourceManager::GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName)
-{
-    auto& taskWrapper = GetTaskWrapper(effectName, techniqueName, taskName);
-    return taskWrapper.m_bindingTypeInfo;
+    auto& task = FindTask(effectId, techniqueId, taskName);
+    return task.m_taskId;
 }
 
 const VkPipelineVertexInputStateCreateInfo& GfxVk::Shading::VkShaderResourceManager::GetPipelineVertexInputInfo(uint32_t id)
@@ -1700,4 +1479,32 @@ const std::vector<VkPipelineShaderStageCreateInfo>& GfxVk::Shading::VkShaderReso
     ASSERT_MSG_DEBUG(it != m_shaderStageWrapperMap.end(), "id not found");
 
     return m_shaderStageWrapperMap[id].m_infoList;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetVertexInputStateId(const Core::Utility::TaskId& taskId)
+{
+    auto it = m_taskMap.find(taskId);
+    ASSERT_MSG_DEBUG(it != m_taskMap.end(), "task not found");
+    return it->second.m_vertexInputStateId.value();
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetPipelineLayoutId(const Core::Utility::TaskId& taskId)
+{
+    auto it = m_taskMap.find(taskId);
+    ASSERT_MSG_DEBUG(it != m_taskMap.end(), "task not found");
+    return it->second.m_pipelineLayoutId;
+}
+
+uint32_t GfxVk::Shading::VkShaderResourceManager::GetShaderStateId(const Core::Utility::TaskId& taskId)
+{
+    auto it = m_taskMap.find(taskId);
+    ASSERT_MSG_DEBUG(it != m_taskMap.end(), "task not found");
+    return it->second.m_shaderModuleStateId;
+}
+
+const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GfxVk::Shading::VkShaderResourceManager::GetVertexBindingTypeInfo(const Core::Utility::TaskId& taskId)
+{
+    auto it = m_taskMap.find(taskId);
+    ASSERT_MSG_DEBUG(it != m_taskMap.end(), "task not found");
+    return it->second.m_bindingTypeInfo;
 }

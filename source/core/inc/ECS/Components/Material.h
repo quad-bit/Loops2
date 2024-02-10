@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <Platform/Assertion.h>
+#include <Utility/ShaderResourceDescription.h>
 
 namespace Core
 {
@@ -18,12 +19,13 @@ namespace Core
     {
         namespace Components
         {
-            enum class EffectType
+            /*enum class EffectType
             {
                 OPAQUE_E,
                 TRANPARENT,
                 CUSTOM
-            };
+            };*/
+
 
             class Material;
 
@@ -31,8 +33,7 @@ namespace Core
             {
             private:
                 glm::vec4 m_color;
-                // effect and the technique
-                std::pair<EffectType, std::string> m_effectType;
+                Core::Utility::EffectInfo m_effectInfo;
                 std::optional<uint32_t> m_baseColorTextureId;
                 std::optional<uint32_t> m_baseColorSamplerId;
                 std::optional<uint32_t> m_normalTextureId;
@@ -41,20 +42,18 @@ namespace Core
             public:
                 MaterialCreateInfo(
                     const glm::vec4& color,
-                    const std::pair<EffectType, std::string>& effectTypes,
+                    const Core::Utility::EffectInfo& effectInfo,
                     const std::optional<uint32_t>& baseColorTextureId,
                     const std::optional<uint32_t>& baseColorSamplerId,
                     const std::optional<uint32_t>& normalTextureId,
                     const std::string& materialName):
                     m_color(color),
-                    m_effectType(effectTypes),
+                    m_effectInfo(effectInfo),
                     m_baseColorTextureId(baseColorTextureId),
                     m_baseColorSamplerId(baseColorSamplerId),
                     m_normalTextureId(normalTextureId),
                     m_materialName(materialName)
                 {
-                    //ASSERT_MSG_DEBUG(effectTypes.size() > 0, "need effects");
-                    ASSERT_MSG_DEBUG(!m_effectType.second.empty(), "need technique");
                 };
 
                 friend class Material;
@@ -69,7 +68,7 @@ namespace Core
                 glm::vec2 m_mainTextureOffset;
 
                 std::optional<std::string> m_effectName;
-                std::pair<EffectType, std::string> m_effectType;
+                Core::Utility::EffectInfo m_effectInfo;
 
                 std::optional<uint32_t> m_baseColorTextureId;
                 std::optional<uint32_t> m_baseColorSamplerId;
@@ -79,12 +78,12 @@ namespace Core
 
                 std::vector<uint32_t> m_descriptorSetIds;
 
-                Material(const std::string& effectName) :
-                    m_effectName(effectName)
-                {
-                    //m_effectTypes.push_back(EffectType::CUSTOM);
-                    componentType = COMPONENT_TYPE::MATERIAL;
-                }
+                //Material(const std::string& effectName) :
+                //    m_effectName(effectName)
+                //{
+                //    //m_effectTypes.push_back(EffectType::CUSTOM);
+                //    componentType = COMPONENT_TYPE::MATERIAL;
+                //}
 
                 /*Material(const std::vector<std::pair<EffectType, std::string>>& effectTypes) :
                     m_effectTypes(effectTypes)
@@ -94,7 +93,7 @@ namespace Core
 
                 Material(const MaterialCreateInfo& info):
                     m_color(info.m_color),
-                    m_effectType(info.m_effectType),
+                    m_effectInfo(info.m_effectInfo),
                     m_baseColorTextureId(info.m_baseColorTextureId),
                     m_baseColorSamplerId(info.m_baseColorSamplerId),
                     m_normalTextureId(info.m_normalTextureId),
@@ -103,43 +102,10 @@ namespace Core
                     componentType = COMPONENT_TYPE::MATERIAL;
                 }
             };
-
-            //class Material : public Component<Material>
-            //{
-            //private:
-            //    glm::vec4 color;
-            //    bool enableInstancing = false;
-            //    Texture* mainTexture; // main color map
-            //    glm::vec2 mainTextureScale;
-            //    glm::vec2 mainTextureOffset;
-            //    Texture* textures; // normal, heightmap, gloss map.. etc   
-            //    uint32_t numTextures;
-            //    Shader* shaders;
-            //    uint32_t numShaders;
-            //    std::vector<SetWrapper*> resourceLayoutList;
-            //    std::vector<uint32_t> meshList;
-
-            //    std::string m_effectName;
-            //    MaterialType m_effectType;
-
-            //public:
-            //    Material(Shader* shaders, const uint32_t& numShaders)
-            //    {
-            //        this->shaders = shaders;
-            //        this->numShaders = numShaders;
-            //        componentType = COMPONENT_TYPE::MATERIAL;
-            //    }
-
-            //    Material(const MaterialType& effectType, const std::string& effectName) :
-            //        m_effectType(effectType),
-            //        m_effectName(effectName)
-            //    {
-            //        componentType = COMPONENT_TYPE::MATERIAL;
-            //    }
-            //};
         }
     }
 }
+
 // unity ref
 /*
 

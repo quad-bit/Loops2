@@ -32,6 +32,7 @@ namespace GfxVk
             uint32_t CreateSampler(const Core::Wrappers::SamplerCreateInfo& info);
             uint32_t CreateSampler(const VkSamplerCreateInfo& info);
             VkSampler* GetSampler(const uint32_t& id);
+            uint32_t CreateCubemapSampler();
         };
     }
 }

@@ -15,8 +15,12 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
         meshInfo.m_indexCount = data.m_indexCount.value();
     }
 
+    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techName);
+    auto taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
+
     // vertex buffer infos
-    auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(effectName, techName, taskName);
+    auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(taskId);
     Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
     vertexInfo.bindingCount = 0;
     vertexInfo.firstBinding = 0;
@@ -155,10 +159,16 @@ void Renderer::RenderGraph::CreateSetInfo(std::map<Core::Enums::ResourceSets,
 
     std::function<void(const SetInfo* node)> CreateSetList;
 
-    uint32_t bindCount = 0, firstSet = Core::Enums::ResourceSets::TRANSFORM + 1;
+    auto begin = setInfoMap.begin();
+    auto end = setInfoMap.rbegin();
+
+    Core::Enums::ResourceSets minSet = begin->first;
+    Core::Enums::ResourceSets maxSet = end->first;
+
+    uint32_t bindCount = 0, firstSet = maxSet + 1;
     std::vector<int> idList;
     std::vector<int> setIdList;
-    Core::Enums::ResourceSets prevSet{ Core::Enums::ResourceSets::CAMERA };
+    Core::Enums::ResourceSets prevSet{ minSet };
     uint32_t index = 0;
     CreateSetList = [&CreateSetList, &setIdList, &prevSet, &bindCount, &firstSet, &drawInfo, &index]
     (const SetInfo* node)
@@ -321,10 +331,10 @@ bool Renderer::RenderGraph::MaterialFilter(uint32_t index, void* data, void* nex
         ASSERT_MSG_DEBUG(0, "NuLL");
     }
 
-    auto techName = static_cast<std::string*>(next);
+    auto effectInfo = static_cast<Core::Utility::EffectInfo*>(next);
     auto matData = static_cast<Core::Utility::MaterialData*>(data);
-    if (matData->m_effectType == Core::ECS::Components::EffectType::OPAQUE_E &&
-        matData->m_techniqueName == *techName)
+    if (matData->m_effectId == effectInfo->GetEffectId() &&
+        matData->m_techniqueId == effectInfo->GetTechniqueId())
     {
         return true;
     }

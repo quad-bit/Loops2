@@ -18,39 +18,10 @@ namespace GfxVk
             std::vector<Core::Wrappers::SetWrapper*> setWrappers;
         };
 
-        //enum class BindingType
-        //{
-        //    POSITION,
-        //    COLOR,
-        //    NORMAL,
-        //    UV_0,
-        //    UV_1
-        //};
-
-
-        struct TaskWrapper
+        struct ShaderStageInfoWrapper
         {
-            std::string m_name;
-            std::vector<std::string> m_shaderNames;
-            uint32_t m_shaderModuleStateId;
-            std::vector<Core::Wrappers::SetWrapper*> m_setWrappers;
-            uint32_t m_pipelineLayoutId;
-            std::vector<Core::Wrappers::VertexBindingTypeInfo> m_bindingTypeInfo;
-            std::optional<uint32_t> m_vertexInputStateId;
-        };
-
-        struct TechniqueWrapper
-        {
-            std::string techniqueName;
-            uint32_t lodMin, lodMax;
-            std::vector<TaskWrapper> m_taskList;
-
-            /*std::vector<std::string> m_shaderNames;
-            std::vector<Core::Wrappers::SetWrapper*> m_setWrappers;
-            uint32_t m_pipelineLayoutId;
-            std::vector<VertexBindingTypeInfo> m_bindingTypeInfo;
-            uint32_t m_vertexInputStateId;
-            uint32_t m_shaderModuleStateId;*/
+            uint32_t m_id;
+            std::vector<VkPipelineShaderStageCreateInfo> m_infoList;
         };
 
         struct VertexInputStateInfoWrapper
@@ -61,16 +32,37 @@ namespace GfxVk
             uint32_t m_id;
         };
 
-        struct ShaderStageInfoWrapper
+        struct TaskWrapper
         {
-            uint32_t m_id;
-            std::vector<VkPipelineShaderStageCreateInfo> m_infoList;
+            std::string m_name;
+            std::vector<std::string> m_shaderNames;
+            uint32_t m_shaderModuleStateId;
+            std::vector<Core::Wrappers::SetWrapper*> m_setWrappers;
+            uint32_t m_pipelineLayoutId;
+            std::vector<Core::Wrappers::VertexBindingTypeInfo> m_bindingTypeInfo;
+            std::optional<uint32_t> m_vertexInputStateId;
+            Core::Utility::TaskId m_taskId;
+            TaskWrapper(Core::Utility::TaskId id) : m_taskId(id)
+            {}
         };
 
-        struct EffectResources
+        struct TechniqueWrapper
+        {
+            std::string techniqueName;
+            uint32_t lodMin, lodMax;
+            std::vector<Core::Utility::TaskId> m_taskList;
+            Core::Utility::TechniqueId m_techniqueId;
+            TechniqueWrapper(Core::Utility::TechniqueId id) : m_techniqueId(id)
+            {}
+        };
+
+        struct EffectWrapper
         {
             std::string m_effectName;
-            std::vector<TechniqueWrapper> techniqueList;
+            std::vector<Core::Utility::TechniqueId> m_techniqueList;
+            Core::Utility::EffectId m_effectId;
+            EffectWrapper(Core::Utility::EffectId id) : m_effectId(id)
+            {}
         };
 
         struct PipelineLayoutWrapper
@@ -80,8 +72,6 @@ namespace GfxVk
             std::vector<int> setValuesInPipelineLayout;
             VkPipelineLayout* pipelineLayout;
         };
-
-        //class VkShaderResourceAllocator;
 
         class VkShaderResourceManager
         {
@@ -109,6 +99,17 @@ namespace GfxVk
             uint32_t GetVertexInputID();
             uint32_t GetShaderStateID();
 
+            uint32_t m_effectIdCounter = 0;
+            uint32_t m_techniqueIdCounter = 0;
+            uint32_t m_taskIdCounter = 0;
+            Core::Utility::EffectId GetEffectId();
+            Core::Utility::TechniqueId GetTechniqueId();
+            Core::Utility::TaskId GetTaskId();
+
+            std::map<std::string, Core::Utility::EffectId> m_effectToIdMap;
+            std::map<std::string, Core::Utility::TechniqueId> m_techniqueToIdMap;
+            std::map<std::string, Core::Utility::TaskId> m_taskToIdMap;
+
             void DecrementSetLayoutId() { m_setWrapperIdCounter--; }
 
             std::vector<Core::Wrappers::SetWrapper*> m_setWrapperList;
@@ -124,7 +125,11 @@ namespace GfxVk
             std::map<uint32_t, VertexInputStateInfoWrapper> m_vertexInputWrapperMap;
             std::map<uint32_t, ShaderStageInfoWrapper> m_shaderStageWrapperMap;
 
-            std::vector<EffectResources> m_perEffectResources;
+            //std::vector<EffectWrapper> m_perEffectResources;
+            std::map<Core::Utility::EffectId, EffectWrapper> m_effectMap;
+            std::map<Core::Utility::TechniqueId, TechniqueWrapper> m_techniqueMap;
+            std::map<Core::Utility::TaskId, TaskWrapper> m_taskMap;
+
 
             VkDescriptorSetLayout m_fillerSetLayout = VK_NULL_HANDLE;
             VkDescriptorSet m_fillerSet = VK_NULL_HANDLE;
@@ -152,9 +157,9 @@ namespace GfxVk
 
             const char* shaderEntryName = "main";
 
-            const EffectResources& FindEffect(const std::vector<EffectResources>& list, const std::string& name) const;
-            const TechniqueWrapper& FindTechnique(const std::vector<TechniqueWrapper>& list, const std::string& name) const;
-            const TaskWrapper& FindTask(const std::vector<TaskWrapper>& taskList, const std::string& taskName) const;
+            const EffectWrapper& FindEffect(const std::string& name) const;
+            const TechniqueWrapper& FindTechnique(const Core::Utility::EffectId& parentEffectId, const std::string& name) const;
+            const TaskWrapper& FindTask(const Core::Utility::EffectId& parentEffectId, const Core::Utility::TechniqueId& techEffectId, const std::string& taskName) const;
 
         public:
             void Init();
@@ -183,10 +188,19 @@ namespace GfxVk
             
             std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperMap();
 
-            uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            /*uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
             uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
             uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
+            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);*/
+
+            uint32_t GetVertexInputStateId(const Core::Utility::TaskId& taskId);
+            uint32_t GetPipelineLayoutId(const Core::Utility::TaskId& taskId);
+            uint32_t GetShaderStateId(const Core::Utility::TaskId& taskId);
+            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const Core::Utility::TaskId& taskId);
+
+            const Core::Utility::EffectId& GetEffectId(const std::string& effectName) const;
+            const Core::Utility::TechniqueId& GetTechniqueId(const Core::Utility::EffectId& effectId, const std::string& techniqueName) const;
+            const Core::Utility::TaskId& GetTaskId(const Core::Utility::EffectId& effectId, const Core::Utility::TechniqueId& techniqueId, const std::string& taskName) const;
 
             const VkPipelineVertexInputStateCreateInfo& GetPipelineVertexInputInfo(uint32_t id);
             const std::vector<VkPipelineShaderStageCreateInfo>& GetPipelineShaderInfo(uint32_t id);

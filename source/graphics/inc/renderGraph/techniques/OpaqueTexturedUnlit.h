@@ -18,12 +18,13 @@ namespace Renderer
                 const Core::Utility::RenderData& m_renderData;
                 void CreateResources() override;
 
-                GraphNodeWrapper m_colorOutput;
+                GraphNodeWrapper m_colorOutput, m_depthOutput;
 
                 GraphNodeWrapper m_taskNode;
                 std::unique_ptr<Renderer::RenderGraph::Task> m_opaqueRenderTask;
 
                 uint32_t m_renderHeight, m_renderWidth;
+                
 
             public:
                 OpaqueTexturedUnlit(
@@ -33,7 +34,9 @@ namespace Renderer
                     Renderer::RenderGraph::Utils::CallbackUtility& funcs,
                     const std::string& name,
                     const std::string& effectName,
-                    const std::vector<ResourceAlias*>& colorImages);
+                    const std::vector<ResourceAlias*>& colorImages,
+                    const std::vector<ResourceAlias*>& depthImages,
+                    const Core::Utility::EffectInfo& effectInfo);
 
                 ~OpaqueTexturedUnlit();
 

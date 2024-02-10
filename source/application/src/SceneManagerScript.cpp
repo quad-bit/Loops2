@@ -52,7 +52,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     //lightComponent = new Core::ECS::Components::Light(lightTrfHandle.GetComponent());
     //lightHandle->AddComponent<Core::ECS::Components::Light>(lightComponent);
 
-    Core::ECS::Components::Material *colMat, *floorMat , *wallMat;
+    Core::ECS::Components::Material *colMat, *floorMat = nullptr , *wallMat;
 
 #if (debugMeshForLight)
     {

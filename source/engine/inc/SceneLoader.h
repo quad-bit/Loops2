@@ -43,7 +43,8 @@ namespace Engine
             uint32_t GetTexture(int textureIndex);
 
             // samplers get destroyed automatically
-            std::vector<uint32_t> m_samplerList;
+            // gltf sampler index to internal samplerId
+            std::map<uint32_t, uint32_t> m_samplerList;
             void LoadSamplers(const tinygltf::Model& input);
             uint32_t GetSampler(uint32_t index);
 

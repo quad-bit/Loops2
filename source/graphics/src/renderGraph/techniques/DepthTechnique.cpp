@@ -87,8 +87,9 @@ Renderer::RenderGraph::Techniques::DepthTechnique::DepthTechnique(
     const Core::WindowSettings& windowSettings,
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
     Renderer::RenderGraph::Utils::CallbackUtility& funcs, const std::string& name,
-    const std::string& effectName) :
-    Technique(graph, name, funcs, effectName),
+    const std::string& effectName,
+    const Core::Utility::EffectInfo& effectInfo) :
+    Technique(graph, name, funcs, effectName, effectInfo),
     m_renderData(renderData),
     m_renderWidth(windowSettings.m_renderWidth),
     m_renderHeight(windowSettings.m_renderHeight)
@@ -139,7 +140,11 @@ void Renderer::RenderGraph::Techniques::DepthTechnique::SetupFrame(const Core::W
             meshInfo.m_indexCount = data.m_indexCount.value();
         }
 
-        auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(m_parentEffectName, m_name, taskObj->GetTaskName());
+        auto effectId = VulkanInterfaceAlias::GetEffectId(m_parentEffectName);
+        auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, m_name);
+        auto taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskObj->GetTaskName());
+
+        auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(taskId);
 
         Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
         vertexInfo.bindingCount = 0;

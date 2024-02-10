@@ -13,7 +13,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(EFFECTS_PATH "${CMAKE_SOURCE_DIR}/assets/graphics/effects")
-set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets/graphics/models")
+set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/assets/graphics")
 set(RENDERING_API "VULKAN")
 
 find_package(Vulkan REQUIRED)
@@ -21,7 +21,8 @@ find_package(glm REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(plog REQUIRED)
-# find_package(tinyGltf REQUIRED)
+find_package(KTX REQUIRED)
+
 FIND_PATH(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 
 if(TINYGLTF_INCLUDE_DIRS STREQUAL "")

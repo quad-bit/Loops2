@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <ktx.h>
 
 void Core::IO::GetFilesInFolder(const fs::path & folderPath, std::vector<std::string> & result)
 {
@@ -36,6 +37,25 @@ const char * Core::IO::ReadTxtFile(uint32_t& length, const char* filename)
     fclose(inFile); // Close the file
     length = size;
     return outString;
+}
+
+unsigned char* Core::IO::ReadKtxImage(uint32_t& width, uint32_t& height, uint32_t& textureSize, const char* filename)
+{
+    ktxResult result;
+    ktxTexture* ktxTexture;
+
+    result = ktxTexture_CreateFromNamedFile(filename, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture);
+
+    assert(result == KTX_SUCCESS);
+
+    // Get properties required for using and upload texture data from the ktx texture object
+    width = ktxTexture->baseWidth;
+    height = ktxTexture->baseHeight;
+    //mipLevels = ktxTexture->numLevels;
+    unsigned char* ktxTextureData = ktxTexture_GetData(ktxTexture);
+    ktx_size_t components = ktxTexture_GetElementSize(ktxTexture);
+    textureSize = ktxTexture->dataSize;
+    return ktxTextureData;
 }
 
 const char* Core::IO::ReadSpvFile(uint32_t& length, const char* filename)

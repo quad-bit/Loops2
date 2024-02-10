@@ -943,7 +943,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateVertexInput
     pipelineVertexInputStateCreateInfo.pNext = nullptr;
     pipelineVertexInputStateCreateInfo.flags = 0;
 
-    auto id = vertexInputWrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::VertexInputState);
     idToVertexInputMap.insert( std::pair<uint32_t, VkPipelineVertexInputStateCreateInfo>(
     { id, pipelineVertexInputStateCreateInfo }) );
 
@@ -960,7 +960,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateInputAssemb
     pipelineInputAssemblyStateCreateInfo.flags = 0;
     pipelineInputAssemblyStateCreateInfo.pNext = nullptr;
 
-    auto id = inputAssemblyWrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::InputAssemblyState);
     idToInputAssemblyMap.insert(std::pair<uint32_t, VkPipelineInputAssemblyStateCreateInfo>(
     {id , pipelineInputAssemblyStateCreateInfo }));
 
@@ -1001,7 +1001,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateTessellatio
     info.patchControlPoints = wrapper.tessellationState->patchControlPoints;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::TessellationState);
     idToTessellationMap.insert(std::pair<uint32_t, VkPipelineTessellationStateCreateInfo>
         ({ id, info}));
     return id;
@@ -1030,7 +1030,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateViewportSta
         ASSERT_MSG_DEBUG(0, "Yet to be implemented");
     }
     
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::ViewportState);
     idToViewportMap.insert(std::pair<uint32_t, VkPipelineViewportStateCreateInfo>(
         {id, info}));
     return id;
@@ -1055,7 +1055,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateRasterisati
     vkInfo.rasterizerDiscardEnable = info->rasterizerDiscardEnable;
     vkInfo.sType= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::RasterizationState);
     idToRasterizationMap.insert(std::pair<uint32_t, VkPipelineRasterizationStateCreateInfo>(
         { id, vkInfo }));
     return id;
@@ -1079,9 +1079,8 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDepthStenci
     info.stencilTestEnable = state->stencilTestEnable;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
-    idToDepthStencilMap.insert(std::pair<uint32_t, VkPipelineDepthStencilStateCreateInfo>(
-        { id, info}));
+    auto id = GetStateId(Core::Enums::PipelineStates::DepthStencilState);
+    idToDepthStencilMap.insert({ id, info});
     return id;
 }
 
@@ -1102,7 +1101,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateColorBlendS
     vkinfo.pNext = nullptr;
     vkinfo.sType= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::ColorBlendState);
     idToColorBlendMap.insert(std::pair<uint32_t, VkPipelineColorBlendStateCreateInfo>({ id, vkinfo }));
 
     return id;
@@ -1123,7 +1122,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateMultiSample
     vkinfo.sampleShadingEnable = info->sampleShadingEnable;
     vkinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::MultisampleState);
     idToMultiSampleMap.insert(std::pair<uint32_t, VkPipelineMultisampleStateCreateInfo>({ id, vkinfo }));
     return id;
 }
@@ -1139,7 +1138,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreateDynamicStat
     info.pNext = nullptr;
     info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 
-    auto id = wrapper.GetId();
+    auto id = GetStateId(Core::Enums::PipelineStates::DynamicState);
     idToDynamicMap.insert(std::pair<uint32_t, VkPipelineDynamicStateCreateInfo>({ id, info }));
     return id;
 }

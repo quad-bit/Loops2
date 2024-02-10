@@ -205,7 +205,6 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
 
         // Get base color texture index
         if (glTFMaterial.values.find("baseColorTexture") != glTFMaterial.values.end()) {
-            //baseTextureId = CreateTexture(input, glTFMaterial.values["baseColorTexture"].TextureIndex(), Core::Enums::Format::B8G8R8A8_UNORM);
             baseTextureId = GetTexture(glTFMaterial.values["baseColorTexture"].TextureIndex());
             baseSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
         }
@@ -230,10 +229,13 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
 
         }
 
-        auto effectType = std::pair<Core::ECS::Components::EffectType, std::string>{ Core::ECS::Components::EffectType::OPAQUE_E, tech };
+        auto effectId = VulkanInterfaceAlias::GetEffectId("OpaquePass");
+        auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, tech);
+        auto effectInfo = Core::Utility::EffectInfo{ effectId, techId };
+
         Core::ECS::Components::MaterialCreateInfo info{
             color,
-            effectType,
+            effectInfo,
             baseTextureId,
             baseSamplerId,
             normalTextureId,
@@ -241,7 +243,6 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
         };
 
         auto mat = Renderer::ResourceManagement::MaterialFactory::GetInstance()->CreateMaterial(info);
-
         m_materialMap.insert({ (int)i, mat });
     }
 }
@@ -321,7 +322,7 @@ void Engine::Utility::GltfLoader::LoadSamplers(const tinygltf::Model& input)
     // can take the filter valur from gltf
 
     auto& samplers = input.samplers;
-
+    uint32_t index = 0;
     for (auto& sampler : samplers)
     {
         Core::Wrappers::SamplerCreateInfo info = {};
@@ -342,16 +343,17 @@ void Engine::Utility::GltfLoader::LoadSamplers(const tinygltf::Model& input)
         info.mipLodBias = 0.0f;
 
         uint32_t samplerId = VulkanInterfaceAlias::CreateSampler(info);
-        m_samplerList.push_back(samplerId);
+        m_samplerList.insert({index++, samplerId });
     }
 }
 
 uint32_t Engine::Utility::GltfLoader::GetSampler(uint32_t index)
 {
-    auto it = std::find_if(m_samplerList.begin(), m_samplerList.end(), [&index](const uint32_t& e) {return e == index;});
+    //auto it = std::find_if(m_samplerList.begin(), m_samplerList.end(), [&index](const uint32_t& e) {return e == index; });
+    auto it = m_samplerList.find(index);
     ASSERT_MSG_DEBUG(it != m_samplerList.end(), "sampler not found");
 
-    return *it;
+    return it->second;
 }
 
 Engine::Utility::GltfLoader::GltfLoader(Core::ECS::World* worldObj)
@@ -362,7 +364,7 @@ Engine::Utility::GltfLoader::GltfLoader(Core::ECS::World* worldObj)
 void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::vector<Core::ECS::EntityHandle*>& entityList)
 {
     // load file from gltfPath
-    std::string path = ASSETS_PATH + std::string{ "\\" } + assetName;
+    std::string path = ASSETS_PATH + std::string{ "\\models\\" } + assetName;
 
     tinygltf::Model glTFInput;
     tinygltf::TinyGLTF gltfContext;

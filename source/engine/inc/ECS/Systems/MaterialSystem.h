@@ -27,7 +27,12 @@ class MaterialSystem : public Core::ECS::System
 private:
     std::vector<Core::ECS::Components::Material*> m_materialList;
     std::map<uint32_t, std::vector<uint32_t>> m_materialDescriptorList;
+
     std::vector<Core::Utility::MaterialData>& m_materialData;
+    Core::Utility::MaterialData& m_skyboxData;
+
+    Core::ECS::Components::Material* m_skyboxMaterial;
+    std::vector<uint32_t> m_skyboxDescriptorIds;
 
 public:
     virtual void Init() override;
@@ -42,6 +47,6 @@ public:
     /// <param name="materialCreationEvent"></param>
     void HandleMaterialCreation(Core::ECS::Events::MaterialCreationEvent* materialCreationEvent);
 
-    MaterialSystem(std::vector<Core::Utility::MaterialData>& materialData);
+    MaterialSystem(std::vector<Core::Utility::MaterialData>& materialData, Core::Utility::MaterialData& skyboxData);
     virtual ~MaterialSystem();
 };

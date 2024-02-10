@@ -35,7 +35,8 @@ namespace Renderer
                     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
                     Renderer::RenderGraph::Utils::CallbackUtility& funcs,
                     const std::string& name,
-                    const std::string& effectName);
+                    const std::string& effectName,
+                    const Core::Utility::EffectInfo& effectInfo);
 
                 ~OpaqueUnlit();
 
