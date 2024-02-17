@@ -34,10 +34,12 @@ namespace Renderer
                 std::vector<Core::Wrappers::RenderingInfo> m_renderingInfo;
                 Core::Wrappers::Rect2D m_renderArea;
 
+                // to avoid default 0 value
                 std::optional<uint32_t> m_graphicsPipelineId;
-                DrawInfo m_drawInfo;
 
-                Core::Utility::TaskId m_taskId;
+                // in case there are no object for a specific technique/material, we can remove the drawing setup
+                std::optional<DrawInfo> m_drawInfo;
+
 
             public:
                 std::optional<uint32_t> m_vertexInputStateId;
@@ -140,52 +142,55 @@ namespace Renderer
                     Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
                     Renderer::CommandReader::BeginRendering(info, m_renderingInfoId[frameInfo.m_swapBufferIndex]);
 
-                    CommandReader::SetViewport(info, m_renderArea.lengthX, m_renderArea.lengthY,
-                        m_renderArea.offsetX, m_renderArea.offsetY, 0.0f, 1.0f);
-
-                    CommandReader::SetScissor(info, m_renderArea.lengthX, m_renderArea.lengthY,
-                        m_renderArea.offsetX, m_renderArea.offsetY);
-
-                    // bind pipeline
-                    CommandReader::BindPipeline(info, Core::Enums::PipelineType::GRAPHICS, m_graphicsPipelineId.value());
-                    for (auto& meshInfo : m_drawInfo.m_meshInfoList)
+                    if (m_drawInfo.has_value())
                     {
-                        // bind vertex buffer
-                        for (auto& vertInfo : meshInfo.m_vertexBufferInfo)
+                        CommandReader::SetViewport(info, m_renderArea.lengthX, m_renderArea.lengthY,
+                            m_renderArea.offsetX, m_renderArea.offsetY, 0.0f, 1.0f);
+
+                        CommandReader::SetScissor(info, m_renderArea.lengthX, m_renderArea.lengthY,
+                            m_renderArea.offsetX, m_renderArea.offsetY);
+
+                        // bind pipeline
+                        CommandReader::BindPipeline(info, Core::Enums::PipelineType::GRAPHICS, m_graphicsPipelineId.value());
+                        for (auto& meshInfo : m_drawInfo.value().m_meshInfoList)
                         {
-                            CommandReader::BindVertexBuffers(info, vertInfo);
-                        }
+                            // bind vertex buffer
+                            for (auto& vertInfo : meshInfo.m_vertexBufferInfo)
+                            {
+                                CommandReader::BindVertexBuffers(info, vertInfo);
+                            }
 
-                        // bind index buffer
-                        if (meshInfo.m_indexBufferInfo.has_value())
-                        {
-                            CommandReader::BindIndexBuffers(info, meshInfo.m_indexBufferInfo.value());
-                        }
+                            // bind index buffer
+                            if (meshInfo.m_indexBufferInfo.has_value())
+                            {
+                                CommandReader::BindIndexBuffers(info, meshInfo.m_indexBufferInfo.value());
+                            }
 
-                        // bind descriptor set
-                        CommandReader::BindDescriptorSet(info, meshInfo.m_descriptorInfo, m_pipelineLayoutId.value());
+                            // bind descriptor set
+                            CommandReader::BindDescriptorSet(info, meshInfo.m_descriptorInfo, m_pipelineLayoutId.value());
 
-                        // draw
-                        if (meshInfo.m_indexBufferInfo.has_value())
-                        {
-                            Core::Wrappers::IndexedDrawInfo indexDrawInfo{};
-                            indexDrawInfo.firstIndex = 0;
-                            indexDrawInfo.firstInstance = 0;
-                            indexDrawInfo.indexCount = meshInfo.m_indexCount;
-                            indexDrawInfo.instanceCount = 1;
-                            indexDrawInfo.vertexOffset = 0;
+                            // draw
+                            if (meshInfo.m_indexBufferInfo.has_value())
+                            {
+                                Core::Wrappers::IndexedDrawInfo indexDrawInfo{};
+                                indexDrawInfo.firstIndex = 0;
+                                indexDrawInfo.firstInstance = 0;
+                                indexDrawInfo.indexCount = meshInfo.m_indexCount;
+                                indexDrawInfo.instanceCount = 1;
+                                indexDrawInfo.vertexOffset = 0;
 
-                            CommandReader::DrawIndex(info, indexDrawInfo);
-                        }
-                        else
-                        {
-                            Core::Wrappers::DrawArrayInfo drawInfo{};
-                            drawInfo.firstInstance = 0;
-                            drawInfo.firstVertex = 0;
-                            drawInfo.instanceCount = 1;
-                            drawInfo.vertexCount = meshInfo.m_vertexCount;
+                                CommandReader::DrawIndex(info, indexDrawInfo);
+                            }
+                            else
+                            {
+                                Core::Wrappers::DrawArrayInfo drawInfo{};
+                                drawInfo.firstInstance = 0;
+                                drawInfo.firstVertex = 0;
+                                drawInfo.instanceCount = 1;
+                                drawInfo.vertexCount = meshInfo.m_vertexCount;
 
-                            CommandReader::Draw(info, drawInfo);
+                                CommandReader::Draw(info, drawInfo);
+                            }
                         }
                     }
 

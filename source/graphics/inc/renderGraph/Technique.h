@@ -134,8 +134,8 @@ namespace Renderer
             uint32_t m_indiciesCount = 0;
         };
 
-        void CreateDrawInfo(const Core::Utility::TransformData& data,
-            const std::string& effectName, const std::string& techName, const std::string& taskName,
+        void CreateDrawInfo(const Core::Utility::TransformData& data, uint32_t taskId,
+            /*const std::string& effectName, const std::string& techName, const std::string& taskName,*/
             RenderGraph::Tasks::DrawInfo& drawInfo);
 
         void CreateSetInfo(std::map<Core::Enums::ResourceSets,
@@ -150,6 +150,7 @@ namespace Renderer
             void* m_next = nullptr;
         };
 
+        // get all the renderData member objects that are meant for the specific technique
         void Filter(const FilterInfo& info,
             const std::function<bool(uint32_t index, void* data, void* next)>& filterFunc,
             std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
@@ -177,6 +178,9 @@ namespace Renderer
             GraphNodeWrapper& taskNode
         );
 
+
+
+        // Use the childIndicies of heigher level set to pick the lower level sets for a set list
         template < typename ParentType, typename ChildType, Core::Enums::ResourceSets setType>
         void Pick(std::vector<std::pair<uint32_t, void*>>& parentList,
             std::map<Core::Enums::ResourceSets, std::vector<std::pair<uint32_t, void*>>>& filteredDataList,
@@ -187,10 +191,13 @@ namespace Renderer
         {
             // as child indicies are available for transform in mat and there are no filtering params 
             // in transform at this moment
+            // Parent is MATERIAL
             for (auto& data : parentList)
             {
                 auto parentData = static_cast<ParentType*>(data.second);
                 auto& childIndicies = parentData->m_childSetIndicies;
+
+                ASSERT_MSG_DEBUG(childIndicies.size() != 0, "Needs childIndicies");
 
                 void* dataPtr = childData;
                 for (auto index : childIndicies)
@@ -210,7 +217,6 @@ namespace Renderer
                         filteredDataList[setType].push_back(pair);
                     }
 
-                    //CreateDrawInfo(*test, m_parentEffectName, m_name, taskObj->GetTaskName(), drawInfo);
                     if (additionalFunc.has_value())
                     {
                         auto& func = additionalFunc.value();

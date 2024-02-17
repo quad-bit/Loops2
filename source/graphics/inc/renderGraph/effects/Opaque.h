@@ -31,7 +31,7 @@ namespace Renderer
 
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphEndResourceNodes() override
                 {
-                    return m_techniques[1]->GetGraphEndResourceNodes();
+                    return m_techniques[2]->GetGraphEndResourceNodes();
                 }
             };
 

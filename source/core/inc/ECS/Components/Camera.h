@@ -72,7 +72,7 @@ namespace Core
                 float mouseSensitivity;
                 float fov;
                 float aspect;
-                float zNear = 1.0f, zFar = 1000.0f;
+                float zNear = 0.10f, zFar = 256.0f;
                 CameraType projectionType;
 
                 void* cameraDataRaw;
@@ -83,7 +83,10 @@ namespace Core
 
                 Transform* transform;
                 // Constructor with vectors
-                Camera(Transform* transform, float aspectRatio, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH, CameraType projectionType = CameraType::PERSPECTIVE);
+                Camera(Transform* transform, float aspectRatio,
+                    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+                    float yaw = YAW, float pitch = PITCH,
+                    CameraType projectionType = CameraType::PERSPECTIVE);
 
                 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
                 glm::mat4 GetViewMatrix();

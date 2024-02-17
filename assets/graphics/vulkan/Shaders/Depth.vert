@@ -26,6 +26,6 @@ void main()
         0.0f, 0.0f, 0.5f, 1.0f
     );
 
-   gl_Position = clip * view.projection * view.view * transform.model * vec4(pos.xyz, 1.0);
+   gl_Position = view.projection * view.view * transform.model * vec4(pos.xyz, 1.0);
    vec3 cam = view.cameraPos; // so that spir cross does not ignore it
 }

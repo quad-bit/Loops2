@@ -1,6 +1,8 @@
 #include "renderGraph/Technique.h"
 
-void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& data, const std::string& effectName, const std::string& techName, const std::string& taskName, Renderer::RenderGraph::Tasks::DrawInfo& drawInfo)
+void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& data, uint32_t taskId,
+    /*const std::string& effectName, const std::string& techName, const std::string& taskName,*/
+    Renderer::RenderGraph::Tasks::DrawInfo& drawInfo)
 {
     Renderer::RenderGraph::Tasks::MeshDrawInfo meshInfo{};
 
@@ -15,9 +17,9 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
         meshInfo.m_indexCount = data.m_indexCount.value();
     }
 
-    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
-    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techName);
-    auto taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
+    //auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+    //auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techName);
+    //auto taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
 
     // vertex buffer infos
     auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(taskId);
@@ -49,9 +51,11 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
                 ASSERT_MSG_DEBUG(0, "No UV0 attrib in the json file");
             vertexInfo.bufferIds.push_back(data.m_uv0BufferId.value());
             break;
-            //case Core::Enums::VertexAttributeType::TANGENT:
-            //    vertexInfo.bufferIds.push_back(data.m_positionBufferId);
-            //    break;
+        case Core::Enums::VertexAttributeType::TANGENT:
+            if (!data.m_tangentBufferId.has_value())
+                ASSERT_MSG_DEBUG(0, "No Tangent attrib in the json file");
+            vertexInfo.bufferIds.push_back(data.m_tangentBufferId.value());
+            break;
         }
     }
     meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
@@ -275,11 +279,18 @@ void Renderer::RenderGraph::Filter(const FilterInfo& info,
             }
             break;
             case Core::Enums::UNKNOWN:
-                //setInfo.m_descriptorSetId = static_cast<Core::Utility::CameraData*>(data)->m_descriptorSetId;
                 break;
             case Core::Enums::LIGHT:
-                //setInfo.m_descriptorSetId = static_cast<Core::Utility::CameraData*>(data)->m_descriptorSetId;
-                break;
+            {
+                auto light = static_cast<Core::Utility::LightData*>(dataPtr);
+                setInfo.m_descriptorSetId = light->m_descriptorSetId;
+                if (light->m_childSetIndicies.size() > 0)
+                {
+                    setInfo.m_childIndicies = light->m_childSetIndicies.data();
+                    setInfo.m_indiciesCount = light->m_childSetIndicies.size();
+                }
+            }
+            break;
             case Core::Enums::MATERIAL:
             {
                 auto mat = static_cast<Core::Utility::MaterialData*>(dataPtr);

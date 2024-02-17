@@ -25,9 +25,55 @@ namespace Renderer
 
                 GraphNodeWrapper m_taskNode;
                 std::unique_ptr<Renderer::RenderGraph::Task> m_skyboxRenderTask;
+                uint32_t m_skyboxRenderTaskId;
 
                 uint32_t m_renderHeight, m_renderWidth;
                 Core::Utility::TransformData m_transformData;
+
+                std::vector<glm::vec3> skyboxVertices = {
+                    // positions          
+                    {-1.0f,  1.0f, -1.0f},
+                    {-1.0f, -1.0f, -1.0f},
+                    { 1.0f, -1.0f, -1.0f},
+                    { 1.0f, -1.0f, -1.0f},
+                    { 1.0f,  1.0f, -1.0f},
+                    {-1.0f,  1.0f, -1.0f},
+
+                    {-1.0f, -1.0f,  1.0f},
+                    {-1.0f, -1.0f, -1.0f},
+                    {-1.0f,  1.0f, -1.0f},
+                    {-1.0f,  1.0f, -1.0f},
+                    {-1.0f,  1.0f,  1.0f},
+                    {-1.0f, -1.0f,  1.0f},
+
+                    {1.0f, -1.0f, -1.0f},
+                    {1.0f, -1.0f,  1.0f},
+                    {1.0f,  1.0f,  1.0f},
+                    {1.0f,  1.0f,  1.0f},
+                    {1.0f,  1.0f, -1.0f},
+                    {1.0f, -1.0f, -1.0f},
+
+                    {-1.0f, -1.0f,  1.0f},
+                    {-1.0f,  1.0f,  1.0f},
+                    { 1.0f,  1.0f,  1.0f},
+                    { 1.0f,  1.0f,  1.0f},
+                    { 1.0f, -1.0f,  1.0f},
+                    {-1.0f, -1.0f,  1.0f},
+
+                    {-1.0f,  1.0f, -1.0f},
+                    { 1.0f,  1.0f, -1.0f},
+                    { 1.0f,  1.0f,  1.0f},
+                    { 1.0f,  1.0f,  1.0f},
+                    {-1.0f,  1.0f,  1.0f},
+                    {-1.0f,  1.0f, -1.0f},
+
+                    {-1.0f, -1.0f, -1.0f},
+                    {-1.0f, -1.0f,  1.0f},
+                    { 1.0f, -1.0f, -1.0f},
+                    { 1.0f, -1.0f, -1.0f},
+                    {-1.0f, -1.0f,  1.0f},
+                    { 1.0f, -1.0f,  1.0f}
+                };
 
             public:
                 Skybox(

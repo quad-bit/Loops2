@@ -28,8 +28,9 @@ void Renderer::RenderGraph::Techniques::Skybox::CreateResources()
     depthState.depthBoundsTestEnable = false;
     depthState.depthCompareOp = Core::Enums::CompareOp::COMPARE_OP_LESS_OR_EQUAL;
     depthState.depthTestEnable = true;
-    depthState.depthWriteEnable = true;
+    depthState.depthWriteEnable = false;
     depthState.front = depthState.back;
+    depthState.front.compareOp = Core::Enums::CompareOp::COMPARE_OP_NEVER;
     depthState.depthBoundsTestEnable = false;
     depthState.maxDepthBounds = 0;
     depthState.minDepthBounds = 0;
@@ -40,13 +41,13 @@ void Renderer::RenderGraph::Techniques::Skybox::CreateResources()
 
     Core::Utility::RasterizationStateWrapper rasterWrapper{};
     Core::Wrappers::RasterizationState rasterState{};
-    rasterState.cullMode = Core::Enums::CullMode::CULL_MODE_BACK_BIT;
-    rasterState.depthBiasClamp =0 ;
+    rasterState.cullMode = Core::Enums::CullMode::CULL_MODE_NONE;
+    rasterState.depthBiasClamp = 0 ;
     rasterState.depthBiasConstantFactor = 0;
     rasterState.depthBiasEnable = false;
     rasterState.depthBiasSlopeFactor = 0;
     rasterState.depthClampEnable = false;
-    rasterState.frontFace = Core::Enums::FrontFace::FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterState.frontFace = Core::Enums::FrontFace::FRONT_FACE_CLOCKWISE;
     rasterState.lineWidth = 1.0f;
     rasterState.polygonMode = Core::Enums::PolygonMode::POLYGON_MODE_FILL;
     rasterState.rasterizerDiscardEnable = false;
@@ -98,15 +99,13 @@ Renderer::RenderGraph::Techniques::Skybox::Skybox(
     {
         Core::Math::CubeIndexed obj{};
 
-        std::vector<glm::vec3> positions = obj.positions;
-        size_t numVertices = obj.indices.size();
-        positions.resize(numVertices);
+        std::vector<glm::vec3> positions;
+        positions.resize(skyboxVertices.size());
 
-        for (int i = 0; i < numVertices; i++)
+        for (int i = 0; i < skyboxVertices.size(); i++)
         {
-            positions[i] = obj.positions[obj.indices[i]];
+            positions[i] = 5.0f * skyboxVertices[i];
         }
-
 
         auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
         {
@@ -140,6 +139,11 @@ Renderer::RenderGraph::Techniques::Skybox::Skybox(
         m_transformData.m_vertexCount = positions.size();
     }
 
+    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, name);
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_taskNode.m_nodeBase.get())->GetTask();
+    auto taskName = taskObj->GetTaskName();
+    m_skyboxRenderTaskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
 }
 
 Renderer::RenderGraph::Techniques::Skybox::~Skybox()
@@ -184,8 +188,7 @@ void Renderer::RenderGraph::Techniques::Skybox::SetupFrame(const Core::Wrappers:
 
     auto taskName = taskObj->GetTaskName();
 
-    Renderer::RenderGraph::CreateDrawInfo(m_transformData,
-        m_parentEffectName, m_name, taskName, drawInfo);
+    Renderer::RenderGraph::CreateDrawInfo(m_transformData, m_skyboxRenderTaskId, drawInfo);
 
     CreateSetInfo(setInfoMap, drawInfo);
 

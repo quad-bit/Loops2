@@ -83,6 +83,11 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
             data.m_uv0BufferId = renderer->GetComponent()->geometry->m_uv0BufferId;
         }
 
+        if (renderer->GetComponent()->geometry->m_tangents.size() > 0)
+        {
+            data.m_tangentBufferId = renderer->GetComponent()->geometry->m_tangentBufferId;
+        }
+
         if (renderer->GetComponent()->geometry->m_indicies.size() > 0)
         {
             data.m_indexBufferId = (uint32_t)(renderer->GetComponent()->geometry->m_indexBufferId);

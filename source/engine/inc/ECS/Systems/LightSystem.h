@@ -6,6 +6,7 @@
 #include <ECS/Events/MeshAdditionEvent.h>
 #include <ECS/Events/ComponentAdditionEvent.h>
 #include <RenderData.h>
+#include <array>
 
 #if (RENDERING_API == VULKAN)
 class VulkanInterface;
@@ -32,35 +33,43 @@ namespace Core
     }
 }
 
+struct PointLightUniform
+{
+    glm::vec3 lightPos;
+    float lightRadius;
+    glm::vec4 lightColor;
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+};
+
+#define MAX_POINT_LIGHTS 20
+
 class LightSystem : public Core::ECS::System
 {
 private:
     std::vector<Core::ECS::Components::Light *> lightlist;
-    std::map<Core::ECS::Components::Light *, Core::ECS::Components::Camera *> lightToCamList;
-    std::vector<Core::Utility::DescriptorSetInfo> resDescriptionList;
-    Core::Utility::GlobalResourceAllocationConfig lightUniformAllocConfig, shadowMapUniformAllocConfig;
-    Core::Utility::GlobalResourceSharingConfig lightBufferSharingConfig;
+    std::vector<Core::Utility::DescriptorSetInfo> pointLightDescriptorInfoList;
+    Core::Utility::GlobalResourceAllocationConfig pointLightUniformAllocConfig;
+    Core::Utility::GlobalResourceSharingConfig pointLightBufferSharingConfig;
 
     uint32_t idCounter = 0;
     uint32_t GeneratedLightId();
 
     Core::Wrappers::SetWrapper * lightSetWrapper;
 
-    //std::vector<GraphNode<DrawGraphNode> *> lightGraphNodeList;
-    //std::map<DrawGraphNode *, ShaderBindingDescription *> nodeToDescriptionMap;
     std::map<Core::ECS::Components::Light *, Core::Utility::DescriptorSetInfo> lightToDescriptionMap;
 
-    size_t memoryAlignedUniformSize;
+    size_t pointUniformSize;
+    size_t memoryAlignedPointUniformSize;
     
-    Core::ECS::Components::Material * shadowMappingMat = nullptr;
-    System * cameraSystem;
-
     void CreateLightUniformDescription(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light);
     void CreateLightUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
-    Core::ECS::Components::Camera * CreateLightCamera(Core::ECS::Components::Transform * transform);
-    void CreateShadowMap(Core::Utility::ShaderBindingDescription * desc);
 
-    std::vector<Core::Utility::LightData>& m_lightDataList;
+    Core::Utility::LightData& m_lightData;
+
+    uint32_t m_pointLightCount = 0;
+    std::vector<std::array<PointLightUniform, MAX_POINT_LIGHTS>> m_pointUniformListPerFrame;
 
 public:
     virtual void Init() override;
@@ -68,11 +77,7 @@ public:
     virtual void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo) override;
 
     void HandleLightAddition(Core::ECS::Events::LightAdditionEvent * lightAdditionEvent);
-    //void HandleMeshAddition(MeshToMatAdditionEvent *  meshAdditionEvent);
-    //void HandleRendererAddition(MeshRendererAdditionEvent *  rendererAdditionEvent);
-    //void HandleDepthPrepassCreation(DepthPassAttachmentCreationEvent * evt);
-    void AssignCameraSystem(Core::ECS::System * camSystem);
 
-    LightSystem(std::vector<Core::Utility::LightData>&);
+    LightSystem(Core::Utility::LightData& lightData);
     virtual ~LightSystem();
 };

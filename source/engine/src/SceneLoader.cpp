@@ -15,10 +15,13 @@
 #include "VulkanInterface.h"
 #include "resourceManagement/UniformFactory.h"
 #include <utility>
+#include <Math/TangentCalculator.h>
 
 
 void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, const tinygltf::Model& input, Core::ECS::EntityHandle* parent)
 {
+    bool generateTangents = false;
+
     Core::ECS::EntityHandle* entity = m_ecsWorldObj->CreateEntity();
     entity->GetEntity()->entityName = inputNode.name;
     auto transform = entity->GetTransform();
@@ -77,6 +80,7 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
             uint32_t vertexStart = 0;// static_cast<uint32_t>(vertexBuffer.size());
             uint32_t indexCount = 0;
             Core::ECS::Components::Mesh* mesh = new Core::ECS::Components::Mesh();
+            size_t vertexCount = 0;
 
             // Vertices
             {
@@ -84,7 +88,6 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                 const float* normalsBuffer = nullptr;
                 const float* texCoordsBuffer = nullptr;
                 const float* tangentsBuffer = nullptr;
-                size_t vertexCount = 0;
 
                 // Get buffer data for vertex normals
                 if (glTFPrimitive.attributes.find("POSITION") != glTFPrimitive.attributes.end()) {
@@ -106,13 +109,11 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     texCoordsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                 }
-                // POI: This sample uses normal mapping, so we also need to load the tangents from the glTF file
                 if (glTFPrimitive.attributes.find("TANGENT") != glTFPrimitive.attributes.end()) {
                     const tinygltf::Accessor& accessor = input.accessors[glTFPrimitive.attributes.find("TANGENT")->second];
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     tangentsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                 }
-
 
                 // Append data to model's vertex buffer
                 for (size_t v = 0; v < vertexCount; v++) {
@@ -120,7 +121,14 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                     mesh->m_normals.push_back(glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f)));
                     mesh->m_uv0.push_back(texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f));
                     mesh->m_colors.push_back(glm::vec4(1.0f));
-                    mesh->m_tangents.push_back(tangentsBuffer ? glm::make_vec4(&tangentsBuffer[v * 4]) : glm::vec4(0.0f));
+
+                    // if normals are present and tangents are missing 
+                    if (normalsBuffer && !tangentsBuffer)
+                    {
+                        generateTangents = true;
+                    }
+                    else
+                        mesh->m_tangents.push_back(glm::make_vec4(&tangentsBuffer[v * 4]));
                 }
             }
 
@@ -162,6 +170,13 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                     std::cerr << "Index component type " << accessor.componentType << " not supported!" << std::endl;
                     return;
                 }
+            }
+
+            if (generateTangents)
+            {
+                mesh->m_tangents.resize(vertexCount);
+                Core::Math::CalculateTangentArray(vertexCount, mesh->m_positions.data(), mesh->m_normals.data(),
+                    mesh->m_uv0.data(), mesh->m_indicies.data(), mesh->m_indicies.size(), mesh->m_tangents.data());
             }
 
             Renderer::ResourceManagement::MeshFactory::GetInstance()->AddMesh(mesh);
@@ -209,10 +224,11 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
             baseSamplerId = GetSampler(input.textures[glTFMaterial.values["baseColorTexture"].TextureIndex()].sampler);
         }
 
-        //// Get the normal map texture index
-        //if (glTFMaterial.additionalValues.find("normalTexture") != glTFMaterial.additionalValues.end()) {
-        //    materials[i].normalTextureIndex = glTFMaterial.additionalValues["normalTexture"].TextureIndex();
-        //}
+        // Get the normal map texture index
+        if (glTFMaterial.additionalValues.find("normalTexture") != glTFMaterial.additionalValues.end()) {
+            normalTextureId = GetTexture(glTFMaterial.additionalValues["normalTexture"].TextureIndex());
+        }
+
         //// Get some additional material parameters that are used in this sample
         //materials[i].alphaMode = glTFMaterial.alphaMode;
         //materials[i].alphaCutOff = (float)glTFMaterial.alphaCutoff;
@@ -220,13 +236,13 @@ void Engine::Utility::GltfLoader::LoadMaterials(const tinygltf::Model& input)
 
         std::string tech = "OpaqueUnlit";
 
-        if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt)
+        if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt && normalTextureId != std::nullopt)
+        {
+            tech = "OpaqueTexturedLit";
+        }
+        else if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt)
         {
             tech = "OpaqueTexturedUnlit";
-        }
-        else if (baseTextureId != std::nullopt && baseSamplerId != std::nullopt && normalTextureId != std::nullopt)
-        {
-
         }
 
         auto effectId = VulkanInterfaceAlias::GetEffectId("OpaquePass");
@@ -259,7 +275,7 @@ Core::ECS::Components::Material* Engine::Utility::GltfLoader::GetMaterial(const 
 
 void Engine::Utility::GltfLoader::LoadTextures(const tinygltf::Model& input)
 {
-    const auto imageFormat = Core::Enums::Format::B8G8R8A8_UNORM;
+    const auto imageFormat = Core::Enums::Format::R8G8B8A8_UNORM;
     uint32_t textureIndex = 0;
     for (auto& gltfTexture : input.textures)
     {
@@ -377,7 +393,8 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
     auto transform = entity->GetTransform();
     transform->SetLocalPosition(glm::vec3(0, 0, 0));
     transform->SetLocalScale(glm::vec3(1, 1, 1));
-    transform->SetLocalEulerAngles(glm::vec3(0, glm::radians(90.0), 0));
+    //transform->SetLocalEulerAngles(glm::vec3(0, glm::radians(90.0), 0));
+    transform->SetLocalEulerAngles(glm::vec3(0, 0, 0));
 
     m_entityList.push_back(entity);
 

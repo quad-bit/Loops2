@@ -25,6 +25,7 @@ namespace Renderer
 
                 GraphNodeWrapper m_taskNode;
                 std::unique_ptr<Renderer::RenderGraph::Task> m_opaqueRenderTask;
+                uint32_t m_opaqueRenderTaskId;
 
                 uint32_t m_renderHeight, m_renderWidth;
 

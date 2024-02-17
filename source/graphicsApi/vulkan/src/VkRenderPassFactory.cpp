@@ -259,7 +259,9 @@ uint32_t GfxVk::Renderpass::VkRenderPassFactory::CreateRenderingInfo(const Core:
     info.m_renderingInfo.layerCount = 1;
     info.m_renderingInfo.pColorAttachments = info.m_colorAttachmentInfo.data();
     info.m_renderingInfo.pNext = nullptr;
-    info.m_renderingInfo.renderArea = VkRect2D{ 0, 0, (uint32_t)renderingInfo.m_renderArea.lengthX, (uint32_t)renderingInfo.m_renderArea.lengthY };
+    // abs value being used to counter the viewport adjustment for Vulkan coordinate system
+    //https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+    info.m_renderingInfo.renderArea = VkRect2D{ 0, 0, (uint32_t)glm::abs(renderingInfo.m_renderArea.lengthX), (uint32_t)glm::abs(renderingInfo.m_renderArea.lengthY )};
     info.m_renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
 
     return id;

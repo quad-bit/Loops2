@@ -65,6 +65,7 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::CreateResources()
 
     Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_colorOutput.m_graphNode);
     Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_depthOutput.m_graphNode);
+
 }
 
 Renderer::RenderGraph::Techniques::OpaqueUnlit::OpaqueUnlit(
@@ -80,6 +81,13 @@ Renderer::RenderGraph::Techniques::OpaqueUnlit::OpaqueUnlit(
     m_renderHeight(windowSettings.m_renderHeight)
 {
     CreateResources();
+
+
+    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, name);
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_taskNode.m_nodeBase.get())->GetTask();
+    auto taskName = taskObj->GetTaskName();
+    m_opaqueRenderTaskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
 }
 
 Renderer::RenderGraph::Techniques::OpaqueUnlit::~OpaqueUnlit()
@@ -113,6 +121,9 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
     camFilterInfo.m_stride = sizeof(Core::Utility::CameraData);
     Filter(camFilterInfo, Renderer::RenderGraph::CameraFilter, filteredDataList, setInfoMap);
 
+    // There are no material set for this technique but it still needs to filter the transformData objects
+    // for this particular technique, which are stored in childIndicies of the materialData getting filled in 
+    // MeshRendererSystem
     FilterInfo matFilterInfo{};
     matFilterInfo.m_data = (void*)m_renderData.m_materialData.data();
     matFilterInfo.m_dataCount = m_renderData.m_materialData.size();
@@ -124,34 +135,26 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
     // Pick =============================
     struct PickInfo
     {
-        const std::string& m_parentEffectName;
-        const std::string& m_techName;
-        const std::string& m_taskName;
+        uint32_t m_taskId;
         Renderer::RenderGraph::Tasks::DrawInfo& m_drawInfo;
 
         PickInfo(
-            const std::string& parentEffectName,
-            const std::string& techName,
-            const std::string& taskName,
+            uint32_t taskId,
             Renderer::RenderGraph::Tasks::DrawInfo& drawInfo
-        ):
-            m_parentEffectName(parentEffectName),
-            m_techName(techName),
-            m_taskName(taskName),
+        ) :
+            m_taskId(taskId),
             m_drawInfo(drawInfo)
         {
         }
     };
 
     auto taskName = taskObj->GetTaskName();
-    PickInfo pickInfo(m_parentEffectName, m_name, taskName, drawInfo);
+    PickInfo pickInfo(m_opaqueRenderTaskId, drawInfo);
     auto PickFunc = [](void* setData, void* funcData)
     {
         auto pickInfo = static_cast<PickInfo*>(funcData);
         auto transformData = static_cast<Core::Utility::TransformData*>(setData);
-        Renderer::RenderGraph::CreateDrawInfo(*transformData,
-            pickInfo->m_parentEffectName, pickInfo->m_techName, pickInfo->m_taskName,
-            pickInfo->m_drawInfo);
+        Renderer::RenderGraph::CreateDrawInfo(*transformData, pickInfo->m_taskId, pickInfo->m_drawInfo);
     };
 
     auto funcData = static_cast<void*>(&pickInfo);
@@ -162,9 +165,10 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
         PickFunc, funcData);
 
     // ======================
-
-    CreateSetInfo(setInfoMap, drawInfo);
-
-    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    if (setInfoMap.find(Core::Enums::TRANSFORM) != setInfoMap.end())
+    {
+        CreateSetInfo(setInfoMap, drawInfo);
+        ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    }
 }
 

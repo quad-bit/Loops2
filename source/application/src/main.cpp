@@ -6,7 +6,7 @@ void main()
 {
     ApplicationController appController;
 
-    Engine::EngineManager::GetInstance()->Init("Loops", 1024, 1024, 1024, 1024);
+    Engine::EngineManager::GetInstance()->Init("Loops", 1280, 720, 1280, 720);
     appController.Init();
 
     appController.Update();

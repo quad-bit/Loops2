@@ -110,6 +110,7 @@ inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Light *
 
     Core::ECS::Events::LightAdditionEvent evt;
     evt.light = componentType;
+    evt.transform = entityObj->transform;
     Core::ECS::Events::EventBus::GetInstance()->Publish(&evt);
 }
 

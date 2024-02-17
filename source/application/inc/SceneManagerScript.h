@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ECS/Components/Scriptable.h>
+#include <array>
 
 class CameraController;
 
@@ -17,6 +18,7 @@ namespace Core
     }
 }
 
+#define NUM_LIGHTS 5
 class SceneManagerScript : public Core::ECS::Components::Scriptable
 {
 private:
@@ -25,20 +27,12 @@ private:
     Core::ECS::EntityHandle* camHandle0;
     Core::ECS::EntityHandle* camHandle1;
     Core::ECS::Components::Scriptable * cameraController;
-    
+
     //EntityHandle* playerHandle;
     //Core::ECS::Components::Scriptable* playerHandlerScript;
-    
-    Core::ECS::EntityHandle* lightHandle;
-    Core::ECS::Components::Light * lightComponent;
-    Core::ECS::Components::MeshRenderer * lightDebugRenderer;
-    
-    Core::ECS::EntityHandle* floorHandle, *wallHandle;
-    Core::ECS::Components::MeshRenderer * floorRenderer, *wallRenderer;
 
-    std::vector<Core::ECS::EntityHandle*> boxHandles;
-    std::vector<Core::ECS::Components::MeshRenderer*> boxRenderer;
-    const uint32_t numBoxes = 0;
+    std::array< Core::ECS::EntityHandle*, NUM_LIGHTS> lightHandles;
+    std::array< Core::ECS::Components::Light*, NUM_LIGHTS> lightComponents;
 
     float prevAngle, currentAngle;
 

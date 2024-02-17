@@ -41,6 +41,12 @@ Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::OpaqueTexturedUnlit(
 
     Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_colorOutput.m_graphNode);
     Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_depthOutput.m_graphNode);
+
+    auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
+    auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, name);
+    auto taskObj = ((Renderer::RenderGraph::TaskNode*)m_taskNode.m_nodeBase.get())->GetTask();
+    auto taskName = taskObj->GetTaskName();
+    m_opaqueRenderTaskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
 }
 
 Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::~OpaqueTexturedUnlit()
@@ -82,38 +88,31 @@ void Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::SetupFrame(const Co
     matFilterInfo.m_next = (void*)&m_effectInfo;
     Filter(matFilterInfo, Renderer::RenderGraph::MaterialFilter, filteredDataList, setInfoMap);
 
+    // Pick =============================
     struct PickInfo
     {
-        const std::string& m_parentEffectName;
-        const std::string& m_techName;
-        const std::string& m_taskName;
+        uint32_t m_taskId;
         Renderer::RenderGraph::Tasks::DrawInfo& m_drawInfo;
 
         PickInfo(
-            const std::string& parentEffectName,
-            const std::string& techName,
-            const std::string& taskName,
+            uint32_t taskId,
             Renderer::RenderGraph::Tasks::DrawInfo& drawInfo
-        ):
-            m_parentEffectName(parentEffectName),
-            m_techName(techName),
-            m_taskName(taskName),
+        ) :
+            m_taskId(taskId),
             m_drawInfo(drawInfo)
         {
         }
     };
 
-    // Pick =============================
 
+    // the pick function know how to use the funcData ( pick data in this case )
     auto taskName = taskObj->GetTaskName();
-    PickInfo pickInfo(m_parentEffectName, m_name, taskName, drawInfo);
+    PickInfo pickInfo(m_opaqueRenderTaskId, drawInfo);
     auto PickFunc = [](void* setData, void* funcData)
     {
         auto pickInfo = static_cast<PickInfo*>(funcData);
         auto transformData = static_cast<Core::Utility::TransformData*>(setData);
-        Renderer::RenderGraph::CreateDrawInfo(*transformData,
-            pickInfo->m_parentEffectName, pickInfo->m_techName, pickInfo->m_taskName,
-            pickInfo->m_drawInfo);
+        Renderer::RenderGraph::CreateDrawInfo(*transformData, pickInfo->m_taskId, pickInfo->m_drawInfo);
     };
 
     auto funcData = static_cast<void*>(&pickInfo);
@@ -125,8 +124,11 @@ void Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::SetupFrame(const Co
 
     // ======================
 
-    CreateSetInfo(setInfoMap, drawInfo);
-
-    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    // This tech requires material set id and its transform child indicies
+    if (filteredDataList[Core::Enums::MATERIAL].size() > 0)
+    {
+        CreateSetInfo(setInfoMap, drawInfo);
+        ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    }
 }
 

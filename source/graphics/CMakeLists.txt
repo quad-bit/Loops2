@@ -34,6 +34,7 @@ inc/renderGraph/pipelines/LowEndPipeline.h
 inc/renderGraph/techniques/LambertianLit.h
 inc/renderGraph/techniques/OpaqueUnlit.h
 inc/renderGraph/techniques/OpaqueTexturedUnlit.h
+inc/renderGraph/techniques/OpaqueTexturedLit.h
 inc/renderGraph/techniques/DepthTechnique.h
 inc/renderGraph/techniques/Skybox.h
 
@@ -59,6 +60,7 @@ src/renderGraph/techniques/LambertianLit.cpp
 src/renderGraph/techniques/DepthTechnique.cpp
 src/renderGraph/techniques/OpaqueUnlit.cpp
 src/renderGraph/techniques/OpaqueTexturedUnlit.cpp
+src/renderGraph/techniques/OpaqueTexturedLit.cpp
 src/renderGraph/techniques/Skybox.cpp
 
 src/renderGraph/tasks/RenderTask.cpp

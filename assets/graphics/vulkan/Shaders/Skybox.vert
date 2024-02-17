@@ -19,13 +19,16 @@ void main()
     mat4 clip = mat4(
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, -1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.5f, 0.0f,
-        0.0f, 0.0f, 0.5f, 1.0f
+        0.0f, 0.0f, 0.5f, 0.5f,
+        0.0f, 0.0f, 0.0f, 1.0f
     );
 
     outTexcoord = inPos;
+    // this is a hack, the texture was coming out inverted even after the viewport adjustment
+    outTexcoord.y *= -1.0f;
     mat4 viewMat = mat4(mat3(view.view));
-    vec4 pos = clip * view.projection * viewMat * vec4(inPos.xyz, 1.0);
+    vec4 pos = view.projection * viewMat * vec4(inPos.xyz, 1.0);
     gl_Position = pos.xyww;
+
     vec3 cam = view.cameraPos; // so that spir cross does not ignore it
 }

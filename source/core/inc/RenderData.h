@@ -53,11 +53,17 @@ namespace Core
             Core::Utility::TechniqueId m_techniqueId;
         };
 
+        struct PointLightData
+        {
+            glm::vec3 m_position; // world position, will help with LOD or sorting
+            float radius;
+        };
+
+        // represent the complete light set (point binding = 0, spot = binding = 1, etc)
         struct LightData
         {
             uint32_t m_descriptorSetId;
-            glm::vec3 m_position; // world position, will help with LOD or sorting
-            glm::mat4 m_modelMat;
+            std::vector<PointLightData> m_pointLights;
             std::vector<uint32_t> m_childSetIndicies;
         };
 
@@ -87,7 +93,7 @@ namespace Core
             std::vector<CameraData> m_cameraData;
             std::vector<TransformData> m_transformData;
             //std::map<std::string, std::vector<TransformData>> m_perEffectTransformData;
-            std::vector<LightData> m_lightData;
+            LightData m_lightData;
             // material component id to materialdata
             std::vector<MaterialData> m_materialData;
             MaterialData m_skyboxData;

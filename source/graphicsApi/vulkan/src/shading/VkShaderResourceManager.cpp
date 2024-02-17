@@ -20,6 +20,7 @@ constexpr auto POSITION_BINDING_LOCATION = 0;
 constexpr auto COLOR_BINDING_LOCATION = 1;
 constexpr auto NORMAL_BINDING_LOCATION = 2;
 constexpr auto UV0_BINDING_LOCATION = 3;
+constexpr auto TANGENT_BINDING_LOCATION = 4;
 
 GfxVk::Shading::VkShaderResourceManager* GfxVk::Shading::VkShaderResourceManager::instance = nullptr;
 
@@ -88,6 +89,15 @@ void GfxVk::Shading::VkShaderResourceManager::CreateVertexInfoForTask(
                 attribInfo.format = VK_FORMAT_R32G32_SFLOAT;
 
                 bindingInfo.stride = sizeof(glm::vec2);
+            }
+            else if (attribType == "TANGENT")
+            {
+                taskWapper.m_bindingTypeInfo.push_back({ Core::Enums::VertexAttributeType::TANGENT, TANGENT_BINDING_LOCATION });
+
+                attribInfo.location = TANGENT_BINDING_LOCATION;
+                attribInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+                bindingInfo.stride = sizeof(glm::vec4);
             }
             else
                 ASSERT_MSG_DEBUG(0, "name mismatch");
@@ -1355,11 +1365,10 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
     for (uint32_t i = 0; i < numDescriptorSets; i++)
     {
         // Create writes for various type of descriptors
-        std::vector<VkWriteDescriptorSet> writeList;
-        writeList.resize(numWritesPerDescriptorSet);
-
-        VkDescriptorBufferInfo bufferInfo = {};
-        VkDescriptorImageInfo imageInfo = {};
+        std::vector<VkWriteDescriptorSet> writeList(numWritesPerDescriptorSet);
+        std::vector<VkDescriptorBufferInfo>bufferInfo(numWritesPerDescriptorSet);
+        std::vector<VkDescriptorImageInfo>imageInfo(numWritesPerDescriptorSet);
+        //writeList.resize(numWritesPerDescriptorSet);
 
         for (uint32_t k = 0; k < numWritesPerDescriptorSet; k++)
         {
@@ -1391,17 +1400,17 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                 else
                     buf = VkBufferFactory::GetInstance()->GetBuffer(bufBindingInfo.bufferIdList[i]);
 
-                bufferInfo.buffer = *buf;
-                bufferInfo.offset = bufBindingInfo.info.offsetsForEachDescriptor[i];
-                bufferInfo.range = bufBindingInfo.info.dataSizePerDescriptorAligned;
-                writeList[k].pBufferInfo = &(bufferInfo);
+                bufferInfo[k].buffer = *buf;
+                bufferInfo[k].offset = bufBindingInfo.info.offsetsForEachDescriptor[i];
+                bufferInfo[k].range = bufBindingInfo.info.dataSizePerDescriptorAligned;
+                writeList[k].pBufferInfo = &(bufferInfo[k]);
 
             }
             break;
 
             case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
             {
-                imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo[k].imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 Core::Utility::ImageBindingInfo imgBindingInfo = std::get<Core::Utility::ImageBindingInfo>(desc.m_setBindings[k].m_bindingInfo);
 
                 uint32_t numViews = (uint32_t)imgBindingInfo.imageId.size();
@@ -1412,14 +1421,14 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                 else
                     imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(imgBindingInfo.imageId[i]);
 
-                imageInfo.imageView = imageView;
-                imageInfo.sampler = *VkSamplerFactory::GetInstance()->GetSampler(imgBindingInfo.samplerId.value());
+                imageInfo[k].imageView = imageView;
+                imageInfo[k].sampler = *VkSamplerFactory::GetInstance()->GetSampler(imgBindingInfo.samplerId.value());
 
                 /*if (numSamplers == 1)
                 else
                     sampler = VkSamplerFactory::GetInstance()->GetSampler(samplerBindingInfo.samplerId[i]);*/
 
-                writeList[k].pImageInfo = &(imageInfo);
+                writeList[k].pImageInfo = &(imageInfo[k]);
             }
             break;
 

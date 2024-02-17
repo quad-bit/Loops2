@@ -76,6 +76,7 @@ namespace Renderer
 
             std::string m_name;
             TaskType m_taskType;
+            Core::Utility::TaskId m_taskId;
 
             std::vector<TaskCommandBufferInfo> m_cmdBufferInfo;
             std::vector<TaskSubmitInfo> m_taskSubmitInfo;
@@ -161,6 +162,11 @@ namespace Renderer
             std::string GetTaskName()
             {
                 return m_name;
+            }
+
+            Core::Utility::TaskId GetTaskId() const
+            {
+                return m_taskId;
             }
 
             const TaskType& GetTaskType()

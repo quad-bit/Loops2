@@ -17,7 +17,7 @@
                             "reflPath": ""
                         },
                         {
-                            "name": "PC.vert",
+                            "name": "Color.vert",
                             "type": "VERTEX",
                             "shaderPath": "",
                             "reflPath": ""
@@ -83,6 +83,65 @@
                             "location": 3,
                             "attribType": "UV_0",
                             "dataType": "vec2"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "OpaqueTexturedLit",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "OpaqueRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "LitTextured.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "LitTextured.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "pos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inColor",
+                            "location": 1,
+                            "attribType": "COLOR",
+                            "dataType": "vec4"
+                        },
+                        {
+                            "name": "inNormal",
+                            "location": 2,
+                            "attribType": "NORMAL",
+                            "dataType": "vec3"
+                        },
+                        {
+                            "name": "inTexCoord",
+                            "location": 3,
+                            "attribType": "UV_0",
+                            "dataType": "vec2"
+                        },
+                        {
+                            "name": "inTangent",
+                            "location": 4,
+                            "attribType": "TANGENT",
+                            "dataType": "vec4"
                         }
                     ]
                 }

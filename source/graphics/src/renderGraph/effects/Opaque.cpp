@@ -1,6 +1,7 @@
 #include "renderGraph/effects/Opaque.h"
 #include "renderGraph/techniques/OpaqueUnlit.h"
 #include "renderGraph/techniques/OpaqueTexturedUnlit.h"
+#include "renderGraph/techniques/OpaqueTexturedLit.h"
 
 Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     Core::Utility::RenderData& renderData,
@@ -9,6 +10,8 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     Renderer::RenderGraph::Utils::CallbackUtility& funcs):
     Effect(graph, name, funcs), m_renderData(renderData), m_windowSettings(windowSettings)
 {
+
+    // === OpaqueUnlit
     auto effectId = VulkanInterfaceAlias::GetEffectId(name);
     Core::Utility::EffectId techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "OpaqueUnlit");
     Core::Utility::EffectInfo info{ effectId, techId };
@@ -22,6 +25,7 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     auto& depthImages = unlitTech->GetResource(unlitOutputs[0]);
     auto& colorImages = unlitTech->GetResource(unlitOutputs[1]);
 
+    // === OpaqueTexturedUnlit
     techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "OpaqueTexturedUnlit");
     Core::Utility::EffectInfo info2{ effectId, techId };
 
@@ -31,6 +35,17 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
             graph, m_callbackUtility, "OpaqueTexturedUnlit", m_name, colorImages, depthImages, info2);
     
     auto unlitTexturedTaskNode = unlitTexturedTech->GetTaskNode("OpaqueRenderTask");
+
+    // === OpaqueTexturedLit
+    techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "OpaqueTexturedLit");
+    Core::Utility::EffectInfo info3{ effectId, techId };
+
+    std::unique_ptr<Renderer::RenderGraph::Technique> litTexturedTech =
+        std::make_unique<Renderer::RenderGraph::Techniques::OpaqueTexturedLit>(
+            m_renderData, m_windowSettings,
+            graph, m_callbackUtility, "OpaqueTexturedLit", m_name, colorImages, depthImages, info3);
+
+    auto litTexturedTaskNode = litTexturedTech->GetTaskNode("OpaqueRenderTask");
 
     // Connect techniques
 
@@ -42,6 +57,16 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
         Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
         Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0);
 
+    auto unlitTexturedOutputs = unlitTexturedTech->GetGraphEndResourceNodes();
+    Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(graph, unlitTexturedOutputs[0], litTexturedTaskNode,
+        Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
+        Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+
+    Renderer::RenderGraph::Utils::AddInputAsColorAttachment(graph, unlitTexturedOutputs[1], litTexturedTaskNode,
+        Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
+        Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0);
+
     m_techniques.push_back(std::move(unlitTech));
     m_techniques.push_back(std::move(unlitTexturedTech));
+    m_techniques.push_back(std::move(litTexturedTech));
 }

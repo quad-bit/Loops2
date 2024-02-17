@@ -1350,11 +1350,11 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineColorBl
     m_attachmentsDefault.srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
 
     m_pipelineColorBlendStateCreateInfoObj.attachmentCount = 1;
-    m_pipelineColorBlendStateCreateInfoObj.blendConstants[0] = 1.0f;
-    m_pipelineColorBlendStateCreateInfoObj.blendConstants[1] = 1.0f;
-    m_pipelineColorBlendStateCreateInfoObj.blendConstants[2] = 1.0f;
-    m_pipelineColorBlendStateCreateInfoObj.blendConstants[3] = 1.0f;
-    m_pipelineColorBlendStateCreateInfoObj.logicOp = VK_LOGIC_OP_NO_OP;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[0] = 0.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[1] = 0.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[2] = 0.0f;
+    m_pipelineColorBlendStateCreateInfoObj.blendConstants[3] = 0.0f;
+    m_pipelineColorBlendStateCreateInfoObj.logicOp = VK_LOGIC_OP_CLEAR;
     m_pipelineColorBlendStateCreateInfoObj.logicOpEnable = VK_FALSE;
     m_pipelineColorBlendStateCreateInfoObj.pAttachments = &m_attachmentsDefault;
     m_pipelineColorBlendStateCreateInfoObj.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

@@ -401,6 +401,15 @@ void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::M
         UploadData(mesh->m_uv0BufferId, dataSize, mesh->m_uv0.data());
     }
 
+    //tangent buffer
+    if (mesh->m_tangents.size() > 0)
+    {
+        dataSize = sizeof(glm::vec4) * mesh->m_tangents.size();
+        CreateBuffer(dataSize, mesh->m_tangentBufferId, mesh->m_tangentBufferMemoryId);
+        UploadData(mesh->m_tangentBufferId, dataSize, mesh->m_tangents.data());
+    }
+
+
     //index buffer
     if (mesh->m_indicies.size() > 0)
     {
@@ -470,6 +479,12 @@ void Renderer::ResourceManagement::MeshFactory::DestroyMesh(Core::ECS::Component
     {
         VulkanInterfaceAlias::DestroyBuffer(&mesh->m_uv0BufferId, 1);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_uv0BufferMemoryId, 1);
+    }
+
+    if (mesh->m_tangents.size() > 0)
+    {
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_tangentBufferId, 1);
+        VulkanInterfaceAlias::FreeMemory(&mesh->m_tangentBufferMemoryId, 1);
     }
 
     //delete mesh;

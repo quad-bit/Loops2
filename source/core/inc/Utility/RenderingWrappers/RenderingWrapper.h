@@ -38,6 +38,7 @@ namespace Core
         {
             UNDEFINED,
             B8G8R8A8_UNORM,
+            R8G8B8A8_UNORM,
             D32_SFLOAT_S8_UINT,
             D24_UNORM_S8_UINT,
             D16_UNORM_S8_UINT,

@@ -1,7 +1,10 @@
 #include "ECS/Components/Camera.h"
 #include "ECS/Components/Transform.h"
 
-Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transform, float aspectRatio, glm::vec3 up, float yaw, float pitch, CameraType projectionType) : movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
+Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transform,
+    float aspectRatio, glm::vec3 up, float yaw, float pitch,
+    CameraType projectionType) :
+    movementSpeed(SPEED), mouseSensitivity(SENSITIVTY), fov(FOV)
 {
     this->transform = transform;
     //this->position = position;
@@ -29,12 +32,6 @@ glm::mat4 Core::ECS::Components::Camera::GetViewMatrix()
 
 glm::mat4 Core::ECS::Components::Camera::GetProjectionMat()
 {
-    glm::mat4 clip = glm::mat4(
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, -1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.5f, 0.0f,
-        0.0f, 0.0f, 0.5f, 1.0f
-    );
     switch (projectionType)
     {
     case CameraType::ORTHOGONAL:

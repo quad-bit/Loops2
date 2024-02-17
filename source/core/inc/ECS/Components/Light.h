@@ -2,6 +2,7 @@
 #include "ECS/Component.h"
 #include "Platform/Assertion.h"
 #include <glm/glm.hpp>
+#include <memory>
 
 namespace Core
 {
@@ -9,9 +10,6 @@ namespace Core
     {
         namespace Components
         {
-
-            class Transform;
-
             enum class LightType
             {
                 Point,
@@ -19,137 +17,70 @@ namespace Core
                 SpotLight
             };
 
-            enum class SpreadEquation
+            struct LightCategory
             {
-                Circle = 0,
-                Square = 1,
+                glm::vec4 m_ambient;
+                glm::vec4 m_diffuse;
+                glm::vec4 m_specular;
+                glm::vec4 m_color;
+                LightType m_type;
+
+                LightCategory(const LightType& type) : m_type(type)
+                {
+                    m_ambient = glm::vec4(.01f);
+                    m_diffuse = glm::vec4(.2f);
+                    m_specular = glm::vec4(.2f);
+                    m_color = glm::vec4(.20f);
+                }
             };
 
-            struct LightUniform
+            struct SpotLight : LightCategory
             {
-                glm::vec4 lightPos;
-                glm::vec4 lightDir;
-                glm::vec4 ambient;
-                glm::vec4 diffuse;
-                glm::vec4 specular;
-                //glm::mat4 lightSpaceMat;
-                float beamHeight;
-                float beamRadius;
+                float m_beamHeight = 10.0f;
+                float m_beamRadius = 10.0f;
+                SpotLight() : LightCategory(LightType::SpotLight)
+                {
+                }
+            };
+
+            struct PointLight : LightCategory
+            {
+                float m_lightRadius = 10.0f;
+                PointLight() : LightCategory(LightType::Point)
+                {
+                }
             };
 
             class Light : public Component<Light>
             {
             private:
-                Transform* transform;
 
-                LightType lightType;
-
-                //valid in case of directional and spot light
-                SpreadEquation equation;
-
-                float beamRadius;
-                float beamHeight;
-
-                float intensity;
-                // meant to be used on c++ side to check if the object should be lit or not
-                float range; // should be directly proportional to the intensity
-                float effectiveRange; // max( intensity * range, range) 
-
-                glm::vec3 ambient;
-                glm::vec3 diffuse;
-                glm::vec3 specular;
+                std::unique_ptr<LightCategory> m_lightCatergory;
 
                 Light() = delete;
                 Light(const Light&) = delete;
                 Light& operator=(const Light&) = delete;
 
             public:
-                Light(Transform* transform, LightType lightType = LightType::Point,
-                    SpreadEquation equation = SpreadEquation::Circle)
+                Light(std::unique_ptr<LightCategory>& category)
                 {
-                    this->transform = transform;
-                    this->lightType = lightType;
-                    intensity = 0.5f;
-                    range = 5.0f;
-                    ambient = glm::vec3(0.6f, 0.6f, 0.6f);
-                    diffuse = glm::vec3(0.45f, 0.45f, 0.45f);
-                    specular = glm::vec3(0.45f, 0.45f, 0.45f);
-                    this->beamRadius = 15.0;
-                    this->beamHeight = 20.0;
-
+                    m_lightCatergory = std::move(category);
                     componentType = COMPONENT_TYPE::LIGHT;
                 }
 
-                void SetEquationType(const SpreadEquation& equation)
+                const LightType& GetLightType() const
                 {
-                    this->equation = equation;
+                    return m_lightCatergory->m_type;
                 }
 
-                void SetRadius(const float& rad)
+                const LightCategory* GetLightCategory() const
                 {
-                    this->beamRadius = rad;
+                    return m_lightCatergory.get();
                 }
 
-                void SetWidth(const float& beamWidth)
+                ~Light()
                 {
-                    this->beamHeight = beamWidth;
-                }
-
-                void SetDiffuse(const glm::vec3& strength)
-                {
-                    this->diffuse = strength;
-                }
-
-                void SetSpecular(const glm::vec3& strength)
-                {
-                    this->specular = strength;
-                }
-
-                void SetRange(const float& range)
-                {
-                    this->range = range;
-                }
-
-                void SetIntensity(const float& intensity)
-                {
-                    ASSERT_MSG_DEBUG(intensity > 0.0f && intensity < 1.0f, "intensity should be [0,1]");
-                    this->intensity = intensity;
-                }
-
-                float GetEffectiveRange()
-                {
-                    ASSERT_MSG(0, "yet to be implemented");
-                    return 0.0f;// glm::max(range, intensity * range);
-                }
-
-                Transform* const GetTransform()
-                {
-                    return transform;
-                }
-
-                glm::vec3 GetSpecular()
-                {
-                    return this->specular;
-                }
-
-                glm::vec3 GetAmbient()
-                {
-                    return this->ambient;
-                }
-
-                glm::vec3 GetDiffuse()
-                {
-                    return this->diffuse;
-                }
-
-                float GetBeamRadius()
-                {
-                    return this->beamRadius;
-                }
-
-                float GetBeamHeight()
-                {
-                    return this->beamHeight;
+                    m_lightCatergory.reset();
                 }
             };
         }

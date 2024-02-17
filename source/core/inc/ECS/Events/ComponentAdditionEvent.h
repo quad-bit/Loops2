@@ -14,6 +14,7 @@ namespace Core
             class MeshRenderer;
             class Light;
             class Material;
+            class Transform;
         }
     }
 }
@@ -40,6 +41,7 @@ namespace Core
             {
             public:
                 Core::ECS::Components::Light* light;
+                Core::ECS::Components::Transform* transform;
             };
 
             class MaterialCreationEvent : public Event
@@ -54,15 +56,6 @@ namespace Core
                 Core::ECS::Components::Material* material;
                 Core::ECS::Entity* entity;
             };
-
-
-            /*class DepthPassAttachmentCreationEvent : public Event
-            {
-            public:
-                std::vector<uint32_t> imageId;
-                std::vector<uint32_t> imageViewId;
-                std::vector<uint32_t> memoryId;
-            };*/
         }
     }
 }

@@ -27,12 +27,12 @@ void main()
     mat4 clip = mat4(
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, -1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.5f, 0.0f,
-        0.0f, 0.0f, 0.5f, 1.0f
+        0.0f, 0.0f, 0.5f, 0.5f,
+        0.0f, 0.0f, 0.0f, 1.0f
     );
 
    outColor = inColor;
-   gl_Position = clip * view.projection * view.view * transform.model * vec4(pos.xyz, 1.0);
+   gl_Position = view.projection * view.view * transform.model * vec4(pos.xyz, 1.0);
    outFragTexCoord = inTexCoord;
    vec3 cam = view.cameraPos; // so that spir cross does not ignore it
 }

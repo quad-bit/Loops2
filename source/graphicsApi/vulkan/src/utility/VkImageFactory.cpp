@@ -310,7 +310,7 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateCubeMap(const std::string& path, 
     Core::Wrappers::ImageCreateInfo imageInfo = {};
     imageInfo.m_colorSpace = Core::Enums::ColorSpace::COLOR_SPACE_SRGB_NONLINEAR_KHR;
     imageInfo.m_depth = 1;
-    imageInfo.m_format = Core::Enums::Format::B8G8R8A8_UNORM;
+    imageInfo.m_format = Core::Enums::Format::R8G8B8A8_UNORM;
     imageInfo.m_height = height;
     imageInfo.m_imageType = Core::Enums::ImageType::IMAGE_TYPE_2D;
     imageInfo.m_initialLayout = Core::Enums::ImageLayout::LAYOUT_UNDEFINED;

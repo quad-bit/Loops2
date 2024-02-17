@@ -18,6 +18,7 @@ void MaterialSystem::Init()
     auto effectId = VulkanInterfaceAlias::GetEffectId("Skybox");
     auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, "Skybox");
 
+    //std::string path = ASSETS_PATH + std::string{ "\\textures\\cubemap_space.ktx" };
     std::string path = ASSETS_PATH + std::string{ "\\textures\\cubemap_vulkan.ktx" };
     auto baseTextureId = VulkanInterfaceAlias::CreateCubemap(path, "SkyboxImage");
     auto baseSamplerId = VulkanInterfaceAlias::CreateCubemapSampler();
@@ -100,6 +101,44 @@ void MaterialSystem::HandleMaterialAddition(Core::ECS::Events::MaterialAdditionE
 void MaterialSystem::HandleMaterialCreation(Core::ECS::Events::MaterialCreationEvent* materialCreationEvent)
 {
     if (materialCreationEvent->material->m_baseColorTextureId.has_value() &&
+        materialCreationEvent->material->m_baseColorSamplerId.has_value() &&
+        materialCreationEvent->material->m_normalTextureId.has_value())
+    {
+        Core::Utility::ImageBindingInfo imageInfo0{};
+        imageInfo0.imageId.push_back(materialCreationEvent->material->m_baseColorTextureId.value());
+        imageInfo0.samplerId = materialCreationEvent->material->m_baseColorSamplerId.value();
+
+        Core::Utility::DescriptorSetBindingInfo diffuseBindingDescription;
+        diffuseBindingDescription.m_bindingName = "diffuseSampler";
+        diffuseBindingDescription.m_bindingNumber = 0;
+        diffuseBindingDescription.m_numElements = 0;
+        diffuseBindingDescription.m_resourceType = Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER;
+        diffuseBindingDescription.m_bindingInfo = imageInfo0;
+
+        Core::Utility::ImageBindingInfo imageInfo1{};
+        imageInfo1.imageId.push_back(materialCreationEvent->material->m_normalTextureId.value());
+        imageInfo1.samplerId = materialCreationEvent->material->m_baseColorSamplerId.value();
+
+        Core::Utility::DescriptorSetBindingInfo normalBindingDescription;
+        normalBindingDescription.m_bindingName = "normalSampler";
+        normalBindingDescription.m_bindingNumber = 1;
+        normalBindingDescription.m_numElements = 0;
+        normalBindingDescription.m_resourceType = Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER;
+        normalBindingDescription.m_bindingInfo = imageInfo1;
+
+        Core::Utility::DescriptorSetInfo setDescription;
+        setDescription.m_numBindings = 2;
+        setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::MATERIAL;
+        setDescription.m_setBindings.push_back(diffuseBindingDescription);
+        setDescription.m_setBindings.push_back(normalBindingDescription);
+
+        auto setWrapper = UniFactAlias::GetInstance()->GetSetWrapper(setDescription);
+        UniFactAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
+
+        //materialCreationEvent->material->m_descriptorSetIds = setDescription.m_descriptorSetIds;
+        m_materialDescriptorList[materialCreationEvent->material->componentId] = setDescription.m_descriptorSetIds;
+    }
+    else if (materialCreationEvent->material->m_baseColorTextureId.has_value() &&
         materialCreationEvent->material->m_baseColorSamplerId.has_value() &&
         !materialCreationEvent->material->m_normalTextureId.has_value())
     {

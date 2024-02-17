@@ -69,7 +69,7 @@ namespace Core
                 std::vector<glm::vec3> m_positions;
                 std::vector<glm::vec4> m_colors;
                 std::vector<glm::vec3> m_normals;
-                std::vector<glm::vec3> m_tangents;
+                std::vector<glm::vec4> m_tangents;
                 std::vector<uint32_t> m_indicies;
 
                 uint32_t m_positionBufferId, m_positionBufferMemoryId;

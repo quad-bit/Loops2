@@ -54,12 +54,26 @@ void GfxVk::CommandWriter::SetViewport(const Core::Wrappers::CommandBufferInfo& 
     VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
 
     VkViewport viewport;
-    viewport.height = height;
-    viewport.width = width;
-    viewport.minDepth = minDepth;
-    viewport.maxDepth = maxDepth;
-    viewport.x = positionX;
-    viewport.y = positionY;
+
+    bool overrideDefaultSetup = false;
+    if (overrideDefaultSetup)
+    {
+        viewport.height = height;
+        viewport.width = width;
+        viewport.minDepth = minDepth;
+        viewport.maxDepth = maxDepth;
+        viewport.x = positionX;
+        viewport.y = positionY;
+    }
+    else
+    {
+        viewport.height = -height;
+        viewport.width = width;
+        viewport.minDepth = minDepth;
+        viewport.maxDepth = maxDepth;
+        viewport.x = positionX;
+        viewport.y = positionY + height;
+    }
     vkCmdSetViewport(cmBuf, 0, 1, &viewport);
 }
 

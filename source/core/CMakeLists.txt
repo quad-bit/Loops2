@@ -80,6 +80,7 @@ set(MATH_FILES
     inc/Math/MathUtil.h
     inc/Math/Plane.h
     inc/Math/Quad.h
+    inc/Math/TangentCalculator.h
     inc/Math/ReadMe.txt
 
     src/Math/BoundingBox.cpp

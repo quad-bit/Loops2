@@ -9,8 +9,8 @@
 #include <CorePrecompiled.h>
 #include <Settings.h>
 
-uint32_t windowWidth = 1024;
-uint32_t windowHeight = 1024;
+uint32_t windowWidth = 1280;
+uint32_t windowHeight = 720;
 
 glm::vec2 CameraController::TransformMouse(const glm::vec2 & mouse)
 {

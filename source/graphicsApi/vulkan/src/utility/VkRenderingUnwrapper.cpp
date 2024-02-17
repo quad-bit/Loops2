@@ -58,6 +58,10 @@ VkFormat GfxVk::Unwrap::UnWrapFormat(Core::Enums::Format format)
         return VK_FORMAT_B8G8R8A8_UNORM;
         break;
 
+    case Core::Enums::Format::R8G8B8A8_UNORM:
+        return VK_FORMAT_R8G8B8A8_UNORM;
+        break;
+
     case Core::Enums::Format::D16_UNORM:
         return VK_FORMAT_D16_UNORM;
         break;
