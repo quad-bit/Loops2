@@ -191,7 +191,8 @@ void Renderer::RenderGraph::Techniques::Skybox::SetupFrame(const Core::Wrappers:
     Renderer::RenderGraph::CreateDrawInfo(m_transformData, m_skyboxRenderTaskId, drawInfo);
 
     CreateSetInfo(setInfoMap, drawInfo);
-
     ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+
+    //NOTE : Not setting technique active state as this will always be drawn for now unless deactivated explicitly
 }
 

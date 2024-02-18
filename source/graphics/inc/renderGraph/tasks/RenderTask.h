@@ -38,8 +38,8 @@ namespace Renderer
                 std::optional<uint32_t> m_graphicsPipelineId;
 
                 // in case there are no object for a specific technique/material, we can remove the drawing setup
-                std::optional<DrawInfo> m_drawInfo;
-
+                //std::optional<DrawInfo> m_drawInfo;
+                std::vector<DrawInfo> m_drawCache;
 
             public:
                 std::optional<uint32_t> m_vertexInputStateId;
@@ -59,7 +59,7 @@ namespace Renderer
                     const std::string& effectName, const std::string& techniqueName) :
                     Task(name, TaskType::RENDER_TASK), m_renderArea(renderArea)
                 {
-                    m_drawInfo = {};
+                    //m_drawInfo = {};
 
                     auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
                     auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techniqueName);
@@ -142,8 +142,16 @@ namespace Renderer
                     Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
                     Renderer::CommandReader::BeginRendering(info, m_renderingInfoId[frameInfo.m_swapBufferIndex]);
 
-                    if (m_drawInfo.has_value())
+                    if (m_drawCache.size() > 0)
                     {
+                        uint32_t index = 0;
+                        if (m_cachingEnabled)
+                        {
+                            index = frameInfo.m_frameInFlightIndex;
+                        }
+
+                        auto& drawInfo = m_drawCache[index];
+
                         CommandReader::SetViewport(info, m_renderArea.lengthX, m_renderArea.lengthY,
                             m_renderArea.offsetX, m_renderArea.offsetY, 0.0f, 1.0f);
 
@@ -152,7 +160,7 @@ namespace Renderer
 
                         // bind pipeline
                         CommandReader::BindPipeline(info, Core::Enums::PipelineType::GRAPHICS, m_graphicsPipelineId.value());
-                        for (auto& meshInfo : m_drawInfo.value().m_meshInfoList)
+                        for (auto& meshInfo : drawInfo.m_meshInfoList)
                         {
                             // bind vertex buffer
                             for (auto& vertInfo : meshInfo.m_vertexBufferInfo)
@@ -196,6 +204,11 @@ namespace Renderer
 
                     Renderer::CommandReader::EndRendering(info);
                     EndTask(frameInfo, queueType);
+
+                    if (!m_cachingEnabled)
+                    {
+                        m_drawCache.clear();
+                    }
                 }
 
                 Core::Wrappers::Rect2D GetRenderArea()
@@ -205,7 +218,14 @@ namespace Renderer
 
                 void UpdateDrawInfo(const DrawInfo& drawInfo)
                 {
-                    m_drawInfo = drawInfo;
+                    m_drawCache.push_back(drawInfo);
+                    ASSERT_MSG_DEBUG(m_drawCache.size() < m_maxFrameCacheCount + 1, "Cache count exceeded");
+                    //m_drawInfo = drawInfo;
+
+                    if (m_cachingEnabled)
+                    {
+                        UpdateCacheInfo();
+                    }
                 }
             };
         }

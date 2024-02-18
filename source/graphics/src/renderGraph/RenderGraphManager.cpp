@@ -1079,7 +1079,12 @@ void Renderer::RenderGraph::RenderGraphManager::Update(const Core::Wrappers::Fra
 
         for (auto& technique : techniques)
         {
-            technique->SetupFrame(frameInfo);
+            if (technique->IsTechniqueActive())
+            {
+                if (technique->IsCachingEnabled() && technique->IsDataCached())
+                    continue;
+                technique->SetupFrame(frameInfo);
+            }
         }
     }
 

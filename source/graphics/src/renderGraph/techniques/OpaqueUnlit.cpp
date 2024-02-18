@@ -170,5 +170,9 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::SetupFrame(const Core::Wrap
         CreateSetInfo(setInfoMap, drawInfo);
         ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
     }
+    else
+    {
+        m_techniqueActive = false;
+    }
 }
 

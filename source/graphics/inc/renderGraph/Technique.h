@@ -32,6 +32,10 @@ namespace Renderer
             Core::Utility::TechniqueId m_techniqueId;
             Core::Utility::EffectInfo m_effectInfo;
 
+            bool m_techniqueActive = true;
+            bool m_dataCached = false;
+            bool m_cachingEnabled = true;
+
         public:
             typedef Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase> graphNodeAlias;
 
@@ -117,6 +121,27 @@ namespace Renderer
 
             virtual void SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
             {}
+
+            const bool& IsTechniqueActive() const
+            {
+                return m_techniqueActive;
+            }
+
+            bool IsDataCached() const
+            {
+                for (auto& taskNode : m_taskNodes)
+                {
+                    auto taskObj = ((Renderer::RenderGraph::TaskNode*)taskNode->GetNodeData())->GetTask();
+                    if (!taskObj->IsDataCached())
+                        return false;
+                }
+                return true;
+            }
+
+            const bool& IsCachingEnabled() const
+            {
+                return m_cachingEnabled;
+            }
         };
 
         struct GraphNodeWrapper

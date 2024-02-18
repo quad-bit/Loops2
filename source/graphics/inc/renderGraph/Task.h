@@ -90,6 +90,24 @@ namespace Renderer
             std::optional< std::vector<PerFrameTaskBarrierInfo>> m_presentationBarrierInfo;
 
         protected:
+
+            bool m_cachingEnabled = true;
+            bool m_dataCached = false;
+            const uint32_t m_maxFrameCacheCount;
+            uint32_t m_frameCacheCounter = 0;
+
+            void UpdateCacheInfo()
+            {
+                if (m_dataCached)
+                    return;
+
+                m_frameCacheCounter++;
+                if (m_frameCacheCounter >= m_maxFrameCacheCount)
+                {
+                    m_dataCached = true;
+                }
+            }
+
             void StartTask(const Core::Wrappers::FrameInfo& frameInfo, const Core::Enums::QueueType queueType)
             {
                 m_activeCommandBuffer = m_cmdBufferInfo[frameInfo.m_swapBufferIndex].m_bufId;
@@ -149,15 +167,21 @@ namespace Renderer
 
         public:
             Task() = delete;
-            Task(const std::string& name, const TaskType& taskType) :
-                m_name(name), m_taskType(taskType)
-            {}
+            Task(const std::string& name, const TaskType& taskType, bool cacheEnabled = true) :
+                m_name(name), m_taskType(taskType), m_maxFrameCacheCount(RendererSettings::GetMaxFramesInFlightCount())
+            {
+                //m_maxFrameCacheCount = RendererSettings::GetMaxFramesInFlightCount();
+            }
 
             virtual ~Task()
             {}
 
             virtual void Execute(const Core::Wrappers::FrameInfo& frameInfo) = 0;
 
+            const bool& IsDataCached() const
+            {
+                return m_dataCached;
+            }
 
             std::string GetTaskName()
             {

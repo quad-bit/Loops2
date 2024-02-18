@@ -125,11 +125,21 @@ void Renderer::RenderGraph::Techniques::OpaqueTexturedLit::SetupFrame(const Core
 
     // ======================
 
-    // This tech requires material set id and its transform child indicies
-    if (filteredDataList[Core::Enums::MATERIAL].size() > 0)
+    //// This tech requires material set id and its transform child indicies
+    //if (filteredDataList[Core::Enums::MATERIAL].size() > 0)
+    //{
+    //    CreateSetInfo(setInfoMap, drawInfo);
+    //    ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    //}
+
+    if (setInfoMap.find(Core::Enums::TRANSFORM) != setInfoMap.end())
     {
         CreateSetInfo(setInfoMap, drawInfo);
         ((Renderer::RenderGraph::Tasks::RenderTask*)taskObj)->UpdateDrawInfo(drawInfo);
+    }
+    else
+    {
+        m_techniqueActive = false;
     }
 }
 
