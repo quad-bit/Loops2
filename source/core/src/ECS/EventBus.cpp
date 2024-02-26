@@ -24,9 +24,9 @@ void Core::ECS::Events::EventBus::DeInit()
         uint32_t numHandlers = (uint32_t)list.size();
         for (uint32_t i = 0; i < numHandlers; i++)
         {
-            std::advance(listBegin, i);
             Core::ECS::Events::HandlerFunctionBase * obj = *listBegin;
             delete obj;
+            std::advance(listBegin, 1);
         }
 
         delete it->second;

@@ -211,7 +211,7 @@ glm::vec3 Core::ECS::Components::Transform::GetGlobalScale()
     return globalScale;
 }
 
-glm::mat4 Core::ECS::Components::Transform::GetGlobalModelMatrix()
+const glm::mat4& Core::ECS::Components::Transform::GetGlobalModelMatrix()
 {
     globalModelMatrix = localModelMatrix;
 

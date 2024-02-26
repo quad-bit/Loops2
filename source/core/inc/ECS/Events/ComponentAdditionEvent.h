@@ -2,6 +2,7 @@
 
 #include "ECS/Events/Event.h"
 //#include "Camera.h"
+#include "ECS/ECS_Helper.h"
 
 namespace Core
 {
@@ -15,6 +16,7 @@ namespace Core
             class Light;
             class Material;
             class Transform;
+            class Bound;
         }
     }
 }
@@ -35,6 +37,14 @@ namespace Core
             {
             public:
                 Core::ECS::Components::MeshRenderer* renderer;
+            };
+
+            class BoundAdditionEvent : public Event
+            {
+            public:
+                Core::ECS::Components::Bound* bounds;
+                Core::ECS::COMPONENT_TYPE boundParentType;
+                //uint32_t boundParentComponentId;
             };
 
             class LightAdditionEvent : public Event

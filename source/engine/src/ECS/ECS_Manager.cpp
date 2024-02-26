@@ -6,6 +6,7 @@
 #include <ECS/Components/Scriptable.h>
 #include "ECS/Systems/ScriptableSystem.h"
 #include "ECS/Systems/MaterialSystem.h"
+#include "ECS/Systems/BoundSystem.h"
 
 #include <ECS/ECS_Setting.h>
 #include <ECS/Events/EventBus.h>
@@ -17,6 +18,7 @@
 #include "ECS/Systems/MeshRendererSystem.h"
 #include "ECS/Systems/LightSystem.h"
 #include <ECS/Components/Light.h>
+#include <ECS/Components/Bounds.h>
 
 Engine::ECS_Manager* Engine::ECS_Manager::instance = nullptr;
 Core::ECS::World * worldObj;
@@ -34,6 +36,7 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
     cameraManager = worldObj->CreateManager<Core::ECS::Components::Camera>();
     meshRendererManager = worldObj->CreateManager<Core::ECS::Components::MeshRenderer>();
     lightManager = worldObj->CreateManager<Core::ECS::Components::Light>();
+    boundManager = worldObj->CreateManager<Core::ECS::Components::Bound>();
 
     scriptableSystemObj = new ScriptableSystem();
     worldObj->AddSystem(scriptableSystemObj, Core::ECS::COMPONENT_TYPE::SCRIPTABLE);
@@ -46,13 +49,15 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
 
     lightSystem = new LightSystem(renderData.m_lightData);
     worldObj->AddSystem(lightSystem, Core::ECS::COMPONENT_TYPE::LIGHT);
-    //((LightSystem*)lightSystem)->AssignCameraSystem(cameraSystemObj);
 
     materialSystem = new MaterialSystem(renderData.m_materialData, renderData.m_skyboxData);
     worldObj->AddSystem(materialSystem, Core::ECS::COMPONENT_TYPE::MATERIAL);
 
     meshRendererSystem = new MeshRendererSystem(renderData.m_transformData, renderData.m_materialData);
     worldObj->AddSystem(meshRendererSystem, Core::ECS::COMPONENT_TYPE::MESH_RENDERER);
+
+    boundSystem = new BoundSystem(renderData.m_boundData);
+    worldObj->AddSystem(boundSystem, Core::ECS::COMPONENT_TYPE::BOUNDS);
 
     worldObj->Init();
 
@@ -74,6 +79,7 @@ void Engine::ECS_Manager::DeInit()
 
     worldObj->DeInit();
 
+    delete boundSystem;
     delete materialSystem;
     delete lightSystem;
     delete meshRendererSystem;

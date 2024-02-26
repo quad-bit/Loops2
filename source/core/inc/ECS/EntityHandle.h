@@ -96,6 +96,33 @@ inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::MeshRen
 }
 
 template<>
+inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Bound* componentType)
+{
+    worldObj->AddComponent<Core::ECS::Components::Bound>(componentType, entityObj);
+
+    Core::ECS::Events::BoundAdditionEvent evt;
+    evt.bounds = componentType;
+    if (this->HasComponent<Core::ECS::Components::Camera>())
+    {
+        evt.boundParentType = Core::ECS::COMPONENT_TYPE::CAMERA;
+    }
+    else if (this->HasComponent<Core::ECS::Components::Light>())
+    {
+        evt.boundParentType = Core::ECS::COMPONENT_TYPE::LIGHT;
+    }
+    else if (this->HasComponent<Core::ECS::Components::MeshRenderer>())
+    {
+        evt.boundParentType = Core::ECS::COMPONENT_TYPE::MESH_RENDERER;
+    }
+    else
+    {
+        ASSERT_MSG_DEBUG(0, "Needs a parent component");
+    }
+    Core::ECS::Events::EventBus::GetInstance()->Publish(&evt);
+}
+
+
+template<>
 inline void Core::ECS::EntityHandle::AddComponent(Core::ECS::Components::Scriptable * componentType)
 {
     worldObj->AddComponent<Core::ECS::Components::Scriptable>(componentType, entityObj);

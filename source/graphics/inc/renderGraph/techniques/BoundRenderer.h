@@ -1,5 +1,5 @@
-#ifndef RENDERER_SKYBOX_H_
-#define RENDERER_SKYBOX_H_
+#ifndef RENDERER_BOUNDRENDERER_H_
+#define RENDERER_BOUNDRENDERER_H_
 
 #include <renderGraph/Technique.h>
 #include <RenderData.h>
@@ -12,7 +12,7 @@ namespace Renderer
     {
         namespace Techniques
         {
-            class Skybox : public Technique
+            class BoundRenderer : public Technique
             {
             private:
                 const Core::Utility::RenderData& m_renderData;
@@ -24,14 +24,13 @@ namespace Renderer
                 GraphNodeWrapper m_colorOutput;
 
                 GraphNodeWrapper m_taskNode;
-                std::unique_ptr<Renderer::RenderGraph::Task> m_skyboxRenderTask;
-                uint32_t m_skyboxRenderTaskId;
+                std::unique_ptr<Renderer::RenderGraph::Task> m_boundRenderTask;
+                uint32_t m_boundRenderTaskId;
 
                 uint32_t m_renderHeight, m_renderWidth;
-                Core::Utility::TransformData m_transformData;
 
             public:
-                Skybox(
+                BoundRenderer(
                     Core::Utility::RenderData& renderData,
                     const Core::WindowSettings& windowSettings,
                     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
@@ -40,9 +39,10 @@ namespace Renderer
                     const std::string& effectName,
                     const Core::Utility::EffectInfo& effectInfo,
                     Renderer::RenderGraph::Technique::graphNodeAlias* depthInput,
-                    Renderer::RenderGraph::Technique::graphNodeAlias* colorInput);
+                    Renderer::RenderGraph::Technique::graphNodeAlias* colorInput,
+                    bool active);
 
-                ~Skybox();
+                ~BoundRenderer();
 
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphOriginResourceNodes() override;
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphEndResourceNodes() override;
@@ -53,4 +53,4 @@ namespace Renderer
     }
 }
 
-#endif //RENDERER_SKYBOX_H_
+#endif //RENDERER_BOUNDRENDERER_H_

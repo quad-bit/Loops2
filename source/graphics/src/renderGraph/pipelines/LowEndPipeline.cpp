@@ -7,6 +7,7 @@
 #include "renderGraph/utility/Utils.h"
 #include "renderGraph/effects/Opaque.h"
 #include "renderGraph/effects/SkyboxPass.h"
+#include "renderGraph/effects/BoundPass.h"
 
 uint32_t g_resourceDistributionCount = 0;
 Core::Wrappers::ImageCreateInfo g_info{};
@@ -491,16 +492,26 @@ void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
             m_windowSettings,
             *m_graph.get(), "OpaquePass", m_callbackUtility);
 
-    auto& outputNodes = opaquePass->GetGraphEndResourceNodes();
+    auto& opaqueOutputNodes = opaquePass->GetGraphEndResourceNodes();
+
+    std::unique_ptr<Renderer::RenderGraph::Effect> boundPass =
+        std::make_unique<Renderer::RenderGraph::Effects::BoundPass>(
+            m_renderData,
+            m_windowSettings,
+            *m_graph.get(), "BoundPass", m_callbackUtility,
+            opaqueOutputNodes);
+
+    auto& boundOutputNodes = boundPass->GetGraphEndResourceNodes();
 
     std::unique_ptr<Renderer::RenderGraph::Effect> skyboxPass =
         std::make_unique<Renderer::RenderGraph::Effects::SkyboxPass>(
             m_renderData,
             m_windowSettings,
             *m_graph.get(), "SkyboxPass", m_callbackUtility,
-            outputNodes);
+            boundOutputNodes);
 
     m_effects.push_back(std::move(opaquePass));
+    m_effects.push_back(std::move(boundPass));
     m_effects.push_back(std::move(skyboxPass));
 
     m_graph->PrintGraph();

@@ -9,7 +9,9 @@
 #include "SceneLoader.h"
 #include "ECS/Components/Transform.h"
 #include "ECS/Components/Mesh.h"
+#include "ECS/Components/Bounds.h"
 #include "resourceManagement/MeshFactory.h"
+#include "resourceManagement/BoundFactory.h"
 #include "resourceManagement/MaterialFactory.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "VulkanInterface.h"
@@ -61,7 +63,6 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
         //node->matrix = glm::make_mat4x4(inputNode.matrix.data());
         ASSERT_MSG_DEBUG(0, "not handled");
     };
-
 
     // If the node contains mesh data, we load vertices and indices from the buffers
     // In glTF this is done via accessors and buffer views
@@ -115,6 +116,9 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                     tangentsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                 }
 
+
+                glm::vec3 minPos{}, maxPos{};
+
                 // Append data to model's vertex buffer
                 for (size_t v = 0; v < vertexCount; v++) {
                     mesh->m_positions.push_back(glm::vec3(glm::make_vec3(&positionBuffer[v * 3])) * scaleFactor);
@@ -129,6 +133,42 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                     }
                     else
                         mesh->m_tangents.push_back(glm::make_vec4(&tangentsBuffer[v * 4]));
+
+                    {
+                        // min
+                        if (mesh->m_positions[v].x < minPos.x)
+                        {
+                            minPos.x = mesh->m_positions[v].x;
+                        }
+
+                        if (mesh->m_positions[v].y < minPos.y)
+                        {
+                            minPos.y = mesh->m_positions[v].y;
+                        }
+
+                        if (mesh->m_positions[v].z < minPos.z)
+                        {
+                            minPos.z = mesh->m_positions[v].z;
+                        }
+
+                        // max
+                        if (mesh->m_positions[v].x > maxPos.x)
+                        {
+                            maxPos.x = mesh->m_positions[v].x;
+                        }
+
+                        if (mesh->m_positions[v].y > maxPos.y)
+                        {
+                            maxPos.y = mesh->m_positions[v].y;
+                        }
+
+                        if (mesh->m_positions[v].z > maxPos.z)
+                        {
+                            maxPos.z = mesh->m_positions[v].z;
+                        }
+                    }
+                    mesh->m_minPos = minPos;
+                    mesh->m_maxPos = maxPos;
                 }
             }
 
@@ -187,6 +227,15 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
 
             auto renderer = new Core::ECS::Components::MeshRenderer(mesh, mat, transform);
             entity->AddComponent<Core::ECS::Components::MeshRenderer>(renderer);
+
+            // Bounds
+            {
+                std::unique_ptr<Core::ECS::Components::BoundCategory> category = std::make_unique<Core::ECS::Components::AABB>(
+                    entity->GetTransform()->GetGlobalModelMatrix(), entity->GetEntity()->entityName, mesh->m_minPos, mesh->m_maxPos);
+                Core::ECS::Components::Bound * bound = new Core::ECS::Components::Bound(category);
+                Renderer::ResourceManagement::BoundFactory::GetInstance()->AddBound(bound);
+                entity->AddComponent<Core::ECS::Components::Bound>(bound);
+            }
         }
     }
 
@@ -399,10 +448,6 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
     m_entityList.push_back(entity);
 
     if (fileLoaded) {
-        //glTFScene.loadImages(glTFInput);
-        //glTFScene.loadMaterials(glTFInput);
-        //glTFScene.loadTextures(glTFInput);
-
         LoadSamplers(glTFInput);
         LoadTextures(glTFInput);
         LoadMaterials(glTFInput);
@@ -443,6 +488,15 @@ Engine::Utility::GltfLoader::~GltfLoader()
             {
                 auto renderer = handle->GetComponent<Core::ECS::Components::MeshRenderer>();
                 renderer.DestroyComponent();
+            }
+
+            if (handle->HasComponent<Core::ECS::Components::Bound>())
+            {
+                auto bound = handle->GetComponent<Core::ECS::Components::Bound>();
+                auto ptr = bound.GetComponent();
+                Renderer::ResourceManagement::BoundFactory::GetInstance()->DestroyBound(ptr);
+                bound.DestroyComponent();
+                delete ptr;
             }
         }
         worldObj->DestroyEntity(handle);

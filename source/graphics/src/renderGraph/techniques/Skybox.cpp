@@ -97,14 +97,14 @@ Renderer::RenderGraph::Techniques::Skybox::Skybox(
         Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0);
 
     {
-        Core::Math::CubeIndexed obj{};
+        Core::Math::Cube obj{};
 
         std::vector<glm::vec3> positions;
-        positions.resize(skyboxVertices.size());
+        positions.resize(obj.positions.size());
 
-        for (int i = 0; i < skyboxVertices.size(); i++)
+        for (int i = 0; i < obj.positions.size(); i++)
         {
-            positions[i] = 5.0f * skyboxVertices[i];
+            positions[i] = 5.0f * obj.positions[i];
         }
 
         auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)

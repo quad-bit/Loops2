@@ -61,7 +61,7 @@ namespace Core
                 glm::vec3 GetGlobalPosition();
                 glm::vec3 GetGlobalEulerAngles();
                 glm::vec3 GetGlobalScale();
-                glm::mat4 GetGlobalModelMatrix();
+                const glm::mat4& GetGlobalModelMatrix();
 
                 glm::vec3* GetLocalPositionRef() { return &localPosition; }
                 glm::vec3* GetLocalEulerAnglesRef() { return &localEulerAngle; }

@@ -83,8 +83,18 @@ namespace Core
             uint32_t m_vertexCount;
             std::optional<uint32_t> m_indexBufferId, m_indexCount;
 
-            // To put it in maps
-            //friend bool operator<(const TransformData& l, const TransformData& r) { return l.id < r.id; }
+        };
+
+        struct BoundData
+        {
+            uint32_t m_descriptorSetId;
+            glm::vec3 m_position; // world position, will help with LOD or sorting
+            glm::mat4 m_modelMat;
+
+            uint32_t m_positionBufferId;
+
+            uint32_t m_vertexCount;
+            std::optional<uint32_t> m_indexBufferId, m_indexCount;
         };
 
         class RenderData
@@ -96,6 +106,7 @@ namespace Core
             LightData m_lightData;
             // material component id to materialdata
             std::vector<MaterialData> m_materialData;
+            std::vector<BoundData> m_boundData;
             MaterialData m_skyboxData;
         };
     }

@@ -34,28 +34,6 @@ namespace Core
                 Core::Math::BoundingBox bounds;
                 uint32_t submeshCount;
 
-                //======================= old
-                /*std::vector<glm::vec3*> positions;
-                std::vector<glm::vec4*> colors;
-                std::vector<glm::vec3*> normals;
-                std::vector<glm::vec3*> tangents;
-                std::vector<uint32_t*> indicies;
-
-                uint32_t vertexAttributeCount;
-                uint32_t vertexCount;
-
-                uint32_t* vertexBuffersIds;
-                uint32_t vertexBufferCount;
-                size_t* vertexDataSizes;
-
-                uint32_t* memoryIds;
-                uint32_t memoryCount;
-
-                uint32_t indexBufferId;
-                uint32_t indexCount;
-                size_t indexDataSize;*/
-                //======================= old
-
                 std::vector<glm::vec2> m_uv0;
                 std::vector<glm::vec2> m_uv1;
                 std::vector<glm::vec2> m_uv2;
@@ -78,8 +56,8 @@ namespace Core
                 uint32_t m_tangentBufferId, m_tangentBufferMemoryId;
                 uint32_t m_indexBufferId, m_indexBufferMemoryId;
                 uint32_t m_uv0BufferId, m_uv0BufferMemoryId;
-                // store bufferid and mem id per attrib
-                //std::map<Core::Enums::VertexAttributes, VertexBufferInfoWrapper> m_vertexGpuDataMap;
+
+                glm::vec3 m_minPos, m_maxPos;
 
                 Mesh()
                 {
@@ -88,9 +66,6 @@ namespace Core
 
                 ~Mesh()
                 {
-                    //delete[] vertexBuffersIds;
-                    //delete[] memoryIds;
-                    //delete[] pGpuMemVB;
                 }
             };
         }

@@ -69,14 +69,27 @@ void main()
         vec3 L = normalize(lightDir);
         vec3 R = reflect(-L, N);
 
-        float diffuseComponent = max(dot(N, L), 0.0);
-        diffuse += lightDiffuse * diffuseComponent;
-        ambient += lightAmbient;
+        float distanceVal = distance(lightPos.xyz, inWorldSpacePos.xyz);
+        bool testRadius = true;
+        if(testRadius)
+        {
+            if(distanceVal < pointLights[i].lightRadius)
+            {
+                diffuse += lightDiffuse * max(dot(N, L), 0.0);// * 1.0f/(distanceVal);
+                specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;// * 1.0f/(distanceVal);
+            }
+        }
+        else
+        {
+            diffuse += lightDiffuse * max(dot(N, L), 0.0);
+            specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;
+        }
 
-        specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;
+
+        ambient += lightAmbient;
     }
 
-    outColor = vec4(diffuse * color.rgb + specular + ambient, color.a);
+    outColor = vec4((diffuse + specular + ambient) * color.rgb, color.a);
 }
 
 

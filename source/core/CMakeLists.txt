@@ -24,6 +24,7 @@ set(ECS_COMPONENT_FILES
     inc/ECS/Components/Scriptable.h
     inc/ECS/Components/Texture.h
     inc/ECS/Components/Transform.h
+    inc/ECS/Components/Bounds.h
 
     src/ECS/Components/Camera.cpp
     src/ECS/Components/SceneNode.cpp
@@ -80,6 +81,7 @@ set(MATH_FILES
     inc/Math/MathUtil.h
     inc/Math/Plane.h
     inc/Math/Quad.h
+    inc/Math/Sphere.h
     inc/Math/TangentCalculator.h
     inc/Math/ReadMe.txt
 

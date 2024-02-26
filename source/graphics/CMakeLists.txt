@@ -27,6 +27,7 @@ inc/renderGraph/Graph.h
 inc/renderGraph/effects/Opaque.h
 inc/renderGraph/effects/SkyboxPass.h
 inc/renderGraph/effects/DepthPass.h
+inc/renderGraph/effects/BoundPass.h
 
 inc/renderGraph/pipelines/DepthViewPipeline.h
 inc/renderGraph/pipelines/LowEndPipeline.h
@@ -37,6 +38,7 @@ inc/renderGraph/techniques/OpaqueTexturedUnlit.h
 inc/renderGraph/techniques/OpaqueTexturedLit.h
 inc/renderGraph/techniques/DepthTechnique.h
 inc/renderGraph/techniques/Skybox.h
+inc/renderGraph/techniques/BoundRenderer.h
 
 inc/renderGraph/tasks/RenderTask.h
 inc/renderGraph/tasks/ComputeTask.h
@@ -52,6 +54,7 @@ src/renderGraph/utility/Utils.cpp
 src/renderGraph/effects/Opaque.cpp
 src/renderGraph/effects/DepthPass.cpp
 src/renderGraph/effects/SkyboxPass.cpp
+src/renderGraph/effects/BoundPass.cpp
 
 src/renderGraph/pipelines/DepthViewPipeline.cpp
 src/renderGraph/pipelines/LowEndPipeline.cpp
@@ -62,6 +65,7 @@ src/renderGraph/techniques/OpaqueUnlit.cpp
 src/renderGraph/techniques/OpaqueTexturedUnlit.cpp
 src/renderGraph/techniques/OpaqueTexturedLit.cpp
 src/renderGraph/techniques/Skybox.cpp
+src/renderGraph/techniques/BoundRenderer.cpp
 
 src/renderGraph/tasks/RenderTask.cpp
 src/renderGraph/tasks/ComputeTask.cpp
@@ -73,11 +77,13 @@ set(SHADER_RESOURCE_FILES
 inc/resourceManagement/UniformFactory.h
 inc/resourceManagement/MaterialFactory.h
 inc/resourceManagement/MeshFactory.h
+inc/resourceManagement/BoundFactory.h
 inc/resourceManagement/Resource.h
 
 src/resourceManagement/UniformFactory.cpp
 src/resourceManagement/MaterialFactory.cpp
 src/resourceManagement/MeshFactory.cpp
+src/resourceManagement/BoundFactory.cpp
 src/resourceManagement/Resource.cpp
 )
 

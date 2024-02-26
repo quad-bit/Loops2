@@ -3,7 +3,6 @@
 #include <ECS/Components/Scriptable.h>
 #include <ECS/ECS_Setting.h>
 #include <ECS/Events/EventBus.h>
-//#include <InputEvents.h>
 #include <ECS/Components/Transform.h>
 #include <SceneGraphManager.h>
 
@@ -15,7 +14,7 @@ Engine::SceneManager::SceneManager()
 
     SceneGraphManager::GetInstance()->Init(sceneRootTransform);
 
-    //EventBus::GetInstance()->Subscribe<SceneManager, KeyInputEvent>(this, &SceneManager::HandleSceneControls);
+    Core::ECS::Events::EventBus::GetInstance()->Subscribe<Engine::SceneManager, Renderer::Windowing::KeyInputEvent>(this, &SceneManager::HandleSceneControls);
 }
 
 Engine::SceneManager::~SceneManager()
@@ -38,25 +37,25 @@ Core::ECS::Components::Transform * const Engine::SceneManager::GetSceneRootTrans
     return sceneRootTransform;
 }
 
-//void SceneManager::HandleSceneControls(KeyInputEvent * inputEvent)
-//{
-//    if (strcmp(inputEvent->keyname, "P") == 0)
-//    {
-//        if (inputEvent->keyState == KeyState::RELEASED)
-//        {
-//            if (appState == APP_STATE::NONE || appState == APP_STATE::STOPPED)
-//                appState = APP_STATE::STARTED;
-//            else if (appState == APP_STATE::RUNNING)
-//                appState = APP_STATE::STOPPED;
-//        }
-//    }
-//
-//    // Just for testing, TODO : need to be removed
-//    if (strcmp(inputEvent->keyname, "T") == 0)
-//    {
-//        if (inputEvent->keyState == KeyState::RELEASED)
-//        {
-//            
-//        }
-//    }
-//}
+void Engine::SceneManager::HandleSceneControls(Renderer::Windowing::KeyInputEvent * inputEvent)
+{
+    if (strcmp(inputEvent->keyname, "P") == 0)
+    {
+        if (inputEvent->keyState == Renderer::Windowing::KeyState::RELEASED)
+        {
+            if (appState == Core::ECS::APP_STATE::NONE || appState == Core::ECS::APP_STATE::STOPPED)
+                appState = Core::ECS::APP_STATE::STARTED;
+            else if (appState == Core::ECS::APP_STATE::RUNNING)
+                appState = Core::ECS::APP_STATE::STOPPED;
+        }
+    }
+
+    // Just for testing, TODO : need to be removed
+    /*if (strcmp(inputEvent->keyname, "T") == 0)
+    {
+        if (inputEvent->keyState == Core::ECS::KeyState::RELEASED)
+        {
+            
+        }
+    }*/
+}

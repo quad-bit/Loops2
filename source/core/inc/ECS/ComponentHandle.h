@@ -46,6 +46,7 @@ template<typename ComponentType>
 void Core::ECS::ComponentHandle<ComponentType>::DestroyComponent()
 {
     componentManagerObj->RemoveComponent(owner);
+    //delete componentType;
 }
 
 template<typename ComponentType>

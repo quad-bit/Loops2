@@ -52,10 +52,12 @@ namespace Renderer
                 const std::string& name,
                 Utils::CallbackUtility& funcs,
                 const std::string& effectName,
-                const Core::Utility::EffectInfo& effectInfo) :
+                const Core::Utility::EffectInfo& effectInfo,
+                bool active = true) :
                 m_graph(graph), m_name(name), 
                 m_callbackUtility(funcs), m_parentEffectName(effectName),
-                m_effectInfo(effectInfo)
+                m_effectInfo(effectInfo),
+                m_techniqueActive(active)
             {
                 auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
                 m_techniqueId = VulkanInterfaceAlias::GetTechniqueId(effectId, m_name);
@@ -160,7 +162,9 @@ namespace Renderer
         };
 
         void CreateDrawInfo(const Core::Utility::TransformData& data, uint32_t taskId,
-            /*const std::string& effectName, const std::string& techName, const std::string& taskName,*/
+            RenderGraph::Tasks::DrawInfo& drawInfo);
+
+        void CreateDrawInfo(const Core::Utility::BoundData& data, uint32_t taskId,
             RenderGraph::Tasks::DrawInfo& drawInfo);
 
         void CreateSetInfo(std::map<Core::Enums::ResourceSets,

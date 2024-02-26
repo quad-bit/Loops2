@@ -47,12 +47,6 @@ namespace Renderer
             int* CreateVertexBuffer(uint32_t count);
             int CreateIndexBuffer();
 
-            //std::bitset<(uint32_t)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> pcMask;
-            //std::bitset<(uint32_t)Core::Utility::ATTRIBUTES::NUM_ATTRIBUTES> pcnMask;
-
-            //template<typename AttribType>
-            //void FillMeshAttrib(Core::Utility::AttribStructBase* wrapper, Core::ECS::Components::MESH_TYPE* meshType, Core::ECS::Components::Mesh* mesh, const Core::Wrappers::MeshInfo* meshInfo);
-
             template<typename T>
             void FillMeshData(Core::ECS::Components::Mesh* mesh, bool addIndices);
 

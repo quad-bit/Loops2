@@ -1,0 +1,39 @@
+{
+    "Technique" : [
+        {
+            "name": "BoundRenderer",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "BoundRenderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "Color.frag",
+                            "type": "FRAGMENT",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        },
+                        {
+                            "name": "Bounds.vert",
+                            "type": "VERTEX",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ],
+                    "attributes":
+                    [
+                        {
+                            "name": "inPos",
+                            "location": 0,
+                            "attribType": "POSITION",
+                            "dataType": "vec4"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

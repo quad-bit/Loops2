@@ -66,7 +66,7 @@ void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
             uniformObj.lightRadius = ((Core::ECS::Components::PointLight*)light->GetLightCategory())->m_lightRadius;
             uniformObj.specular = light->GetLightCategory()->m_specular;
 
-            m_pointUniformListPerFrame[frameInfo.m_frameInFlightIndex][index] = uniformObj;
+            m_pointUniformListPerFrame[frameInfo.m_frameInFlightIndex][index++] = uniformObj;
 
             Core::Utility::PointLightData data{ uniformObj.lightPos , uniformObj.lightRadius };
             m_lightData.m_pointLights.push_back(data);

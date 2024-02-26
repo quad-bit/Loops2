@@ -78,19 +78,6 @@ namespace Core
 
                 std::vector<uint32_t> m_descriptorSetIds;
 
-                //Material(const std::string& effectName) :
-                //    m_effectName(effectName)
-                //{
-                //    //m_effectTypes.push_back(EffectType::CUSTOM);
-                //    componentType = COMPONENT_TYPE::MATERIAL;
-                //}
-
-                /*Material(const std::vector<std::pair<EffectType, std::string>>& effectTypes) :
-                    m_effectTypes(effectTypes)
-                {
-                    componentType = COMPONENT_TYPE::MATERIAL;
-                }*/
-
                 Material(const MaterialCreateInfo& info):
                     m_color(info.m_color),
                     m_effectInfo(info.m_effectInfo),

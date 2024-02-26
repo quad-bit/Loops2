@@ -6,14 +6,16 @@
 #include <ECS/EntityHandle.h>
 #include <ECS/Components/Transform.h>
 #include <ECS/Components/Light.h>
+#include <ECS/Components/Bounds.h>
 #include <bitset>
-//#include <AttributeHelper.h>
 #include <resourceManagement/MeshFactory.h>
 #include <resourceManagement/MaterialFactory.h>
-//#include <MaterialFactory.h>
+#include <resourceManagement/BoundFactory.h>
 #include <random>
 #include "Utility/Timer.h"
 #include <Utility/RenderingWrappers/AttributeHelper.h>
+
+#define LIGHT_SPHERE_VISUAL 1
 
 SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(false)
 {
@@ -39,26 +41,44 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     playerObject = worldObj->CreateEntity("playerObject");
     ASSERT_MSG_DEBUG(playerObject != nullptr, "Object not found");
 
-    auto seed = 4;// Timer::GetInstance()->GetSeconds();
-    PLOGD << "Seed : " << seed;
+    auto seed = 15;// Timer::GetInstance()->GetSeconds();
     srand( seed );
 
-    uint32_t radius = 20;
+    uint32_t radius = 10;
 
-    float xStart = -5.0f;
-    float yStart = 20.0f;
+    float xStart = -10.0f;
+    float yStart = 5.0f;
 
     for (uint32_t i = 0; i < NUM_LIGHTS; i++)
     {
-        auto& lightHandle = lightHandles[i];
-        lightHandle = worldObj->CreateEntity("light");
-        Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightHandle->GetComponent<Core::ECS::Components::Transform>();
-        lightTrfHandle->SetLocalPosition(glm::vec3(xStart + i * 4, yStart + i * 2, 0));
-        //lightTrfHandle->SetLocalPosition(glm::vec3(0, 500, 20));
+        int theta = rand() % (uint32_t)((360.0f));
+        int phi = rand() % (uint32_t)((180.0f));
+        float x = 30 * glm::sin(glm::radians((float)phi)) * glm::cos(glm::radians((float)theta));
+        float y = radius * glm::sin(glm::radians((float)phi)) * glm::sin(glm::radians((float)theta));
+        float z = radius * glm::cos(glm::radians((float)phi));
 
-        std::unique_ptr<Core::ECS::Components::LightCategory> category = std::make_unique< Core::ECS::Components::PointLight>();
+        auto& lightEntity = lightHandles[i];
+        lightEntity = worldObj->CreateEntity("light_" + std::to_string(i));
+        Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightEntity->GetComponent<Core::ECS::Components::Transform>();
+        auto lighPosition = glm::vec3(x + 10 * (i%2 == 0? -1 : 1), 10, z + (i%2 == 0 ? -1.0f : 1.0f) * i * 5);
+        lightTrfHandle->SetLocalPosition(lighPosition);
+
+        std::unique_ptr<Core::ECS::Components::LightCategory> category(new Core::ECS::Components::PointLight(radius));
         lightComponents[i] = new Core::ECS::Components::Light(category);
-        lightHandles[i]->AddComponent<Core::ECS::Components::Light>(lightComponents[i]);
+        lightEntity->AddComponent<Core::ECS::Components::Light>(lightComponents[i]);
+
+        // Bounds
+#if LIGHT_SPHERE_VISUAL
+        std::unique_ptr<Core::ECS::Components::BoundCategory> boundCategory(new Core::ECS::Components::SphereBound(
+            lightTrfHandle->GetGlobalModelMatrix(), lightEntity->GetEntity()->entityName, lightTrfHandle->GetGlobalPosition(), radius));
+#else
+        std::unique_ptr<Core::ECS::Components::BoundCategory> boundCategory(new Core::ECS::Components::AABB(
+            lightTrfHandle->GetGlobalModelMatrix(), lightEntity->GetEntity()->entityName, lighPosition, radius));
+#endif
+
+        Core::ECS::Components::Bound* bound = new Core::ECS::Components::Bound(boundCategory);
+        Renderer::ResourceManagement::BoundFactory::GetInstance()->AddBound(bound);
+        lightEntity->AddComponent<Core::ECS::Components::Bound>(bound);
     }
 }
 
@@ -67,8 +87,15 @@ SceneManagerScript::~SceneManagerScript()
     for (uint32_t i = 0; i < NUM_LIGHTS; i++)
     {
         lightHandles[i]->RemoveComponent<Core::ECS::Components::Light>(lightComponents[i]);
-        worldObj->DestroyEntity(lightHandles[i]);
         delete lightComponents[i];
+
+        auto bound = lightHandles[i]->GetComponent<Core::ECS::Components::Bound>();
+        auto ptr = bound.GetComponent();
+        Renderer::ResourceManagement::BoundFactory::GetInstance()->DestroyBound(ptr);
+        bound.DestroyComponent();
+        delete ptr;
+
+        worldObj->DestroyEntity(lightHandles[i]);
     }
 
     delete cameraController;
@@ -80,7 +107,7 @@ void SceneManagerScript::Init()
 }
 
 static float counter = 60.0f;
-static float factor = 1.0f;
+static float factor = .5f;
 void SceneManagerScript::Update(float dt)
 {
     float upperLimit = 120.0f;
@@ -101,23 +128,36 @@ void SceneManagerScript::Update(float dt)
 
     float theta = glm::radians((float)counter);
 
-    //float radius = glm::distance(glm::vec3(0, 0, 0), lightHandle->GetTransform()->GetGlobalPosition());
-    //float x = radius * glm::cos(theta);
-    //float y = radius * glm::sin(theta);
+    auto obj = worldObj->FindEntity("Knight_B1");
+    ASSERT_MSG_DEBUG(obj != nullptr, "object not found");
 
-    ////PLOGD << x << " " << y;
+    auto transform = obj->GetTransform();
+    transform->SetLocalPosition(glm::vec3(-15.0f, 5.0f, 22.0f));
 
-    //{
-    //    Core::ECS::Components::Transform * transform = lightHandle->GetTransform();
+    float radius = glm::distance(glm::vec3(0, 0, 0), transform->GetGlobalPosition());
+    float x = radius * glm::cos(theta);
+    float y = radius * glm::sin(theta);
 
-    //    float angle = Core::Math::lerp(prevAngle, currentAngle, dt);
-    //    prevAngle = currentAngle;
+    //PLOGD << x << " " << y;
 
-    //    transform->SetLocalPosition(glm::vec3(x, y, transform->GetLocalPosition().z));
+    {
+        float angle = Core::Math::lerp(prevAngle, currentAngle, dt);
+        prevAngle = currentAngle;
 
-    //    transform->SetLocalEulerAngles(glm::vec3(theta, 
-    //        transform->GetLocalEulerAngles().y, theta * 2.0));
-    //}
+        //transform->SetLocalPosition(glm::vec3(x, y, transform->GetLocalPosition().z));
+        transform->SetLocalEulerAngles(glm::vec3(transform->GetLocalEulerAngles().x, theta * 2.0, transform->GetLocalEulerAngles().z));
+    }
+
+    for (uint32_t i = 0; i < NUM_LIGHTS; i++)
+    {
+        auto& lightEntity = lightHandles[i];
+        Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightEntity->GetComponent<Core::ECS::Components::Transform>();
+        float yPos = lightTrfHandle->GetLocalPosition().y + 0.05f * factor;
+        float xPos = lightTrfHandle->GetLocalPosition().x + 0.02f * factor;
+        float zPos = lightTrfHandle->GetLocalPosition().z + 0.03f * factor;
+        lightTrfHandle->SetLocalPosition(glm::vec3((i%2 == 0 ? xPos : lightTrfHandle->GetLocalPosition().x), (i%3 == 0 ? yPos : lightTrfHandle->GetLocalPosition().y), (i == 1 ? zPos : lightTrfHandle->GetLocalPosition().z )));
+    }
+
 }
 
 void SceneManagerScript::Render(float dt)

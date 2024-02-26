@@ -58,7 +58,7 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
         Core::Utility::DescriptorSetInfo desc = transformToBindDescMap[transformObj];
         UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
             sizeof(Core::ECS::Components::TransformUniform), memoryAlignedUniformSize,
-            &obj, std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[Core::Settings::m_currentFrameInFlight], false);
+            &obj, std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
 
         Core::Utility::TransformData data;
         data.m_descriptorSetId = desc.m_descriptorSetIds[frameInfo.m_frameInFlightIndex];
@@ -141,7 +141,7 @@ MeshRendererSystem::~MeshRendererSystem()
 void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRendererAdditionEvent * inputEvent)
 {
     // Create descriptor for transform set
-    inputEvent->renderer->componentId = GenerateId();
+    //inputEvent->renderer->componentId = GenerateId();
 
     //size_t uniformSize = sizeof(Core::ECS::Components::TransformUniform);
 

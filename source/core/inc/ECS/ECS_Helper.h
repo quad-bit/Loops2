@@ -13,7 +13,8 @@ namespace Core
             MATERIAL,
             MESH_RENDERER,
             SCRIPTABLE,
-            LIGHT
+            LIGHT,
+            BOUNDS
         };
     }
 }

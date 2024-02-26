@@ -1,6 +1,7 @@
 {
     "Effects": [
         "low\\OpaquePass.json",
-        "low\\SkyboxPass.json"
+        "low\\SkyboxPass.json",
+        "low\\BoundPass.json"
     ]
 }

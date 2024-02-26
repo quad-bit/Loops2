@@ -1,5 +1,6 @@
 #pragma once
 //#include <InputManager.h>
+#include <windowing/InputEvents.h>
 
 //struct KeyInputEvent;
 //struct NodeAdditionEvent;
@@ -31,7 +32,7 @@ namespace Engine
         ~SceneManager();
 
         Core::ECS::Components::Transform* const GetSceneRootTransform();
-        //void HandleSceneControls(KeyInputEvent * inputEvent);
+        void HandleSceneControls(Renderer::Windowing::KeyInputEvent * inputEvent);
 
         // previously commented out
         //void HandleSceneNodeAddition(NodeAdditionEvent * inputEvent);

@@ -1,7 +1,6 @@
 #include "renderGraph/Technique.h"
 
 void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& data, uint32_t taskId,
-    /*const std::string& effectName, const std::string& techName, const std::string& taskName,*/
     Renderer::RenderGraph::Tasks::DrawInfo& drawInfo)
 {
     Renderer::RenderGraph::Tasks::MeshDrawInfo meshInfo{};
@@ -16,10 +15,6 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
         meshInfo.m_indexBufferInfo = indexInfo;
         meshInfo.m_indexCount = data.m_indexCount.value();
     }
-
-    //auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
-    //auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techName);
-    //auto taskId = VulkanInterfaceAlias::GetTaskId(effectId, techId, taskName);
 
     // vertex buffer infos
     auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(taskId);
@@ -55,6 +50,46 @@ void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::TransformData& d
             if (!data.m_tangentBufferId.has_value())
                 ASSERT_MSG_DEBUG(0, "No Tangent attrib in the json file");
             vertexInfo.bufferIds.push_back(data.m_tangentBufferId.value());
+            break;
+        }
+    }
+    meshInfo.m_vertexBufferInfo.push_back(vertexInfo);
+    meshInfo.m_vertexCount = data.m_vertexCount;
+    drawInfo.m_meshInfoList.push_back(meshInfo);
+}
+
+void Renderer::RenderGraph::CreateDrawInfo(const Core::Utility::BoundData& data, uint32_t taskId, RenderGraph::Tasks::DrawInfo& drawInfo)
+{
+    Renderer::RenderGraph::Tasks::MeshDrawInfo meshInfo{};
+
+    // index buffer info
+    if (data.m_indexBufferId.has_value())
+    {
+        Core::Wrappers::IndexBufferBindingInfo indexInfo{};
+        indexInfo.bufferId = data.m_indexBufferId.value();
+        indexInfo.indexType = Core::Enums::IndexType::INDEX_TYPE_UINT32;
+        indexInfo.offset = 0;
+        meshInfo.m_indexBufferInfo = indexInfo;
+        meshInfo.m_indexCount = data.m_indexCount.value();
+    }
+
+    // vertex buffer infos
+    auto& vertexBufferBindingTypeList = VulkanInterfaceAlias::GetVertexBindingTypeInfo(taskId);
+    Core::Wrappers::VertexBufferBindingInfo vertexInfo{};
+    vertexInfo.bindingCount = 0;
+    vertexInfo.firstBinding = 0;
+    for (auto& bindingType : vertexBufferBindingTypeList)
+    {
+        vertexInfo.pOffsets.push_back({ 0 });
+        vertexInfo.bindingCount++;
+
+        switch (bindingType.m_bindingType)
+        {
+        case Core::Enums::VertexAttributeType::POSITION:
+            vertexInfo.bufferIds.push_back(data.m_positionBufferId);
+            break;
+        default:
+            ASSERT_MSG_DEBUG(0, "Invalid option");
             break;
         }
     }

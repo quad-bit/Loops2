@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+#define RADIUS_TEST 1
+
 namespace Core
 {
     namespace ECS
@@ -27,9 +29,15 @@ namespace Core
 
                 LightCategory(const LightType& type) : m_type(type)
                 {
-                    m_ambient = glm::vec4(.01f);
-                    m_diffuse = glm::vec4(.2f);
+#if RADIUS_TEST
+                    m_ambient = glm::vec4(0.05f);
+                    m_diffuse = glm::vec4(.5f);
+                    m_specular = glm::vec4(.5f);
+#else
+                    m_ambient = glm::vec4(0.02f);
+                    m_diffuse = glm::vec4(.3f);
                     m_specular = glm::vec4(.2f);
+#endif
                     m_color = glm::vec4(.20f);
                 }
             };
@@ -41,12 +49,20 @@ namespace Core
                 SpotLight() : LightCategory(LightType::SpotLight)
                 {
                 }
+
+                ~SpotLight()
+                {
+                }
             };
 
             struct PointLight : LightCategory
             {
-                float m_lightRadius = 10.0f;
-                PointLight() : LightCategory(LightType::Point)
+                float m_lightRadius = 50.0f;
+                PointLight(float radius) : LightCategory(LightType::Point), m_lightRadius(radius)
+                {
+                }
+
+                ~PointLight()
                 {
                 }
             };

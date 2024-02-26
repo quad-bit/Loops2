@@ -18,6 +18,7 @@ namespace Core
             class Camera;
             class MeshRenderer;
             class Light;
+            class Bound;
         }
 
         template<typename T>
@@ -62,6 +63,9 @@ namespace Engine
 
         Core::ECS::ComponentManager<Core::ECS::Components::Light>* lightManager;
         Core::ECS::System* lightSystem;
+
+        Core::ECS::ComponentManager<Core::ECS::Components::Bound>* boundManager;
+        Core::ECS::System* boundSystem;
 
         void Init(Core::Utility::RenderData& renderData, std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader);
         void DeInit();
