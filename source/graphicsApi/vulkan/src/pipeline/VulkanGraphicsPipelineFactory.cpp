@@ -9,6 +9,7 @@
 #include "shading/VkShaderResourceManager.h"
 
 GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory* GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::instance = nullptr;
+GfxVk::VulkanPipeline::VulkanComputePipelineFactory* GfxVk::VulkanPipeline::VulkanComputePipelineFactory::instance = nullptr;
 
 VkPrimitiveTopology GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::UnwrapPrimitiveInfo(Core::Enums::PrimtiveType * primitive)
 {
@@ -1407,4 +1408,77 @@ void GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::CreatePipelineMultiSa
     m_pipelineMultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
     m_pipelineMultisampleStateCreateInfo.minSampleShading = 0.0;
     idToMultiSampleMap.insert({ GetStateId(Core::Enums::PipelineStates::MultisampleState), m_pipelineMultisampleStateCreateInfo });
+}
+
+// ================================= COMPUTE =========================================
+
+uint32_t GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetComputePipelineId()
+{
+    return m_computePipelineId++;
+}
+
+void GfxVk::VulkanPipeline::VulkanComputePipelineFactory::Init(const Core::WindowSettings& windowSettings)
+{
+}
+
+void GfxVk::VulkanPipeline::VulkanComputePipelineFactory::DeInit()
+{
+    for each (auto obj in idToPipelineMap)
+    {
+        vkDestroyPipeline(DeviceInfo::GetLogicalDevice(), obj.second, DeviceInfo::GetAllocationCallback());
+    }
+    idToPipelineMap.clear();
+}
+
+GfxVk::VulkanPipeline::VulkanComputePipelineFactory* GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()
+{
+    if (instance == nullptr)
+    {
+        instance = new GfxVk::VulkanPipeline::VulkanComputePipelineFactory();
+    }
+    return instance;
+}
+
+GfxVk::VulkanPipeline::VulkanComputePipelineFactory::~VulkanComputePipelineFactory()
+{
+}
+
+uint32_t GfxVk::VulkanPipeline::VulkanComputePipelineFactory::CreatePipeline(const Core::Wrappers::ComputePipelineCreateInfo& info)
+{
+    auto pipelineLayout = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineLayout(info.pipelineLayoutId);
+    auto& shaderStageInfo = GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetPipelineShaderInfo(info.shaderStateId);
+
+    VkPipeline pipeline = VK_NULL_HANDLE;
+
+    VkComputePipelineCreateInfo vkInfo{};
+    //vkInfo.basePipelineHandle = ;
+    //vkInfo.basePipelineIndex = ;
+    //vkInfo.flags = ;
+    vkInfo.layout = *pipelineLayout;
+    vkInfo.pNext = nullptr;
+    vkInfo.stage = shaderStageInfo[0];
+    vkInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+
+    GfxVk::Utility::ErrorCheck(vkCreateComputePipelines(
+        DeviceInfo::GetLogicalDevice(),
+        VK_NULL_HANDLE,
+        1,
+        &vkInfo,
+        DeviceInfo::GetAllocationCallback(),
+        &pipeline));
+
+    auto id = GetComputePipelineId();
+    idToPipelineMap.insert({ id, pipeline });
+
+    return 0;
+}
+
+const VkPipeline& GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetPipeline(const uint32_t& id)
+{
+    if (idToPipelineMap.find(id) == idToPipelineMap.end())
+    {
+        ASSERT_MSG_DEBUG(0, "Id not found");
+    }
+
+    return idToPipelineMap[id];
 }

@@ -7,7 +7,8 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     Core::Utility::RenderData& renderData,
     const Core::WindowSettings& windowSettings,
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph, const std::string& name,
-    Renderer::RenderGraph::Utils::CallbackUtility& funcs):
+    Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+    const std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& inputNodes):
     Effect(graph, name, funcs), m_renderData(renderData), m_windowSettings(windowSettings)
 {
 
@@ -65,6 +66,38 @@ Renderer::RenderGraph::Effects::OpaquePass::OpaquePass(
     Renderer::RenderGraph::Utils::AddInputAsColorAttachment(graph, unlitTexturedOutputs[1], litTexturedTaskNode,
         Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
         Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0);
+
+    // Connect tile data to opaqueLit
+    {
+        Renderer::RenderGraph::Utils::BufferResourceConnectionInfo bufInfo{};
+        bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufInfo.expectedShader = Core::Enums::ShaderType::FRAGMENT;
+        bufInfo.prevShader = Core::Enums::ShaderType::COMPUTE;
+        bufInfo.previousUsage = Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+        Renderer::RenderGraph::Utils::ConnectionInfo connection{};
+        connection.m_bufInfo = bufInfo;
+        connection.m_resource = static_cast<Renderer::RenderGraph::ResourceNode*>(inputNodes[0]->GetNodeData())->GetResource();
+        connection.m_resourceParentNodeId = inputNodes[0]->GetNodeId();
+        connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
+        Renderer::RenderGraph::Utils::AddEdge(m_graph, inputNodes[0], litTexturedTaskNode, connection);
+    }
+
+    // Connect light depth data to opaqueLit
+    {
+        Renderer::RenderGraph::Utils::BufferResourceConnectionInfo bufInfo{};
+        bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufInfo.expectedShader = Core::Enums::ShaderType::FRAGMENT;
+        bufInfo.prevShader = Core::Enums::ShaderType::COMPUTE;
+        bufInfo.previousUsage = Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT;
+
+        Renderer::RenderGraph::Utils::ConnectionInfo connection{};
+        connection.m_bufInfo = bufInfo;
+        connection.m_resource = static_cast<Renderer::RenderGraph::ResourceNode*>(inputNodes[1]->GetNodeData())->GetResource();
+        connection.m_resourceParentNodeId = inputNodes[1]->GetNodeId();
+        connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
+        Renderer::RenderGraph::Utils::AddEdge(m_graph, inputNodes[1], litTexturedTaskNode, connection);
+    }
 
     m_techniques.push_back(std::move(unlitTech));
     m_techniques.push_back(std::move(unlitTexturedTech));

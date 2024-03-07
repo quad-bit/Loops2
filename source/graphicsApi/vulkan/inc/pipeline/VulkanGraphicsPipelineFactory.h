@@ -33,21 +33,6 @@ namespace GfxVk
             VkRect2D m_defaultScissor;
             VkViewport m_defaultViewport;
 
-            /*
-                VkPipelineCache                                     pipelineCacheObj;
-                VkPipelineShaderStageCreateInfo                     pipelineShaderStageCreateInfo = {};
-                VkPipelineVertexInputStateCreateInfo                pipelineVertexInputStateCreateInfo = {};
-                VkPipelineInputAssemblyStateCreateInfo              pipelineInputAssemblyStateCreateInfo = {};
-                VkPipelineTessellationStateCreateInfo               pipelineTessellationStateCreateInfo = {};
-                VkPipelineViewportStateCreateInfo                   pipelineViewportStateCreateInfoObj = {};
-                VkPipelineRasterizationStateCreateInfo              pipelineRasterizationStateCreateInfoObj = {};
-                VkPipelineMultisampleStateCreateInfo                pipelineMultisampleStateCreateInfo = {};
-                VkPipelineDepthStencilStateCreateInfo               pipelineDepthStencilStateCreateInfo = {};
-                VkPipelineColorBlendStateCreateInfo                 pipelineColorBlendStateCreateInfoObj = {};
-                VkPipelineColorBlendAttachmentState                 attachments[1];
-                VkPipelineDynamicStateCreateInfo                    pipelineDynamicStateCreateInfoObj = {};
-                VkGraphicsPipelineCreateInfo                        vulkanGraphicsPipelineCreateInfoObj = {};
-*/
             void InitPipelineCache();
             void CreatePipelineShaderStage();
             void CreatePipelineVertexInputState();
@@ -60,15 +45,15 @@ namespace GfxVk
             void CreatePipelineColorBlendState();
             void CreateDynamicState();
 
-            VkPipelineTessellationStateCreateInfo               m_pipelineTessellationStateCreateInfo = {};
-            VkPipelineInputAssemblyStateCreateInfo              m_pipelineInputAssemblyStateCreateInfo = {};
-            VkPipelineViewportStateCreateInfo                   m_pipelineViewportStateCreateInfoObj = {};
-            VkPipelineRasterizationStateCreateInfo              m_pipelineRasterizationStateCreateInfoObj = {};
-            VkPipelineMultisampleStateCreateInfo                m_pipelineMultisampleStateCreateInfo = {};
-            VkPipelineDepthStencilStateCreateInfo               m_pipelineDepthStencilStateCreateInfo = {};
-            VkPipelineColorBlendStateCreateInfo                 m_pipelineColorBlendStateCreateInfoObj = {};
-            VkPipelineColorBlendAttachmentState                 m_attachmentsDefault;
-            VkPipelineDynamicStateCreateInfo                    m_pipelineDynamicStateCreateInfoObj = {};
+            VkPipelineTessellationStateCreateInfo  m_pipelineTessellationStateCreateInfo = {};
+            VkPipelineInputAssemblyStateCreateInfo m_pipelineInputAssemblyStateCreateInfo = {};
+            VkPipelineViewportStateCreateInfo      m_pipelineViewportStateCreateInfoObj = {};
+            VkPipelineRasterizationStateCreateInfo m_pipelineRasterizationStateCreateInfoObj = {};
+            VkPipelineMultisampleStateCreateInfo   m_pipelineMultisampleStateCreateInfo = {};
+            VkPipelineDepthStencilStateCreateInfo  m_pipelineDepthStencilStateCreateInfo = {};
+            VkPipelineColorBlendStateCreateInfo    m_pipelineColorBlendStateCreateInfoObj = {};
+            VkPipelineColorBlendAttachmentState    m_attachmentsDefault;
+            VkPipelineDynamicStateCreateInfo       m_pipelineDynamicStateCreateInfoObj = {};
 
             uint32_t m_pipelineTessellationStateCreateInfoCounter = 0;
             uint32_t m_pipelineInputAssemblyStateCreateInfoCounter = 0;
@@ -153,6 +138,34 @@ namespace GfxVk
             void CreatePipeline(Core::Wrappers::PipelineCreateInfo* info, const uint32_t& pipelineCount, uint32_t* pipelineId);
             uint32_t CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info);
 
+            const VkPipeline& GetPipeline(const uint32_t& id);
+        };
+
+        class VulkanComputePipelineFactory
+        {
+        private:
+            VulkanComputePipelineFactory() {}
+            VulkanComputePipelineFactory(VulkanComputePipelineFactory const&) {}
+            VulkanComputePipelineFactory const& operator= (VulkanComputePipelineFactory const&) {}
+
+            static VulkanComputePipelineFactory* instance;
+            Core::WindowSettings m_windowSettings;
+
+            uint32_t m_computePipelineId = 0;
+            uint32_t GetComputePipelineId();
+
+            std::map<uint32_t, VkPipeline> idToPipelineMap;
+
+            void DestroyPipelines();
+
+        public:
+            void Init(const Core::WindowSettings& windowSettings);
+            void DeInit();
+
+            static VulkanComputePipelineFactory* GetInstance();
+            ~VulkanComputePipelineFactory();
+
+            uint32_t CreatePipeline(const Core::Wrappers::ComputePipelineCreateInfo& info);
             const VkPipeline& GetPipeline(const uint32_t& id);
         };
     }

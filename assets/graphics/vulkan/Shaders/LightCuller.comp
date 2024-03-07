@@ -1,0 +1,163 @@
+#version 450
+
+#define MAX_LIGHTS 5
+#define MAX_LIGHTS_PER_TILE 10
+#define MAX_TILE_ROWS 8
+#define MAX_TILE_COLS 8
+#define MAX_TILES MAX_TILE_ROWS * MAX_TILE_COLS
+
+#define MAX_BINS 32
+
+layout (std140, set = 0, binding = 0) uniform Scene
+{
+    mat4 view;
+    mat4 projection;
+    float near;
+    float far;
+    uint screenWidth;
+    uint screenHeight;
+} scene;
+
+struct AABB
+{
+    vec3 minPos;
+    vec3 maxPos;
+};
+
+// the index will be used as lightIndex
+layout (std140, set = 0, binding = 1) uniform Bounds
+{
+    AABB aabbList[MAX_LIGHTS];
+}bound;
+
+struct Tile
+{
+    uint lightIds[MAX_LIGHTS_PER_TILE];
+    uint lightCounter;
+};
+
+layout (std140, set = 0, binding = 2) buffer TileInfo
+{
+    Tile tileArray[MAX_TILES];
+}tileInfo;
+
+// depth bins for each light, min Bin and max Bin
+layout (std140, set = 0, binding = 3) buffer DepthInfo
+{
+    uint depthBins[MAX_LIGHTS][2];
+}depthInfo;
+
+layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+
+uint tileWidth = 0;
+uint tileHeight = 0;
+
+void AssignDepthBin(float minZ, float maxZ, uint lightIndex)
+{
+    float logVal = log(scene.far/scene.near);
+    float denom = float(MAX_BINS)/logVal;
+    uint binMin = uint(floor((log(minZ) - log(scene.near)) * denom));
+    uint binMax = uint(floor((log(maxZ) - log(scene.near)) * denom));
+    depthInfo.depthBins[lightIndex][0] = binMin;
+    depthInfo.depthBins[lightIndex][1] = binMax;
+}
+
+vec4 CalculateScreenSpaceBoundsAABB(in vec3 minPos, in vec3 maxPos, uint lightIndex)
+{
+    vec3 boundCorners[8];
+
+    boundCorners[0] = vec3(minPos.x, minPos.y, minPos.z);
+    boundCorners[1] = vec3(maxPos.x, minPos.y, minPos.z);
+    boundCorners[2] = vec3(maxPos.x, maxPos.y, minPos.z);
+    boundCorners[3] = vec3(minPos.x, maxPos.y, minPos.z);
+
+    boundCorners[4] = vec3(minPos.x, minPos.y, maxPos.z);
+    boundCorners[5] = vec3(maxPos.x, minPos.y, maxPos.z);
+    boundCorners[6] = vec3(maxPos.x, maxPos.y, maxPos.z);
+    boundCorners[7] = vec3(minPos.x, maxPos.y, maxPos.z);
+
+    float minX = 0.0f, minY = 0.0f;
+    float maxX = 0.0f, maxY = 0.0f;
+
+    for(int i =0; i < 8; i++)
+    {
+        vec4 ndcPos = scene.projection * scene.view * vec4(boundCorners[i], 1.0f);
+        ndcPos = ndcPos/ndcPos.w;
+        if(ndcPos.x < minX)
+        {
+            minX = ndcPos.x;
+        }
+        if(ndcPos.y < minY)
+        {
+            minY = ndcPos.y;
+        }
+
+        if(ndcPos.x > maxX)
+        {
+            maxX = ndcPos.x;
+        }
+        if(ndcPos.y > maxY)
+        {
+            maxY = ndcPos.y;
+        }
+    }
+
+    // for Vulkan
+    minY *= -1.0f;
+    maxY *= -1.0f;
+
+    vec4 aabbScreen = vec4(
+        (minX * 0.5 + 0.5) * (scene.screenWidth - 1), 
+        (minY * 0.5 + 0.5) * (scene.screenHeight - 1),
+        (maxX * 0.5 + 0.5) * (scene.screenWidth - 1),
+        (maxY * 0.5 + 0.5) * (scene.screenHeight - 1));
+
+    //float width = aabbScreen.z - aabbScreen.x;
+    //float height = aabbScreen.w - aabbScreen.y;
+
+    AssignDepthBin(minPos.z, maxPos.z, lightIndex);
+    return aabbScreen;
+}
+
+void CalculateTileCoverage(in uint lightIndex, vec4 screenSpaceBounds)
+{
+    uint colMin = uint(screenSpaceBounds.x/tileWidth);
+    uint colMax = uint(screenSpaceBounds.z/tileWidth);
+
+    uint rowMin = uint(screenSpaceBounds.y/tileHeight);
+    uint rowMax = uint(screenSpaceBounds.w/tileHeight);
+
+    for(uint i = rowMin; i < rowMax; i++)
+    {
+        for(uint j = colMin; j < colMax; j++)
+        {
+            uint tileIndex = i * MAX_TILE_COLS + j;
+            if(tileInfo.tileArray[tileIndex].lightCounter < MAX_LIGHTS_PER_TILE)
+            {
+                tileInfo.tileArray[tileIndex].lightIds[tileInfo.tileArray[tileIndex].lightCounter] = lightIndex;
+                tileInfo.tileArray[tileIndex].lightCounter += 1;
+            }
+        }
+    }
+}
+
+void main() 
+{
+    uint globalInvocationIndex =
+          gl_GlobalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y +
+          gl_GlobalInvocationID.y * gl_WorkGroupSize.x + 
+          gl_GlobalInvocationID.x;
+    uint lightIndex = globalInvocationIndex;
+
+    if(lightIndex > MAX_LIGHTS)
+        return;
+
+    tileWidth = scene.screenWidth/MAX_TILE_COLS;
+    tileHeight = scene.screenWidth/MAX_TILE_ROWS;
+
+    //minX, minY, maxX, maxY
+    vec4 screenSpaceBounds = CalculateScreenSpaceBoundsAABB(bound.aabbList[lightIndex].minPos, 
+        bound.aabbList[lightIndex].maxPos, lightIndex);
+
+    CalculateTileCoverage(lightIndex, screenSpaceBounds);
+}

@@ -8,6 +8,7 @@
 #include "renderGraph/effects/Opaque.h"
 #include "renderGraph/effects/SkyboxPass.h"
 #include "renderGraph/effects/BoundPass.h"
+#include "renderGraph/effects/LightCullPass.h"
 
 uint32_t g_resourceDistributionCount = 0;
 Core::Wrappers::ImageCreateInfo g_info{};
@@ -486,11 +487,19 @@ Renderer::RenderGraph::Pipelines::LowEndPipeline::LowEndPipeline(Core::Utility::
 
 void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
 {
+    std::unique_ptr<Renderer::RenderGraph::Effect> lightCullPass =
+        std::make_unique<Renderer::RenderGraph::Effects::LightCullPass>(
+            m_renderData,
+            m_windowSettings,
+            *m_graph.get(), "LightCullPass", m_callbackUtility);
+
+    auto& tileOutputNode = lightCullPass->GetGraphEndResourceNodes();
+
     std::unique_ptr<Renderer::RenderGraph::Effect> opaquePass =
         std::make_unique<Renderer::RenderGraph::Effects::OpaquePass>(
             m_renderData,
             m_windowSettings,
-            *m_graph.get(), "OpaquePass", m_callbackUtility);
+            *m_graph.get(), "OpaquePass", m_callbackUtility, tileOutputNode);
 
     auto& opaqueOutputNodes = opaquePass->GetGraphEndResourceNodes();
 
@@ -512,6 +521,7 @@ void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
 
     m_effects.push_back(std::move(opaquePass));
     m_effects.push_back(std::move(boundPass));
+    m_effects.push_back(std::move(lightCullPass));
     m_effects.push_back(std::move(skyboxPass));
 
     m_graph->PrintGraph();

@@ -12,7 +12,7 @@ void Renderer::RenderGraph::Techniques::OpaqueTexturedUnlit::CreateResources()
     g_renderArea.offsetX = 0;
     g_renderArea.offsetY = 0;
 
-    CreateTaskGraphNode(GetNodeName("OpaqueRenderTask"), m_parentEffectName, m_name, g_renderArea,
+    CreateRenderTaskGraphNode(GetNodeName("OpaqueRenderTask"), m_parentEffectName, m_name, g_renderArea,
         m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_taskNode);
 
 }

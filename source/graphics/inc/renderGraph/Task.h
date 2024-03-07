@@ -87,7 +87,11 @@ namespace Renderer
             // one for each swap buffer ( image count = swapbufferCount ),
             // one PerFrameTaskBarrierInfo for all the resources in one frame
             std::vector<std::optional<PerFrameTaskBarrierInfo>> m_taskBarrierInfo;
-            std::optional< std::vector<PerFrameTaskBarrierInfo>> m_presentationBarrierInfo;
+            std::optional<std::vector<PerFrameTaskBarrierInfo>> m_presentationBarrierInfo;
+
+            // If the buffer barrier frequency is frameInFlights and not swapchainCount
+            // Use dedicated barrier call for buffers.
+            std::vector<PerFrameTaskBarrierInfo> m_bufferBarrierInfo;
 
         protected:
 
@@ -126,6 +130,12 @@ namespace Renderer
                 {
                     Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
                     Renderer::CommandReader::SetPipelineBarrier(info, m_taskBarrierInfo[frameInfo.m_swapBufferIndex].value().m_barrierHandle);
+                }
+
+                if (m_bufferBarrierInfo.size() == RendererSettings::GetMaxFramesInFlightCount())
+                {
+                    Core::Wrappers::CommandBufferInfo info(m_activeCommandBuffer, queueType);
+                    Renderer::CommandReader::SetPipelineBarrier(info, m_bufferBarrierInfo[frameInfo.m_frameInFlightIndex].m_barrierHandle);
                 }
             }
 
@@ -233,6 +243,25 @@ namespace Renderer
                 m_taskQueueInfo.m_taskQueueId = taskQueueId;
                 m_taskQueueInfo.m_previousTaskQueueId = previousTaskQueueId;
             }
+
+            void AssignBufferBarrierInfo(const std::vector<PerFrameTaskBarrierInfo>& barrierInfo)
+            {
+                if (barrierInfo.size() > 0)
+                {
+                    //if (barrierInfo[0].m_bufferBarriers.size() > 0)
+                    {
+                        for (auto& barrier : barrierInfo)
+                        {
+                            m_bufferBarrierInfo.push_back(barrier);
+                            m_bufferBarrierInfo[m_bufferBarrierInfo.size() - 1].m_barrierHandle = VulkanInterfaceAlias::CreateBarrier(
+                                barrier.m_imageBarriers,
+                                barrier.m_bufferBarriers,
+                                barrier.m_memoryBarriers);
+                        }
+                    }
+                }
+            }
+
 
             void AssignBarrierInfo(const std::vector<PerFrameTaskBarrierInfo>& barrierInfo, bool isPresentationBarrier = false)
             {

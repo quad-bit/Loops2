@@ -399,7 +399,7 @@ void Renderer::RenderGraph::CreateResourceNode(const std::string& nodeName,
     resourceNodes.push_back(resourceNode.m_graphNode);
 }
 
-void Renderer::RenderGraph::CreateTaskGraphNode(const std::string& taskName,
+void Renderer::RenderGraph::CreateRenderTaskGraphNode(const std::string& taskName,
     const std::string& parentEffectName, const std::string& techName,
     const Core::Wrappers::Rect2D& renderArea,
     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
@@ -407,8 +407,21 @@ void Renderer::RenderGraph::CreateTaskGraphNode(const std::string& taskName,
     std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
     GraphNodeWrapper& taskNode)
 {
-    auto m_opaqueRenderTask = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, parentEffectName, techName);
-    taskNode.m_nodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(m_opaqueRenderTask), graphTraversal);
+    auto renderTask = std::make_unique<Renderer::RenderGraph::Tasks::RenderTask>(taskName, renderArea, parentEffectName, techName);
+    taskNode.m_nodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(renderTask), graphTraversal);
+    taskNode.m_graphNode = graph.Push(taskNode.m_nodeBase.get());
+    taskNodes.push_back(taskNode.m_graphNode);
+}
+
+void Renderer::RenderGraph::CreateComputeTaskGraphNode(const std::string& taskName, const std::string& parentEffectName,
+    const std::string& techName, Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+    Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+    std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
+    GraphNodeWrapper& taskNode,
+    uint32_t workGroupX, uint32_t workGroupY, uint32_t workGroupZ)
+{
+    auto computeTask = std::make_unique<Renderer::RenderGraph::Tasks::ComputeTask>(taskName, parentEffectName, techName, workGroupX, workGroupY, workGroupZ);
+    taskNode.m_nodeBase = std::make_unique<Renderer::RenderGraph::TaskNode>(std::move(computeTask), graphTraversal);
     taskNode.m_graphNode = graph.Push(taskNode.m_nodeBase.get());
     taskNodes.push_back(taskNode.m_graphNode);
 }

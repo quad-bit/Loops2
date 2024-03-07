@@ -6,6 +6,7 @@
 #include <ECS/Events/MeshAdditionEvent.h>
 #include <ECS/Events/ComponentAdditionEvent.h>
 #include <RenderData.h>
+#include <ECS/ECS_Setting.h>
 #include <array>
 
 #if (RENDERING_API == VULKAN)
@@ -43,7 +44,6 @@ struct PointLightUniform
     glm::vec4 specular;
 };
 
-#define MAX_POINT_LIGHTS 20
 
 class LightSystem : public Core::ECS::System
 {

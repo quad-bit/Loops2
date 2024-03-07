@@ -52,7 +52,7 @@ void Renderer::RenderGraph::Techniques::OpaqueUnlit::CreateResources()
     g_renderArea.offsetX = 0;
     g_renderArea.offsetY = 0;
 
-    CreateTaskGraphNode("OpaqueRenderTask", m_parentEffectName, m_name, g_renderArea,
+    CreateRenderTaskGraphNode("OpaqueRenderTask", m_parentEffectName, m_name, g_renderArea,
         m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_taskNode);
 
     Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(m_graph, m_depthInput.m_graphNode, m_taskNode.m_graphNode,

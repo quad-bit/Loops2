@@ -6,6 +6,7 @@
 #include <renderGraph/Task.h>
 #include <renderGraph/Graph.h>
 #include <renderGraph/tasks/RenderTask.h>
+#include <renderGraph/tasks/ComputeTask.h>
 #include <RenderData.h>
 
 namespace Renderer
@@ -196,7 +197,7 @@ namespace Renderer
             GraphNodeWrapper& resourceNode
         );
 
-        void CreateTaskGraphNode(
+        void CreateRenderTaskGraphNode(
             const std::string& taskName,
             const std::string& parentEffectName,
             const std::string& techName,
@@ -207,7 +208,27 @@ namespace Renderer
             GraphNodeWrapper& taskNode
         );
 
+        void CreateComputeTaskGraphNode(
+            const std::string& taskName,
+            const std::string& parentEffectName,
+            const std::string& techName,
+            Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+            Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+            std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
+            GraphNodeWrapper& taskNode,
+            uint32_t workGroupX, uint32_t workGroupY, uint32_t workGroupZ
+        );
 
+        void CreateRenderTaskGraphNode(
+            const std::string& taskName,
+            const std::string& parentEffectName,
+            const std::string& techName,
+            const Core::Wrappers::Rect2D& renderArea,
+            Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
+            Renderer::RenderGraph::Utils::GraphTraversalCallback& graphTraversal,
+            std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& taskNodes,
+            GraphNodeWrapper& taskNode
+        );
 
         // Use the childIndicies of heigher level set to pick the lower level sets for a set list
         template < typename ParentType, typename ChildType, Core::Enums::ResourceSets setType>

@@ -207,7 +207,7 @@ namespace Renderer
 
             const size_t GetDataOffset()
             {
-                return m_dataSize;
+                return m_offset;
             }
         };
     }

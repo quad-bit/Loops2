@@ -87,6 +87,11 @@ void GfxVk::Shading::VkShaderFactory::Init()
             wrapper->shaderType = new Core::Enums::ShaderType{ Core::Enums::ShaderType::VERTEX };
             wrapper->stageFlag = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
         }
+        else if (var.find("comp") != std::string::npos)
+        {
+            wrapper->shaderType = new Core::Enums::ShaderType{ Core::Enums::ShaderType::COMPUTE };
+            wrapper->stageFlag = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
+        }
         else
             ASSERT_MSG_DEBUG(0, "Case not handled");
         

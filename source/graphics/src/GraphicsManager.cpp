@@ -57,6 +57,7 @@ void Renderer::GraphicsManager::Init()
     GfxVk::Shading::VkSamplerFactory::GetInstance()->Init();
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->Init();
     GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->Init(m_windowSettings);
+    GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()->Init(m_windowSettings);
 
     // next high level wrappers
     Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
@@ -101,6 +102,9 @@ void Renderer::GraphicsManager::DeInit()
 
     GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->DeInit();
     delete GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance();
+
+    GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()->DeInit();
+    delete GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance();
 
     GfxVk::Renderpass::VkRenderPassFactory::GetInstance()->DeInit();
     delete GfxVk::Renderpass::VkRenderPassFactory::GetInstance();

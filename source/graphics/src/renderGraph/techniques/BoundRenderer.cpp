@@ -13,7 +13,7 @@ void Renderer::RenderGraph::Techniques::BoundRenderer::CreateResources()
     g_renderArea.offsetX = 0;
     g_renderArea.offsetY = 0;
 
-    CreateTaskGraphNode(GetNodeName("BoundRenderTask"), m_parentEffectName, m_name, g_renderArea,
+    CreateRenderTaskGraphNode(GetNodeName("BoundRenderTask"), m_parentEffectName, m_name, g_renderArea,
         m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_taskNode);
 
     Core::Utility::RasterizationStateWrapper rasterWrapper{};

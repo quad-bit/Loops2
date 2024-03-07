@@ -183,6 +183,7 @@ uint32_t GetGPUAlignedSize(uint32_t unalignedSize)
 Core::Enums::DescriptorType StringToDescType(const char* str, const char * bindingName)
 {
     if (!strcmp(str, "UNIFORM")) return Core::Enums::DescriptorType::UNIFORM_BUFFER;
+    if (!strcmp(str, "STORAGE_BUFFER")) return Core::Enums::DescriptorType::STORAGE_BUFFER;
     if (!strcmp(str, "SAMPLER"))
     {
         return Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER;
@@ -764,6 +765,25 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
         return jsonDoc;
     };
 
+    // Insert bindings in increasing order
+    auto InsertBindings = [](std::vector<Core::Wrappers::BindingWrapper>& wrapperList, const Core::Wrappers::BindingWrapper& wrapper)
+    {
+        uint32_t counter = 0;
+        bool valueInserted = false;
+        for (auto& binding : wrapperList)
+        {
+            if (wrapper.bindingObj.binding < binding.bindingObj.binding)
+            {
+                wrapperList.insert(std::begin(wrapperList) + counter, wrapper);
+                valueInserted = true;
+                break;
+            }
+        }
+
+        if (!valueInserted)
+            wrapperList.push_back(wrapper);
+    };
+
     Document pipelineDoc = LoadJson(pipelineFilePath.c_str());
     if (pipelineDoc.HasMember("Effects"))
     {
@@ -816,8 +836,6 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                                 std::map<uint32_t, std::vector<Core::Wrappers::BindingWrapper>> setMap;
                                 std::vector<std::string> shaderNameList;
 
-                                uint32_t numUniform = 0;
-
                                 const Value& taskShaders = taskDoc["shaders"];
                                 CreateShaderInfoForTask(taskShaders, taskWrapper);
 
@@ -843,20 +861,8 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
 
                                     //printf("%s %s %s \n", shaderName.c_str(), shaderType.c_str(), reflPath.c_str());
 
-                                    Document reflDoc = LoadJson(reflPath.c_str());
-                                    bool hasDescriptors = reflDoc.HasMember("descriptor_sets");
-                                    if (hasDescriptors)
+                                    auto AccumulateResource = [&setMap, &InsertBindings, &shaderTypeVal](const Value& reflFileDescSets, const Core::Enums::DescriptorType& descriptorType)
                                     {
-                                        const Value& reflFileDescSets = reflDoc["descriptor_sets"];
-                                        numUniform = reflFileDescSets.Size();
-                                    }
-                                    else
-                                        numUniform = 0;
-
-                                    if (numUniform > 0)
-                                    {
-                                        const Value& reflFileDescSets = reflDoc["descriptor_sets"];
-
                                         for (SizeType dsIdx = 0; dsIdx < reflFileDescSets.Size(); dsIdx++)
                                         {
                                             const Value& currentInputFromReflData = reflFileDescSets[dsIdx];
@@ -869,14 +875,17 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                                             Core::Wrappers::BindingWrapper wrapper = {};
                                             wrapper.bindingObj.binding = currentInputFromReflData["binding"].GetInt();
 
-                                            int arraySize = currentInputFromReflData["ArraySize"].GetInt();
-                                            if (arraySize == 0)
-                                                wrapper.bindingObj.descriptorCount = 1;
-                                            else
+                                            bool isArray = currentInputFromReflData.HasMember("ArraySize");
+                                            if (isArray)
+                                            {
+                                                int arraySize = currentInputFromReflData["ArraySize"].GetInt();
                                                 wrapper.bindingObj.descriptorCount = arraySize;
+                                            }
+                                            else
+                                                wrapper.bindingObj.descriptorCount = 1;
 
                                             wrapper.bindingName = currentInputFromReflData["name"].GetString();
-                                            wrapper.bindingObj.descriptorType = StringToDescType(currentInputFromReflData["type"].GetString(), wrapper.bindingName.c_str());
+                                            wrapper.bindingObj.descriptorType = descriptorType;// StringToDescType(currentInputFromReflData["type"].GetString(), wrapper.bindingName.c_str());
 
                                             //add all members to block definition
                                             const Value& reflBlockMembers = currentInputFromReflData["members"];
@@ -886,7 +895,7 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
 
                                                 Core::Wrappers::UniformStructMember mem = {};
                                                 mem.offset = reflBlockMember["offset"].GetInt();
-                                                mem.size = reflBlockMember["size"].GetInt();
+                                                //mem.size = reflBlockMember["size"].GetInt();
 
                                                 snprintf(mem.name, sizeof(mem.name), "%s", reflBlockMember["name"].GetString());
 
@@ -898,6 +907,8 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                                                 shaderType = Core::Enums::ShaderType::FRAGMENT;
                                             else if (shaderTypeVal == "VERTEX")
                                                 shaderType = Core::Enums::ShaderType::VERTEX;
+                                            else if (shaderTypeVal == "COMPUTE")
+                                                shaderType = Core::Enums::ShaderType::COMPUTE;
                                             wrapper.bindingObj.stageFlags.push_back(shaderType);
 
                                             if (setMap.find(set) == setMap.end())
@@ -906,7 +917,45 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                                             }
                                             else
                                             {
-                                                setMap[set].push_back(wrapper);
+                                                InsertBindings(setMap[set], wrapper);
+                                            }
+                                        }
+                                    };
+
+                                    Document reflDoc = LoadJson(reflPath.c_str());
+
+                                    {
+                                        bool hasUbos = reflDoc.HasMember("ubos");
+                                        if (hasUbos)
+                                        {
+                                            const Value& reflFileUbos = reflDoc["ubos"];
+                                            if (reflFileUbos.Size() > 0)
+                                            {
+                                                AccumulateResource(reflFileUbos, Core::Enums::DescriptorType::UNIFORM_BUFFER);
+                                            }
+                                        }
+                                    }
+
+                                    {
+                                        bool hasSsbos = reflDoc.HasMember("ssbos");
+                                        if (hasSsbos)
+                                        {
+                                            const Value& reflFileSsbos = reflDoc["ssbos"];
+                                            if (reflFileSsbos.Size() > 0)
+                                            {
+                                                AccumulateResource(reflFileSsbos, Core::Enums::DescriptorType::STORAGE_BUFFER);
+                                            }
+                                        }
+                                    }
+
+                                    {
+                                        bool hastextures = reflDoc.HasMember("textures");
+                                        if (hastextures)
+                                        {
+                                            const Value& reflFileTextures = reflDoc["textures"];
+                                            if (reflFileTextures.Size() > 0)
+                                            {
+                                                AccumulateResource(reflFileTextures, Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER);
                                             }
                                         }
                                     }
@@ -945,7 +994,9 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
                             {
                                 ASSERT_MSG_DEBUG(0, "Shaders not found in effect file");
                             }
-                            CreateVertexInfoForTask(taskDoc, taskWrapper);
+                            //if !ComputeTask ugly hack
+                            if(taskWrapper.m_shaderNames.size() > 1)
+                                CreateVertexInfoForTask(taskDoc, taskWrapper);
 
                             m_taskMap.insert({ taskWrapper.m_taskId, taskWrapper });
                             techniqueWrapper.m_taskList.push_back(taskWrapper.m_taskId);
@@ -964,10 +1015,6 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
     {
         ASSERT_MSG_DEBUG(0, "Effects not found in effect file");
     }
-
-    //The effect file will contain the shader names for the effect
-
-    //Check for the corresponding refl file to create the descriptor set, layout and pipeline and its layout
 }
 
 void GfxVk::Shading::VkShaderResourceManager::DeInit()

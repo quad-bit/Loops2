@@ -22,7 +22,8 @@ namespace Renderer
                     Core::Utility::RenderData& renderData,
                     const Core::WindowSettings& windowSettings,
                     Renderer::RenderGraph::Graph<Renderer::RenderGraph::Utils::RenderGraphNodeBase>& graph,
-                    const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs);
+                    const std::string& name, Renderer::RenderGraph::Utils::CallbackUtility& funcs,
+                    const std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*>& inputNodes);
 
                 virtual std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> GetGraphOriginResourceNodes() override
                 {

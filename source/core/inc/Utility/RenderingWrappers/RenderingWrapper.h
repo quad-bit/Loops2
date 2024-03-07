@@ -1181,6 +1181,13 @@ namespace Core
                 std::vector<Core::Enums::Format> colorFormats;
             };
 
+            struct ComputePipelineCreateInfo
+            {
+                std::vector<SetWrapper*> setsPerPipeline;
+                uint32_t shaderStateId;
+                uint32_t pipelineLayoutId;
+            };
+
             // used for vkCmdBindDescriptorSets
             struct DescriptorSetBindingInfo
             {

@@ -107,7 +107,7 @@ namespace Renderer
                         names[i],
                         unaligneDataSize,
                         dataSizeAligned,
-                        dataSizeAligned * i,
+                        0,//dataSizeAligned * i,
                         bufferCreateInfo.usage,
                         bufferInfo.second[0],
                         true

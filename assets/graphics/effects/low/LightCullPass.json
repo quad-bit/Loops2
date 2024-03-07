@@ -1,0 +1,24 @@
+{
+    "Technique" : [
+        {
+            "name": "LightCull",
+            "lod_min": 10,
+            "lod_max": 20,
+            "tasks":
+            [
+                {
+                    "name" : "LightCullTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "LightCuller.comp",
+                            "type": "COMPUTE",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

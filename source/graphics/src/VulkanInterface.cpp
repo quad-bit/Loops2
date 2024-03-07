@@ -1077,6 +1077,11 @@ uint32_t Renderer::Utility::VulkanInterface::CreatePipeline(const Core::Wrappers
     return GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->CreatePipeline(info);
 }
 
+uint32_t Renderer::Utility::VulkanInterface::CreatePipeline(const Core::Wrappers::ComputePipelineCreateInfo& info)
+{
+    return GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()->CreatePipeline(info);
+}
+
 const Core::Utility::EffectId& Renderer::Utility::VulkanInterface::GetEffectId(const std::string& effectName)
 {
     return GfxVk::Shading::VkShaderResourceManager::GetInstance()->GetEffectId(effectName);

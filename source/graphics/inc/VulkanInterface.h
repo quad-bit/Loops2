@@ -162,6 +162,7 @@ namespace Renderer
             uint32_t CreateDynamicState(const Core::Utility::DynamicStateWrapper& wrapper);
             void CreatePipeline(Core::Wrappers::PipelineCreateInfo* info, const uint32_t& pipelineCount, uint32_t* pipelineId);
             uint32_t CreatePipeline(const Core::Wrappers::PipelineCreateInfo& info);
+            uint32_t CreatePipeline(const Core::Wrappers::ComputePipelineCreateInfo& info);
             //uint32_t CreatePipeline(uint32_t pipelineId);
 
             const Core::Utility::EffectId& GetEffectId(const std::string& effectName);
