@@ -127,24 +127,24 @@ namespace Renderer
             void PresentSwapchainImage(const Core::Wrappers::PresentInfo& info);
 
             bool IsApplicationSafeForClosure();
-
-            //Deprecated.
-            //uint32_t * CreateBuffer(BufferInfo * info, const uint32_t & count);
-            //deprecated
-            uint32_t* CreateBuffers(Core::Wrappers::BufferInfo* info, const uint32_t& count);
-            void CreateBuffers(Core::Wrappers::BufferCreateInfo* info, const uint32_t& count, uint32_t* out_buffIds, size_t* out_bufferMemRequirements);
-            std::pair<uint32_t, std::optional<uint32_t>> CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory, const std::string& name);
+            // =============================BUFFER=========================================
+            uint32_t CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, const std::string& name);
 
             size_t GetMemoryAlignedDataSizeForBuffer(const size_t& dataSize);
-            uint32_t* AllocateBufferMemory(uint32_t* bufferId, const uint32_t& bufCount);
-            uint32_t AllocateBufferSharedMemory(uint32_t* bufferId, uint32_t bufCount);
-            //deprecated
-            uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq, const size_t& allocationSize);
-            uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq, const uint32_t& numUserReq, const size_t& allocationSize);
+            // returns memid
+            uint32_t AllocateAndBindBufferMemory(uint32_t bufferId,
+                Core::Enums::MemoryType* userReq,
+                const uint32_t& numUserReq,
+                bool isMemoryShared,
+                std::optional<uint32_t> allocationSize
+                );
+            uint32_t AllocateMemory(const Core::Wrappers::MemoryRequirementInfo& memReq, Core::Enums::MemoryType* userReq, const uint32_t& numUserReq, const size_t& allocationSize);
             Core::Wrappers::MemoryRequirementInfo GetImageMemoryRequirement(const uint32_t& imageId);
             void CopyBufferDataToMemory(const uint32_t& bufId, const VkDeviceSize& dataSize, const VkDeviceSize& memAlignedSize, void* data, VkDeviceSize memoryOffset, bool keepMemoryMounted);
-            //void CopyBufferDataToMemory(const uint32_t & bufId, VkDeviceSize dataSize, void * data, VkDeviceSize memoryOffset, bool keepMemoryMounted = false);
-            void DestroyBuffer(uint32_t* ids, const uint32_t& count);
+            void DestroyBuffer(uint32_t* ids, const uint32_t& count, bool freeMemory);
+
+            // =============================BUFFER=========================================
+
             void FreeMemory(uint32_t* ids, const uint32_t& count);
             uint32_t* AllocateDescriptorsSet(Core::Wrappers::SetWrapper* set, const uint32_t& numDescriptors);
             void BindImageMemory(const uint32_t& imageId, const uint32_t& memId, const size_t& offset);

@@ -109,16 +109,14 @@ Renderer::RenderGraph::Techniques::Skybox::Skybox(
 
         auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
         {
-            Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
-            Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-            Core::Wrappers::BufferInfo info = {};
-            info.bufType = &bufferType;
-            info.memType = &memType;
-            info.memTypeCount = 1;
-            info.dataSize = dataSize;
+            Core::Enums::MemoryType memType[1]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT };
 
-            bufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-            memId = *VulkanInterfaceAlias::AllocateBufferMemory(&bufferId, 1);
+            Core::Wrappers::BufferCreateInfo info{};
+            info.size = dataSize;
+            info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_VERTEX_BUFFER_BIT };
+
+            bufferId = VulkanInterfaceAlias::CreateBuffer(info, "SkyboxVertexBuffer");
+            memId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(bufferId, memType, 1, false, std::nullopt);
         };
 
         auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
@@ -148,7 +146,7 @@ Renderer::RenderGraph::Techniques::Skybox::Skybox(
 
 Renderer::RenderGraph::Techniques::Skybox::~Skybox()
 {
-    VulkanInterfaceAlias::DestroyBuffer(&m_transformData.m_positionBufferId, 1);
+    VulkanInterfaceAlias::DestroyBuffer(&m_transformData.m_positionBufferId, 1, true);
 }
 
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::Skybox::GetGraphOriginResourceNodes()

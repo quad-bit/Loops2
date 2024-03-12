@@ -586,49 +586,16 @@ VkImageAspectFlags GfxVk::Unwrap::UnwrapAspectMask(const std::vector<Core::Enums
     return vkflag;
 }
 
-VkMemoryRequirements GfxVk::Unwrap::UnwrapMemoryRequirements(Core::Wrappers::MemoryRequirementInfo * info)
+VkMemoryRequirements GfxVk::Unwrap::UnwrapMemoryRequirements(const Core::Wrappers::MemoryRequirementInfo& info)
 {
     VkMemoryRequirements req = {};
-    req.alignment = info->alignment;
-    req.memoryTypeBits = info->memoryTypeBits;
-    req.size = info->size;
+    req.alignment = info.alignment;
+    req.memoryTypeBits = info.memoryTypeBits;
+    req.size = info.size;
 
     return req;
 }
 
-VkMemoryPropertyFlags GfxVk::Unwrap::UnwrapMemoryProperty(const Core::Enums::MemoryType * memType)
-{
-    VkMemoryPropertyFlags memProp;
-
-    switch (*memType)
-    {
-    case Core::Enums::MemoryType::DEVICE_LOCAL_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        break;
-
-    case Core::Enums::MemoryType::HOST_VISIBLE_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-        break;
-
-    case Core::Enums::MemoryType::HOST_COHERENT_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        break;
-
-    case Core::Enums::MemoryType::HOST_CACHED_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-        break;
-
-    case Core::Enums::MemoryType::LAZILY_ALLOCATED_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
-        break;
-
-    case Core::Enums::MemoryType::PROTECTED_BIT:
-        memProp = VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_PROTECTED_BIT;
-        break;
-    }
-
-    return memProp;
-}
 
 VkPipelineStageFlags const GfxVk::Unwrap::UnwrapPipelineStageFlags(const Core::Enums::PipelineStage * stages, const uint32_t & count)
 {

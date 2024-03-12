@@ -286,16 +286,13 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
 
     auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = dataSize;
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = dataSize;
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
-        bufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        memId = *VulkanInterfaceAlias::AllocateBufferMemory(&bufferId, 1);
+        bufferId = VulkanInterfaceAlias::CreateBuffer(info, "VertexBuffer");
+        memId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(bufferId, mem, 2, false, std::nullopt);
     };
 
     auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
@@ -328,18 +325,15 @@ Core::ECS::Components::Mesh* Renderer::ResourceManagement::MeshFactory::CreateBa
     //index buffer
     if(mesh->m_indicies.size() > 0)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = sizeof(uint32_t) * mesh->m_indicies.size();
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = sizeof(uint32_t) * mesh->m_indicies.size();
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-        mesh->m_indexBufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        mesh->m_indexBufferMemoryId = *VulkanInterfaceAlias::AllocateBufferMemory(&mesh->m_indexBufferId, 1);
+        mesh->m_indexBufferId = VulkanInterfaceAlias::CreateBuffer(info, "IndexBuffer");
+        mesh->m_indexBufferMemoryId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(mesh->m_indexBufferId, mem, 2, false, std::nullopt);
 
-        UploadData(mesh->m_indexBufferId, info.dataSize, mesh->m_indicies.data());
+        UploadData(mesh->m_indexBufferId, info.size, mesh->m_indicies.data());
     }
 
     m_meshList.push_back(mesh);
@@ -354,16 +348,13 @@ void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::M
 
     auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = dataSize;
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = dataSize;
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
-        bufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        memId = *VulkanInterfaceAlias::AllocateBufferMemory(&bufferId, 1);
+        bufferId = VulkanInterfaceAlias::CreateBuffer(info, "VertexBuffer");
+        memId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(bufferId, mem, 2, false, std::nullopt);
     };
 
     auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
@@ -413,18 +404,14 @@ void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::M
     //index buffer
     if (mesh->m_indicies.size() > 0)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = sizeof(uint32_t) * mesh->m_indicies.size();
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = sizeof(uint32_t) * mesh->m_indicies.size();
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-        mesh->m_indexBufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        mesh->m_indexBufferMemoryId = *VulkanInterfaceAlias::AllocateBufferMemory(&mesh->m_indexBufferId, 1);
-
-        UploadData(mesh->m_indexBufferId, info.dataSize, mesh->m_indicies.data());
+        mesh->m_indexBufferId = VulkanInterfaceAlias::CreateBuffer(info, "IndexBuffer");
+        mesh->m_indexBufferMemoryId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(mesh->m_indexBufferId, mem, 2, false, std::nullopt);
+        UploadData(mesh->m_indexBufferId, info.size, mesh->m_indicies.data());
     }
 
     m_meshList.push_back(mesh);
@@ -454,36 +441,36 @@ void Renderer::ResourceManagement::MeshFactory::AddMesh(Core::ECS::Components::M
 
 void Renderer::ResourceManagement::MeshFactory::DestroyMesh(Core::ECS::Components::Mesh* mesh)
 {
-    VulkanInterfaceAlias::DestroyBuffer(&mesh->m_positionBufferId, 1);
+    VulkanInterfaceAlias::DestroyBuffer(&mesh->m_positionBufferId, 1, false);
     VulkanInterfaceAlias::FreeMemory(&mesh->m_positionBufferMemoryId, 1);
 
     if (mesh->m_normals.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_normalBufferId, 1);
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_normalBufferId, 1, false);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_normalBufferMemoryId, 1);
     }
 
     if (mesh->m_colors.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_colorBufferId, 1);
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_colorBufferId, 1, false);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_colorBufferMemoryId, 1);
     }
 
     if (mesh->m_indicies.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_indexBufferId, 1);
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_indexBufferId, 1, false);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_indexBufferMemoryId, 1);
     }
 
     if (mesh->m_uv0.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_uv0BufferId, 1);
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_uv0BufferId, 1, false);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_uv0BufferMemoryId, 1);
     }
 
     if (mesh->m_tangents.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_tangentBufferId, 1);
+        VulkanInterfaceAlias::DestroyBuffer(&mesh->m_tangentBufferId, 1, false);
         VulkanInterfaceAlias::FreeMemory(&mesh->m_tangentBufferMemoryId, 1);
     }
 

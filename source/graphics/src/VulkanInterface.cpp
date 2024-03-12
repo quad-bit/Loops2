@@ -11,7 +11,7 @@
 #include <VkQueueFactory.h>
 #include <utility/VulkanUtility.h>
 #include <RendererSettings.h>
-#include <shading/VkBufferFactory.h>
+#include <utility/VkBufferFactory.h>
 #include <Utility/RenderingWrappers/RenderingWrapper.h>
 #include <pipeline/VulkanGraphicsPipelineFactory.h>
 #include <shading/VkShaderFactory.h>
@@ -199,7 +199,7 @@ namespace
         vkBarrier.srcQueueFamilyIndex = barrier.m_srcQueueFamilyIndex;
         vkBarrier.srcStageMask = GfxVk::Unwrap::UnwrapPipelineStageFlags2(barrier.m_srcStageMask.data(), barrier.m_srcStageMask.size());
         vkBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2;
-        vkBarrier.buffer = *GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer( barrier.m_bufferId );
+        vkBarrier.buffer = GfxVk::Utility::VkBufferFactory::GetInstance()->GetBuffer( barrier.m_bufferId );
         vkBarrier.offset = barrier.m_offset;
         vkBarrier.size = barrier.m_size;
 
@@ -536,96 +536,6 @@ Core::Enums::Format Renderer::Utility::VulkanInterface::FindBestDepthFormat()
     return WrapFormat(DeviceInfo::GetDepthFormat());
 }
 
-//void Renderer::Utility::VulkanInterface::SetupPresentationEngine(Core::Wrappers::VkImageInfo info)
-//{
-//    GfxVk::Utility::PresentationEngine::GetInstance()->CreateSwapChain(info);
-//}
-//
-//void Renderer::Utility::VulkanInterface::CreateRenderTarget(Core::Wrappers::VkImageInfo * info, Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count, bool defaultTarget,
-//    uint32_t * ids)
-//{
-//    //VkImageFactory::GetInstance()->CreateColorAttachment(info, count, defaultTarget, ids);
-//}
-
-//void Renderer::Utility::VulkanInterface::CreateDefaultRenderTarget(Core::Wrappers::VkImageInfo info, Core::Wrappers::ImageViewInfo viewInfo, uint32_t & count, uint32_t * ids)
-//{
-//    VkImageCreateInfo vkImageCreateInfo = GfxVk::Unwrap::UnWrapImageCreateInfo(&info);
-//    VkImageViewCreateInfo vkImageViewCreateInfo = GfxVk::Unwrap::UnWrapImageViewCreateInfo(&viewInfo);
-//
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateSwapChainImage(vkImageCreateInfo, vkImageViewCreateInfo, count, ids);
-//}
-//
-//void Renderer::Utility::VulkanInterface::DestroyRenderTarget(std::vector<uint32_t>* ids, bool defaultTarget)
-//{
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
-//}
-//
-//void Renderer::Utility::VulkanInterface::CreateImage(Core::Wrappers::ImageInfo * info, const uint32_t & count, uint32_t * ids)
-//{
-//    /*VkImageCreateInfo * imageCreateInfo = new VkImageCreateInfo[count];
-//    VkImageViewCreateInfo * viewCreateInfo = new VkImageViewCreateInfo[count];
-//
-//    for (uint32_t i = 0; i < count; i++)
-//    {
-//        imageCreateInfo[i] = GfxVk::Unwrap::UnWrapImageCreateInfo(info);
-//        viewCreateInfo[i]  = GfxVk::Unwrap::UnWrapImageViewCreateInfo(viewInfo);
-//    }
-//
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateDepthAttachment(imageCreateInfo, count, viewCreateInfo,
-//        stencilRequired, ids);
-//
-//    delete[] imageCreateInfo;
-//    delete[] viewCreateInfo;
-//*/
-//    std::vector<VkImageCreateInfo> vkInfo;
-//    for(uint32_t i = 0 ;i < count;i++)
-//       vkInfo.push_back(GfxVk::Unwrap::UnWrapImageCreateInfo(info));
-//
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
-//}
-
-//void Renderer::Utility::VulkanInterface::DestroyDepthTarget(std::vector<uint32_t>* ids, bool defaultTarget)
-//{
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroyAttachment(*ids, defaultTarget);
-//}
-//
-//uint32_t Renderer::Utility::VulkanInterface::CreateImage(const Core::Wrappers::ImageInfo& info, const std::string)
-//{
-//    std::vector<VkImageCreateInfo> vkInfo;
-//    for (uint32_t i = 0; i < info.size(); i++)
-//        vkInfo.push_back(GfxVk::Unwrap::UnWrapImageCreateInfo(&info[i]));
-//
-//    GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
-//
-//    for (uint32_t i = 0; i < info.size(); i++)
-//    {
-//        GfxVk::Utility::VkImageFactory::GetInstance()->CreateImage(vkInfo.data(), count, ids);
-//
-//    }
-//
-//    return std::vector<uint32_t>();
-//}
-
-//void Renderer::Utility::VulkanInterface::DestroyAttachment(uint32_t * ids, bool * destroyImageView, bool * freeImageMemory, const uint32_t & count)
-//{
-//    GfxVk::Utility::VkImageFactory::GetInstance()->DestroyAttachment(ids, destroyImageView, freeImageMemory, count);
-//}
-
-//void Renderer::Utility::VulkanInterface::FreeAttachmentMemory(uint32_t * imageIds, const uint32_t & count)
-//{
-//    GfxVk::Utility::VkImageFactory::GetInstance()->FreeAttachmentMemory(imageIds, count);
-//}
-
-//void Renderer::Utility::VulkanInterface::DestroySwapChainImageViews(uint32_t * ids, const uint32_t & count)
-//{
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->DestroySwapChainImageViews(ids, count);
-//}
-
-//void Renderer::Utility::VulkanInterface::CreateImageView(Core::Wrappers::ImageViewInfo * viewInfo, uint32_t & count)
-//{
-//    GfxVk::Framebuffer::VkImageFactory::GetInstance()->CreateImageView(viewInfo, count);
-//}
-
 void Renderer::Utility::VulkanInterface::CreateImageView(const Core::Wrappers::ImageViewCreateInfo& viewInfo, uint32_t imageId)
 {
     GfxVk::Utility::VkImageFactory::GetInstance()->CreateImageView(viewInfo, imageId);
@@ -862,99 +772,39 @@ bool Renderer::Utility::VulkanInterface::IsApplicationSafeForClosure()
     return true;
 }
 
-/*
-uint32_t * CreateBuffer(BufferInfo * info, const uint32_t & count)
-{
-    VkBufferUsageFlags * bufferUsage = new VkBufferUsageFlags[count]; 
-    VkMemoryPropertyFlags * memProp = new VkMemoryPropertyFlags[count];
-
-    uint32_t * ids = new uint32_t[count];
-
-    for (uint32_t i = 0; i < count; i++)
-    {
-        bufferUsage[i] = UnwrapBufferUsageFlags(info->bufType);
-        for (uint32_t k = 0; k < info->memTypeCount; k++)
-        {
-            if(k == 0)
-                memProp[i] = UnwrapMemoryProperty(info->memType);
-            else
-                memProp[i] |= UnwrapMemoryProperty(info->memType);
-        }
-
-        ids[i] = *VkBufferFactory::GetInstance()->CreateBuffer(&bufferUsage[i], &memProp[i], info->data, info->dataSize, info->pGpuMem);
-    }
-    
-    delete[] memProp;
-    return ids;
-}
-*/
-
-//deprecated
-uint32_t * Renderer::Utility::VulkanInterface::CreateBuffers(Core::Wrappers::BufferInfo * info, const uint32_t & count)
-{
-    VkBufferUsageFlags * bufferUsage = new VkBufferUsageFlags[count];
-    VkMemoryPropertyFlags * memProp = new VkMemoryPropertyFlags[count];
-    size_t * dataSizes = new size_t[count];
-    uint32_t * ids;
-
-    for (uint32_t i = 0; i < count; i++)
-    {
-        dataSizes[i] = info[i].dataSize;
-        bufferUsage[i] = UnwrapBufferUsageFlags(info[i].bufType);
-        for (uint32_t k = 0; k < info[i].memTypeCount; k++)
-        {
-            if (k == 0)
-                memProp[i] = UnwrapMemoryProperty(info[i].memType);
-            else
-                memProp[i] |= UnwrapMemoryProperty(info[i].memType);
-        }
-    }
-
-    ids = GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffers(count, bufferUsage, memProp, dataSizes);
-
-    delete[] bufferUsage;
-    delete[] memProp;
-    delete[] dataSizes;
-    return ids;
-}
-
-void Renderer::Utility::VulkanInterface::CreateBuffers(Core::Wrappers::BufferCreateInfo * info, const uint32_t & count, uint32_t * out_buffIds, size_t * out_bufferMemRequirements)
-{
-    GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffers(count, info, out_buffIds, out_bufferMemRequirements);
-}
-
-std::pair<uint32_t, std::optional<uint32_t>> Renderer::Utility::VulkanInterface::CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, bool allocateMemory, const std::string& name)
+uint32_t Renderer::Utility::VulkanInterface::CreateBuffer(const Core::Wrappers::BufferCreateInfo& info, const std::string& name)
 {
     VkBufferCreateInfo* vkInfo = GfxVk::Unwrap::UnwrapBufferCreateInfo(&info, 1);
-    auto value = GfxVk::Shading::VkBufferFactory::GetInstance()->CreateBuffer(*vkInfo, allocateMemory, name);
+    auto value = GfxVk::Utility::VkBufferFactory::GetInstance()->CreateBuffer(*vkInfo, name);
     return value;
 }
 
 size_t Renderer::Utility::VulkanInterface::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
-    return GfxVk::Shading::VkBufferFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(dataSize);
+    return GfxVk::Utility::VkBufferFactory::GetInstance()->GetMemoryAlignedDataSizeForBuffer(dataSize);
 }
 
-uint32_t * Renderer::Utility::VulkanInterface::AllocateBufferMemory(uint32_t * bufferId, const uint32_t & bufCount)
+uint32_t Renderer::Utility::VulkanInterface::AllocateAndBindBufferMemory(
+    uint32_t bufferId,
+    Core::Enums::MemoryType* userReq,
+    const uint32_t& numUserReq,
+    bool isMemoryShared,
+    std::optional<uint32_t> allocationSize)
 {
-    return GfxVk::Shading::VkBufferFactory::GetInstance()->AllocateBufferMemory(bufferId, bufCount);
-}
-
-uint32_t Renderer::Utility::VulkanInterface::AllocateBufferSharedMemory(uint32_t* bufferId, uint32_t bufCount)
-{
-    return GfxVk::Shading::VkBufferFactory::GetInstance()->AllocateSharedBufferMemory(bufferId, bufCount);
+    VkMemoryPropertyFlags flags = GfxVk::Unwrap::UnwrapMemoryProperty(userReq, numUserReq);
+    return GfxVk::Utility::VkBufferFactory::GetInstance()->AllocateBindBufferMemory(bufferId, flags, isMemoryShared, allocationSize);
 }
 
 void Renderer::Utility::VulkanInterface::CopyBufferDataToMemory(const uint32_t & bufId, const VkDeviceSize & dataSize, const VkDeviceSize & memAlignedSize, void * data, VkDeviceSize memoryOffset, bool keepMemoryMounted)
 {
-    GfxVk::Shading::VkBufferFactory::GetInstance()->CopyBufferDataToMemory(bufId, dataSize, memAlignedSize, data, memoryOffset, keepMemoryMounted);
+    GfxVk::Utility::VkBufferFactory::GetInstance()->CopyBufferDataToMemory(bufId, dataSize, memAlignedSize, data, memoryOffset, keepMemoryMounted);
 }
 
-void Renderer::Utility::VulkanInterface::DestroyBuffer(uint32_t * ids, const uint32_t & count)
+void Renderer::Utility::VulkanInterface::DestroyBuffer(uint32_t * ids, const uint32_t & count, bool freeMemory)
 {
     for (uint32_t i = 0; i < count; i++)
     {
-        GfxVk::Shading::VkBufferFactory::GetInstance()->DestroyBuffer(ids[i]);
+        GfxVk::Utility::VkBufferFactory::GetInstance()->DestroyBuffer(ids[i], freeMemory);
     }
 }
 
@@ -976,22 +826,12 @@ void Renderer::Utility::VulkanInterface::BindImageMemory(const uint32_t & imageI
     GfxVk::Utility::VkImageFactory::GetInstance()->BindImageMemory(imageId, memId, offset);
 }
 
-uint32_t Renderer::Utility::VulkanInterface::AllocateMemory(Core::Wrappers::MemoryRequirementInfo * memReq, Core::Enums::MemoryType * userReq, const size_t & allocationSize)
-{
-    VkMemoryRequirements req = GfxVk::Unwrap::UnwrapMemoryRequirements(memReq);
-    VkMemoryPropertyFlags flags = GfxVk::Unwrap::UnwrapMemoryProperty(userReq);
-
-    uint32_t memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(&req, flags, allocationSize);
-
-    return memId;
-}
-
-uint32_t Renderer::Utility::VulkanInterface::AllocateMemory(Core::Wrappers::MemoryRequirementInfo * memReq, Core::Enums::MemoryType * userReq, const uint32_t & numUserReq, const size_t & allocationSize)
+uint32_t Renderer::Utility::VulkanInterface::AllocateMemory(const Core::Wrappers::MemoryRequirementInfo& memReq, Core::Enums::MemoryType * userReq, const uint32_t & numUserReq, const size_t & allocationSize)
 {
     VkMemoryRequirements req = GfxVk::Unwrap::UnwrapMemoryRequirements(memReq);
     VkMemoryPropertyFlags flags = GfxVk::Unwrap::UnwrapMemoryProperty(userReq, numUserReq);
 
-    uint32_t memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(&req, flags, allocationSize);
+    uint32_t memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(req, flags, allocationSize);
 
     return memId;
 }
@@ -1000,17 +840,6 @@ Core::Wrappers::MemoryRequirementInfo Renderer::Utility::VulkanInterface::GetIma
 {
     return GfxVk::Utility::VkImageFactory::GetInstance()->GetImageMemoryRequirement(imageId);
 }
-
-//
-//void InitiateGraphicsPipelineCreation(const uint32_t & meshId, VertexInputAttributeInfo * attribInfo, const uint32_t & attribCount, VertexInputBindingInfo * bindingInfo, const uint32_t & bindingCount )
-//{
-//    VulkanGraphicsPipelineFactory::GetInstance()->InitiatePipelineCreation(meshId, attribInfo, attribCount, bindingInfo, bindingCount);
-//}
-//
-//void SetInputAssemblyInfo(const uint32_t & meshId, PrimtiveType * primitive, bool isPrimitiveRestartEnabled)
-//{
-//    VulkanGraphicsPipelineFactory::GetInstance()->SetInputAssemblyInfo(meshId, primitive, isPrimitiveRestartEnabled);
-//}
 
 void Renderer::Utility::VulkanInterface::GetShaderIds(char ** shaderName, Core::Enums::ShaderType * type, uint32_t * id, const uint32_t & shaderCount)
 {

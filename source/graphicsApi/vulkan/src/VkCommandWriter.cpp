@@ -7,7 +7,7 @@
 #include <utility/VkDebugMarkerUtil.h>
 #include "shading/VkShaderResourceManager.h"
 #include "pipeline/VulkanGraphicsPipelineFactory.h"
-#include "shading/VkBufferFactory.h"
+#include "utility/VkBufferFactory.h"
 
 std::vector<float> labelColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -153,7 +153,7 @@ void GfxVk::CommandWriter::BindVertexBuffers(const Core::Wrappers::CommandBuffer
     std::vector<VkBuffer> buffers;
     for (auto& id : info.bufferIds)
     {
-        buffers.push_back(*GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer(id));
+        buffers.push_back(GfxVk::Utility::VkBufferFactory::GetInstance()->GetBuffer(id));
     }
     vkCmdBindVertexBuffers(cmBuf, info.firstBinding, info.bindingCount, buffers.data(), info.pOffsets.data());
 }
@@ -174,7 +174,7 @@ void GfxVk::CommandWriter::BindIndexBuffers(const Core::Wrappers::CommandBufferI
     default: ASSERT_MSG_DEBUG(0, "index type invalid");
     }
 
-    VkBuffer indBuf = *GfxVk::Shading::VkBufferFactory::GetInstance()->GetBuffer(info.bufferId);
+    VkBuffer indBuf = GfxVk::Utility::VkBufferFactory::GetInstance()->GetBuffer(info.bufferId);
     vkCmdBindIndexBuffer(cmBuf, indBuf, info.offset, indexType);
 }
 

@@ -24,10 +24,10 @@ void CreateStagingBuffer(VkBuffer& buffer, VkDeviceMemory& memory, uint32_t& mem
     VkMemoryRequirements memReqs;
     vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), buffer, &memReqs);
     memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(
-        &memReqs,
+        memReqs,
         VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         memReqs.size);
-    memory = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+    memory = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
     GfxVk::Utility::ErrorCheck(vkBindBufferMemory(DeviceInfo::GetLogicalDevice(), buffer, memory, 0));
 
     uint8_t* data;
@@ -87,9 +87,9 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
     VkImage image;
     GfxVk::Utility::ErrorCheck(vkCreateImage(DeviceInfo::GetLogicalDevice(), &info, DeviceInfo::GetAllocationCallback(), &image));
 
-    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&image);
-    auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(&req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.size);
-    VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(image);
+    auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.size);
+    auto& mem = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
     GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), image, mem, 0));
 
     VkImageView imageView;
@@ -128,9 +128,9 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(const Core::Wrappers::Image
 
     if (createView)
     {
-        VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&image);
-        auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(&req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.size);
-        VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+        VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(image);
+        auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(req, VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, req.size);
+        auto& mem = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
         GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), image, mem, 0));
 
         VkImageView imageView;
@@ -185,10 +185,10 @@ uint32_t GfxVk::Utility::VkImageFactory::CreateImage(void* buffer, size_t buffer
     VkMemoryRequirements memReqs;
     vkGetBufferMemoryRequirements(DeviceInfo::GetLogicalDevice(), stagingBuffer, &memReqs);
     auto memId = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->AllocateMemory(
-        &memReqs,
+        memReqs,
         VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         memReqs.size);
-    VkDeviceMemory stagingMemory = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+    auto& stagingMemory = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
     GfxVk::Utility::ErrorCheck(vkBindBufferMemory(DeviceInfo::GetLogicalDevice(), stagingBuffer, stagingMemory, 0));
 
     uint8_t* data;
@@ -477,7 +477,7 @@ Core::Wrappers::MemoryRequirementInfo GfxVk::Utility::VkImageFactory::GetImageMe
 {
     ASSERT_MSG(m_imageList.find(id) != m_imageList.end(), "Image not found");
 
-    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(&m_imageList[id].m_image);
+    VkMemoryRequirements req = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetImageMemoryRequirement(m_imageList[id].m_image);
 
     Core::Wrappers::MemoryRequirementInfo info = {};
     info.alignment = req.alignment;
@@ -492,7 +492,7 @@ void GfxVk::Utility::VkImageFactory::BindImageMemory(uint32_t imageId, uint32_t 
 {
     ASSERT_MSG(m_imageList.find(imageId) != m_imageList.end(), "Image not found");
     m_imageList[imageId].m_memId = memId;
-    VkDeviceMemory mem = *GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
+    auto& mem = GfxVk::Utility::VulkanMemoryManager::GetSingleton()->GetDeviceMemory(memId);
 
     GfxVk::Utility::ErrorCheck(vkBindImageMemory(DeviceInfo::GetLogicalDevice(), m_imageList[imageId].m_image, mem, offset));
 }

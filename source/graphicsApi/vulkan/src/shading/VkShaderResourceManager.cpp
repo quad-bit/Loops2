@@ -8,7 +8,7 @@
 #include "utility/VkRenderingUnwrapper.h"
 #include "shading/VkShaderResourceAllocator.h"
 #include "shading/VkDescriptorPoolFactory.h"
-#include "shading/VkBufferFactory.h"
+#include "utility/VkBufferFactory.h"
 #include "utility/VkImageFactory.h"
 #include "shading/VkShaderFactory.h"
 #include "VkSamplerFactory.h"
@@ -776,12 +776,12 @@ void GfxVk::Shading::VkShaderResourceManager::Init(const std::string& pipelineFi
             {
                 wrapperList.insert(std::begin(wrapperList) + counter, wrapper);
                 valueInserted = true;
-                break;
+                return;
             }
+            counter++;
         }
 
-        if (!valueInserted)
-            wrapperList.push_back(wrapper);
+        wrapperList.push_back(wrapper);
     };
 
     Document pipelineDoc = LoadJson(pipelineFilePath.c_str());
@@ -1345,14 +1345,11 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Ut
                 // if numBuffer == numDescriptors : no sharing
                 // if numBuffer < numDescriptors : sharing
 
-                VkBuffer * buf;
-
                 if (numBuffers == 1)
-                    buf = VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[0]);
+                    bufferInfo.buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[0]);
                 else
-                    buf = VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[i]);
+                    bufferInfo.buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[i]);
 
-                bufferInfo.buffer = *buf;
                 bufferInfo.offset = desc[k].bufferBindingInfo.info.offsetsForEachDescriptor[i];
                 bufferInfo.range = desc[k].bufferBindingInfo.info.dataSizePerDescriptorAligned;
                 writeList[k].pBufferInfo = &(bufferInfo);
@@ -1440,14 +1437,11 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
                 // if numBuffer == numDescriptors : no sharing
                 // if numBuffer < numDescriptors : sharing
 
-                VkBuffer* buf;
-
                 if (numBuffers == 1)
-                    buf = VkBufferFactory::GetInstance()->GetBuffer(bufBindingInfo.bufferIdList[0]);
+                    bufferInfo[k].buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(bufBindingInfo.bufferIdList[0]);
                 else
-                    buf = VkBufferFactory::GetInstance()->GetBuffer(bufBindingInfo.bufferIdList[i]);
+                    bufferInfo[k].buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(bufBindingInfo.bufferIdList[i]);
 
-                bufferInfo[k].buffer = *buf;
                 bufferInfo[k].offset = bufBindingInfo.info.offsetsForEachDescriptor[i];
                 bufferInfo[k].range = bufBindingInfo.info.dataSizePerDescriptorAligned;
                 writeList[k].pBufferInfo = &(bufferInfo[k]);

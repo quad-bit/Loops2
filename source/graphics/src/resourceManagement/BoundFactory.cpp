@@ -79,16 +79,13 @@ void Renderer::ResourceManagement::BoundFactory::AddBound(Core::ECS::Components:
     }
     auto CreateBuffer = [](const size_t& dataSize, uint32_t& bufferId, uint32_t& memId)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::VERTEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = dataSize;
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = dataSize;
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
-        bufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        memId = *VulkanInterfaceAlias::AllocateBufferMemory(&bufferId, 1);
+        bufferId = VulkanInterfaceAlias::CreateBuffer(info, "VertexBuffer");
+        memId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(bufferId, mem, 2, false, std::nullopt);
     };
 
     auto UploadData = [](uint32_t bufferId, size_t dataSize, void* data)
@@ -105,18 +102,15 @@ void Renderer::ResourceManagement::BoundFactory::AddBound(Core::ECS::Components:
     //index buffer
     if (bound->m_indicies.size() > 0)
     {
-        Core::Enums::BufferType bufferType = Core::Enums::BufferType::INDEX_BUFFER_BIT;
-        Core::Enums::MemoryType memType = Core::Enums::MemoryType::HOST_VISIBLE_BIT;
-        Core::Wrappers::BufferInfo info = {};
-        info.bufType = &bufferType;
-        info.memType = &memType;
-        info.memTypeCount = 1;
-        info.dataSize = sizeof(uint32_t) * bound->m_indicies.size();
+        Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+        Core::Wrappers::BufferCreateInfo info{};
+        info.size = sizeof(uint32_t) * bound->m_indicies.size();
+        info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-        bound->m_indexBufferId = *VulkanInterfaceAlias::CreateBuffers(&info, 1);
-        bound->m_indexBufferMemoryId = *VulkanInterfaceAlias::AllocateBufferMemory(&bound->m_indexBufferId.value(), 1);
+        bound->m_indexBufferId = VulkanInterfaceAlias::CreateBuffer(info, "IndexBuffer");
+        bound->m_indexBufferMemoryId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(bound->m_indexBufferId.value(), mem, 2, false, std::nullopt);
 
-        UploadData(bound->m_indexBufferId.value(), info.dataSize, bound->m_indicies.data());
+        UploadData(bound->m_indexBufferId.value(), info.size, bound->m_indicies.data());
     }
 
     m_boundList.push_back(bound);
@@ -124,12 +118,12 @@ void Renderer::ResourceManagement::BoundFactory::AddBound(Core::ECS::Components:
 
 void Renderer::ResourceManagement::BoundFactory::DestroyBound(Core::ECS::Components::Bound* bound)
 {
-    VulkanInterfaceAlias::DestroyBuffer(&bound->m_vertexBufferId, 1);
+    VulkanInterfaceAlias::DestroyBuffer(&bound->m_vertexBufferId, 1, false);
     VulkanInterfaceAlias::FreeMemory(&bound->m_vertexBufferMemoryId, 1);
 
     if (bound->m_indicies.size() > 0)
     {
-        VulkanInterfaceAlias::DestroyBuffer(&bound->m_indexBufferId.value(), 1);
+        VulkanInterfaceAlias::DestroyBuffer(&bound->m_indexBufferId.value(), 1, false);
         VulkanInterfaceAlias::FreeMemory(&bound->m_indexBufferMemoryId.value(), 1);
     }
 

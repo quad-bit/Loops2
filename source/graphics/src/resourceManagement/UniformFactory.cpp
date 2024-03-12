@@ -4,80 +4,20 @@
 #include "VulkanInterface.h"
 
 Renderer::ResourceManagement::UniformFactory* Renderer::ResourceManagement::UniformFactory::instance = nullptr;
-
-
-void Renderer::ResourceManagement::UniformFactory::HandleUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::Wrappers::SetWrapper * setWrapper, Core::Wrappers::BindingWrapper bindingObj, size_t allocationSize)
-{
-    Core::Enums::BufferType type { Core::Enums::BufferType::UNIFORM_BUFFER_BIT };
-    Core::Enums::MemoryType mem[2] { Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT};
-
-    // TODO : remove the hardcoded values and automate it.
-
-    // Create a new buffer
-    Core::Wrappers::BufferInfo info = {};
-    info.dataSize = allocationSize;
-    info.bufType = &type;
-    info.memType = mem;
-    info.memTypeCount = 2;
-
-    // num bufs should be deduced from alloc info
-
-    const uint32_t numBuffers = 1;
-    uint32_t * id =  VulkanInterfaceAlias::CreateBuffers(&info, numBuffers);
-    //desc->resourceId = *id;
-    for (uint32_t i = 0; i < numBuffers; i++)
-    {
-        desc->bufferBindingInfo.bufferIdList[i] = id[i];
-        bufferIds.push_back(id[i]);
-    }
-
-    // allocate buffer memory
-    // num mem should be deduced from alloc info
-    // TODO : should be deprecated,this is horrible
-    uint32_t * memId = VulkanInterfaceAlias::AllocateBufferMemory(id, numBuffers);
-    for (uint32_t i = 0; i < numBuffers; i++)
-    {
-        desc->bufferBindingInfo.bufferMemoryId[i] = memId[i];
-        memoryIds.push_back(memId[i]);
-    }
-
-    delete[] id;
-    delete[] memId;
-}
-
 void Renderer::ResourceManagement::UniformFactory::HandleUniformBuffer(Core::Utility::BufferBindingInfo& bufferInfo)
 {
-    Core::Enums::BufferType type{ Core::Enums::BufferType::UNIFORM_BUFFER_BIT };
     Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+    Core::Wrappers::BufferCreateInfo info{};
+    info.size = bufferInfo.info.totalSize;
+    info.usage.push_back(Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 
-    // Create a new buffer
-    Core::Wrappers::BufferInfo info = {};
-    info.dataSize = bufferInfo.info.totalSize;
-    info.bufType = &type;
-    info.memType = mem;
-    info.memTypeCount = 2;
+    uint32_t id = VulkanInterfaceAlias::CreateBuffer(info, "UniformBuffer");
+    bufferInfo.bufferIdList.push_back(id);
+    bufferIds.push_back(id);
 
-    const uint32_t numBuffers = 1;
-    uint32_t* id = VulkanInterfaceAlias::CreateBuffers(&info, numBuffers);
-
-    for (uint32_t i = 0; i < numBuffers; i++)
-    {
-        bufferInfo.bufferIdList.push_back(id[i]);
-        bufferIds.push_back(id[i]);
-    }
-
-    // allocate buffer memory
-    // num mem should be deduced from alloc info
-    // TODO : should be deprecated,this is horrible
-    uint32_t* memId = VulkanInterfaceAlias::AllocateBufferMemory(id, numBuffers);
-    for (uint32_t i = 0; i < numBuffers; i++)
-    {
-        bufferInfo.bufferMemoryId.push_back(memId[i]);
-        memoryIds.push_back(memId[i]);
-    }
-
-    delete[] id;
-    delete[] memId;
+    uint32_t memId = VulkanInterfaceAlias::AllocateAndBindBufferMemory(id, mem, 2, false, std::nullopt);
+    bufferInfo.bufferMemoryId.push_back(memId);
+    memoryIds.push_back(memId);
 }
 
 void Renderer::ResourceManagement::UniformFactory::Init()
@@ -90,7 +30,7 @@ void Renderer::ResourceManagement::UniformFactory::DeInit()
 {
     setConfig.clear();
 
-    VulkanInterfaceAlias::DestroyBuffer(bufferIds.data(),(uint32_t) bufferIds.size());
+    VulkanInterfaceAlias::DestroyBuffer(bufferIds.data(),(uint32_t)bufferIds.size(), false);
     VulkanInterfaceAlias::FreeMemory(memoryIds.data(), (uint32_t)memoryIds.size());
 }
 
@@ -111,97 +51,6 @@ Renderer::ResourceManagement::UniformFactory * Renderer::ResourceManagement::Uni
 Renderer::ResourceManagement::UniformFactory::~UniformFactory()
 {
 }
-
-// allocates resources for entire set, all bindings.
-//Core::Wrappers::SetWrapper * Renderer::ResourceManagement::UniformFactory::AllocateSetResource(Core::Utility::ShaderBindingDescription * desc, size_t * allocationSize, const uint32_t & numBindings, Core::Utility::AllocationMethod allocation)
-//{
-//    Core::Wrappers::SetWrapper * setWrapper = GetSetWrapper(desc, numBindings);
-//
-//    for (uint32_t i = 0; i < numBindings; i++)
-//    {
-//        Core::Wrappers::BindingWrapper binding = setWrapper->bindingWrapperList[i];
-//        if (binding.bindingName == desc[i].resourceName && binding.bindingObj.binding == desc[i].binding &&
-//            binding.memberList.size() == desc[i].numElements)
-//        {
-//            switch (binding.bindingObj.descriptorType)
-//            {
-//            case Core::Enums::DescriptorType::SAMPLER:
-//                break;
-//            case Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER:
-//                break;
-//            case Core::Enums::DescriptorType::SAMPLED_IMAGE:
-//                break;
-//            case Core::Enums::DescriptorType::STORAGE_IMAGE:
-//                break;
-//            case Core::Enums::DescriptorType::UNIFORM_TEXEL_BUFFER:
-//                break;
-//            case Core::Enums::DescriptorType::STORAGE_TEXEL_BUFFER:
-//                break;
-//            case Core::Enums::DescriptorType::UNIFORM_BUFFER:
-//                HandleUniformBuffer(&desc[i], setWrapper, binding, allocationSize[i]);
-//                break;
-//            case Core::Enums::DescriptorType::STORAGE_BUFFER:
-//                break;
-//            case Core::Enums::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
-//                break;
-//            case Core::Enums::DescriptorType::STORAGE_BUFFER_DYNAMIC:
-//                break;
-//            case Core::Enums::DescriptorType::INPUT_ATTACHMENT:
-//                break;
-//            }
-//        }
-//        else
-//        {
-//            ASSERT_MSG_DEBUG(0, "Binding not found");
-//        }
-//    }
-//
-//    //AllocateDescriptors(*it, desc, numBindings);
-//    return setWrapper;
-//}
-
-void Renderer::ResourceManagement::UniformFactory::AllocateBindingResources(Core::Wrappers::SetWrapper * setWrapper, Core::Utility::ShaderBindingDescription * desc, size_t allocationSize, const uint32_t & bindingIndexInSetwrapper, Core::Utility::AllocationMethod allocation)
-{
-    //for (uint32_t i = 0; i < numBindings; i++)
-    {
-        Core::Wrappers::BindingWrapper binding = setWrapper->bindingWrapperList[bindingIndexInSetwrapper];
-        //if (binding.bindingName == desc[i].resourceName && binding.bindingObj.binding == desc[i].binding &&
-            //binding.memberList.size() == desc[i].numElements)
-        {
-            switch (binding.bindingObj.descriptorType)
-            {
-            case Core::Enums::DescriptorType::SAMPLER:
-                break;
-            case Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER:
-                break;
-            case Core::Enums::DescriptorType::SAMPLED_IMAGE:
-                break;
-            case Core::Enums::DescriptorType::STORAGE_IMAGE:
-                break;
-            case Core::Enums::DescriptorType::UNIFORM_TEXEL_BUFFER:
-                break;
-            case Core::Enums::DescriptorType::STORAGE_TEXEL_BUFFER:
-                break;
-            case Core::Enums::DescriptorType::UNIFORM_BUFFER:
-                HandleUniformBuffer(desc, setWrapper, binding, allocationSize);
-                break;
-            case Core::Enums::DescriptorType::STORAGE_BUFFER:
-                break;
-            case Core::Enums::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
-                break;
-            case Core::Enums::DescriptorType::STORAGE_BUFFER_DYNAMIC:
-                break;
-            case Core::Enums::DescriptorType::INPUT_ATTACHMENT:
-                break;
-            }
-        }
-        /*else
-        {
-            ASSERT_MSG_DEBUG(0, "Binding not found");
-        }*/
-    }
-}
-
 void Renderer::ResourceManagement::UniformFactory::UploadDataToBuffers(const uint32_t & bufId, const size_t & dataSize, const size_t & memAlignedSize, void * data, const size_t & memoryOffset, bool keepMemoryMounted)
 {
     VulkanInterfaceAlias::CopyBufferDataToMemory(bufId, dataSize, memAlignedSize, data, memoryOffset, keepMemoryMounted);
@@ -341,17 +190,6 @@ std::vector<uint32_t> Renderer::ResourceManagement::UniformFactory::AcquireMeshL
 size_t Renderer::ResourceManagement::UniformFactory::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
     return VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(dataSize);
-}
-
-void Renderer::ResourceManagement::UniformFactory::AllocateUniformBuffer(Core::Wrappers::BufferCreateInfo * info, const uint32_t & numBuffers, uint32_t * out_buffIds, size_t * out_bufferMemRequirements)
-{
-    VulkanInterfaceAlias::CreateBuffers(info, numBuffers, out_buffIds, out_bufferMemRequirements);
-}
-
-void Renderer::ResourceManagement::UniformFactory::CreateSetLayout(Core::Utility::ShaderBindingDescription * desc, const uint32_t & numBindings)
-{
-    // Create set Layout bindings
-
 }
 
 uint32_t Renderer::ResourceManagement::UniformFactory::CreateSampler(const Core::Wrappers::SamplerCreateInfo & info)

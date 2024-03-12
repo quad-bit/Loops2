@@ -24,7 +24,6 @@ set(VULKAN_FILES
 inc/PresentationEngine.h
 inc/ValidationManager.h
 inc/VkCommandBufferFactory.h
-inc/VkDrawCommandBuffer.h
 inc/VkCommandWriter.h
 inc/VkFrameBufferFactory.h
 inc/VkQueueFactory.h
@@ -35,7 +34,6 @@ inc/VulkanManager.h
 src/PresentationEngine.cpp
 src/ValidationManager.cpp
 src/VkCommandBufferFactory.cpp
-src/VkDrawCommandBuffer.cpp
 src/VkCommandWriter.cpp
 src/VkFrameBufferFactory.cpp
 src/VkQueueFactory.cpp
@@ -53,13 +51,11 @@ src/pipeline/VulkanGraphicsPipelineFactory.cpp
 )
 
 set(SHADER_MANAGEMENT
-inc/shading/VkBufferFactory.h
 inc/shading/VkDescriptorPoolFactory.h
 inc/shading/VkShaderFactory.h
 inc/shading/VkShaderResourceAllocator.h
 inc/shading/VkShaderResourceManager.h
 
-src/shading/VkBufferFactory.cpp
 src/shading/VkDescriptorPoolFactory.cpp
 src/shading/VkShaderFactory.cpp
 src/shading/VkShaderResourceAllocator.cpp
@@ -78,12 +74,14 @@ inc/utility/VulkanMemoryManager.h
 inc/utility/VulkanSettings.h
 inc/utility/VulkanUtility.h
 inc/utility/VkImageFactory.h
+inc/utility/VkBufferFactory.h
 inc/utility/VkDebugMarkerUtil.h
 
 src/utility/VkRenderingUnwrapper.cpp
 src/utility/VulkanMemoryManager.cpp
 src/utility/VulkanUtility.cpp
 src/utility/VkImageFactory.cpp
+src/utility/VkBufferFactory.cpp
 src/utility/VkDebugMarkerUtil.cpp
 )
 

@@ -378,7 +378,7 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::U
         // Allocate the memory
         size_t allocationSize = req.size * count;
         Core::Enums::MemoryType userReq[1]{ Core::Enums::MemoryType::DEVICE_LOCAL_BIT };
-        auto memId = VulkanInterfaceAlias::AllocateMemory(&req, &userReq[0], allocationSize);
+        auto memId = VulkanInterfaceAlias::AllocateMemory(req, &userReq[0], 1, allocationSize);
         memIds.push_back(memId);
 
         // Bind the memory to the image
@@ -429,15 +429,17 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Renderer::RenderGraph::U
     std::vector<std::string> names,
     uint32_t count)
 {
-    std::vector<uint32_t> bufferIds;
+    std::array<Core::Enums::MemoryType, 2> memReq{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
+
+    std::vector<uint32_t> bufferIds, memIds;
     for (uint32_t i = 0; i < count; i++)
     {
-        auto value = VulkanInterfaceAlias::CreateBuffer(createInfo, false, names[i]);
-        bufferIds.push_back(value.first);
+        auto bufId = VulkanInterfaceAlias::CreateBuffer(createInfo, names[i]);
+        bufferIds.push_back(bufId);
+        memIds.push_back(VulkanInterfaceAlias::AllocateAndBindBufferMemory(bufId, memReq.data(), memReq.size(), false, std::nullopt));
     }
 
-    uint32_t memId = VulkanInterfaceAlias::AllocateBufferSharedMemory(bufferIds.data(), bufferIds.size());
-    return std::pair(bufferIds, std::vector<uint32_t>{memId});
+    return std::pair(bufferIds, memIds);
 }
 
 void Renderer::RenderGraph::Utils::AddSwapchainNode(Renderer::RenderGraph::Graph<RenderGraphNodeBase>& graph, Renderer::RenderGraph::GraphNode<RenderGraphNodeBase>* destNode, const Renderer::RenderGraph::Utils::ResourceMemoryUsage& usage, const Core::Enums::ImageLayout expectedImageLayout)
@@ -467,7 +469,7 @@ void Renderer::RenderGraph::Utils::DestroyPerFrameImageResource(const std::vecto
 
 void Renderer::RenderGraph::Utils::DestroyPerFrameBufferResource(const std::vector<uint32_t>& bufferIds, std::vector<uint32_t>& memIds)
 {
-    VulkanInterfaceAlias::DestroyBuffer((uint32_t*)bufferIds.data(), bufferIds.size());
+    VulkanInterfaceAlias::DestroyBuffer((uint32_t*)bufferIds.data(), bufferIds.size(), false);
     VulkanInterfaceAlias::FreeMemory(memIds.data(), memIds.size());
 }
 

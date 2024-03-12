@@ -16,7 +16,7 @@ Renderer::RenderGraph::Effects::BoundPass::BoundPass(
     std::unique_ptr<Renderer::RenderGraph::Technique> boundRenderer =
         std::make_unique<Renderer::RenderGraph::Techniques::BoundRenderer>(
             m_renderData, m_windowSettings,
-            graph, m_callbackUtility, "BoundRenderer", m_name, info, inputNodes[0], inputNodes[1], false);
+            graph, m_callbackUtility, "BoundRenderer", m_name, info, inputNodes[0], inputNodes[1], true);
 
     m_techniques.push_back(std::move(boundRenderer));
 }

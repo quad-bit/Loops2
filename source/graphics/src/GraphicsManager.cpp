@@ -18,7 +18,7 @@
 #include <shading/VkDescriptorPoolFactory.h>
 #include <shading/VkShaderResourceManager.h>
 #include <shading/VkShaderFactory.h>
-#include <shading/VkBufferFactory.h>
+#include <utility/VkBufferFactory.h>
 #include <utility/VulkanMemoryManager.h>
 #include <VkCommandBufferFactory.h>
 #include <synchronisation/VkSynchroniserFactory.h>
@@ -46,7 +46,7 @@ void Renderer::GraphicsManager::Init()
     GfxVk::Shading::VkDescriptorPoolFactory::GetInstance()->Init();
     GfxVk::Shading::VkShaderFactory::GetInstance()->Init();
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->Init();
-    GfxVk::Shading::VkBufferFactory::GetInstance()->Init();
+    GfxVk::Utility::VkBufferFactory::GetInstance()->Init();
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->Init(DeviceInfo::GetPhysicalDeviceMemProps());
     GfxVk::CommandPool::VkCommandBufferFactory::GetInstance()->Init(
         Renderer::RendererSettings::GetRenderQueueId(),
@@ -124,8 +124,8 @@ void Renderer::GraphicsManager::DeInit()
     GfxVk::Utility::VulkanMemoryManager::GetSingleton()->DeInit();
     delete GfxVk::Utility::VulkanMemoryManager::GetSingleton();
 
-    GfxVk::Shading::VkBufferFactory::GetInstance()->DeInit();
-    delete GfxVk::Shading::VkBufferFactory::GetInstance();
+    GfxVk::Utility::VkBufferFactory::GetInstance()->DeInit();
+    delete GfxVk::Utility::VkBufferFactory::GetInstance();
 
     GfxVk::Shading::VkShaderResourceManager::GetInstance()->DeInit();
     delete GfxVk::Shading::VkShaderResourceManager::GetInstance();

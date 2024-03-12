@@ -18,7 +18,6 @@
 #include "shading/VkShaderFactory.h"
 #include "shading/VkDescriptorPoolFactory.h"
 #include "shading/VkShaderResourceManager.h"
-#include "shading/VkBufferFactory.h"
 #include "VkSamplerFactory.h"
 #include "utility/VkRenderingUnwrapper.h"
 #include <algorithm>

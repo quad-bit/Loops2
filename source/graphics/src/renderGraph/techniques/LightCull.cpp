@@ -128,6 +128,8 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
             sceneBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
             sceneBufInfo.info.sharingConfig = resourceSharingConfig;
             sceneBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[0]->GetPhysicalResourceId());
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
             bindingDescription.m_bindingName = "Scene";
@@ -149,6 +151,8 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
             boundBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
             boundBufInfo.info.sharingConfig = resourceSharingConfig;
             boundBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
+            boundBufInfo.bufferIdList.push_back(m_boundsBuffer[0]->GetPhysicalResourceId());
+            boundBufInfo.bufferIdList.push_back(m_boundsBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
             bindingDescription.m_bindingName = "AABB";
@@ -170,6 +174,8 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
             tileBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
             tileBufInfo.info.sharingConfig = resourceSharingConfig;
             tileBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
+            tileBufInfo.bufferIdList.push_back(m_tileBuffer[0]->GetPhysicalResourceId());
+            tileBufInfo.bufferIdList.push_back(m_tileBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
             bindingDescription.m_bindingName = "TileBuffer";
@@ -191,6 +197,8 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
             lightDepthBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
             lightDepthBufInfo.info.sharingConfig = resourceSharingConfig;
             lightDepthBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
+            lightDepthBufInfo.bufferIdList.push_back(m_lightDepthBuffer[0]->GetPhysicalResourceId());
+            lightDepthBufInfo.bufferIdList.push_back(m_lightDepthBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
             bindingDescription.m_bindingName = "DepthInfo";

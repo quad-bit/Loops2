@@ -2,7 +2,6 @@
 #include <CorePrecompiled.h>
 #include "utility/VulkanUtility.h"
 #include "VkQueueFactory.h"
-#include "VkDrawCommandBuffer.h"
 #include <utility/VkDebugMarkerUtil.h>
 
 GfxVk::CommandPool::VkCommandBufferFactory* GfxVk::CommandPool::VkCommandBufferFactory::instance = nullptr;

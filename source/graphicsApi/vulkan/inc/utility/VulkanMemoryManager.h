@@ -12,7 +12,7 @@ namespace GfxVk
 
         struct VkMemoryWrapper
         {
-            VkDeviceMemory* memory;
+            VkDeviceMemory memory;
             uint32_t id;
             VkDeviceSize memorySize;
             bool isShared;
@@ -30,7 +30,10 @@ namespace GfxVk
             VkPhysicalDeviceMemoryProperties physicalDeviceMemoryPropertiesObj{};
             VmaAllocator allocator;
             VkDevice vulkanLogicalDevice;
-            uint32_t FindMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties* gpu_memory_properties, const VkMemoryRequirements* memory_requirements, const VkMemoryPropertyFlags required_properties);
+            uint32_t FindMemoryTypeIndex(
+                const VkPhysicalDeviceMemoryProperties* gpu_memory_properties,
+                const VkMemoryRequirements& memory_requirements,
+                const VkMemoryPropertyFlags& required_properties);
 
             uint32_t idCounter = 0;
             uint32_t GetId();
@@ -42,25 +45,13 @@ namespace GfxVk
             void Init(VkPhysicalDeviceMemoryProperties physicalDeviceMemoryPropertiesObj);
             void DeInit();
 
-            //deprecated.	
-            void AllocateImageMemory(VkImage* imageObj, VkMemoryPropertyFlags userReq, VkDeviceMemory* memoryObj);
-            //deprecated.
-            VkMemoryRequirements AllocateBufferMemory(VkBuffer* bufferObj, VkMemoryPropertyFlags userReq, VkDeviceMemory* memoryObj);
+            VkMemoryRequirements GetImageMemoryRequirement(const VkImage& image);
 
-
-            VkMemoryRequirements GetImageMemoryRequirement(VkImage* image);
-            uint32_t AllocateMemory(VkMemoryRequirements* memReq, VkMemoryPropertyFlags userReq, VkDeviceMemory* memoryObj);
-            uint32_t AllocateMemory(VkMemoryRequirements* memReq, VkMemoryPropertyFlags userReq, VkDeviceMemory* memoryObj, VkDeviceSize allocationSize);
-
-            uint32_t AllocateMemory(VkMemoryRequirements* memReq, VkMemoryPropertyFlags userReq);
-            uint32_t AllocateMemory(VkMemoryRequirements* memReq, VkMemoryPropertyFlags userReq, VkDeviceSize allocationSize);
-
-            uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq, const size_t& allocationSize);
-            uint32_t AllocateMemory(Core::Wrappers::MemoryRequirementInfo* memReq, Core::Enums::MemoryType* userReq);
+            uint32_t AllocateMemory(const VkMemoryRequirements& memReq, const VkMemoryPropertyFlags& userReq, VkDeviceMemory& memoryObj, const std::optional<VkDeviceSize>& allocationSize);
+            uint32_t AllocateMemory(const VkMemoryRequirements& memReq, const VkMemoryPropertyFlags& userReq, const std::optional<VkDeviceSize>& allocationSize);
 
             void FreeMemory(uint32_t id);
-
-            VkDeviceMemory* GetDeviceMemory(const uint32_t& memId);
+            const VkDeviceMemory& GetDeviceMemory(const uint32_t& memId);
         };
     }
 }

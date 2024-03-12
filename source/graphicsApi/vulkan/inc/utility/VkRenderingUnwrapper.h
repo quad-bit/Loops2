@@ -42,8 +42,7 @@ namespace GfxVk
         VkImageViewType UnwrapImageViewType(Core::Enums::ImageViewType type);
         VkImageAspectFlags UnwrapAspectMask(Core::Enums::ImageAspectFlag flag);
         VkImageAspectFlags UnwrapAspectMask(const std::vector<Core::Enums::ImageAspectFlag>& flags);
-        VkMemoryRequirements UnwrapMemoryRequirements(Core::Wrappers::MemoryRequirementInfo* info);
-        VkMemoryPropertyFlags UnwrapMemoryProperty(const Core::Enums::MemoryType* memType);
+        VkMemoryRequirements UnwrapMemoryRequirements(const Core::Wrappers::MemoryRequirementInfo& info);
         VkPipelineStageFlags const UnwrapPipelineStageFlags(const Core::Enums::PipelineStage* stages, const uint32_t& count);
         VkPipelineStageFlags2 const UnwrapPipelineStageFlags2(const Core::Enums::PipelineStageFlagBits2* stages, const uint32_t& count);
         VkAccessFlags const UnwrapAccessFlags(const Core::Enums::AccessFlagBits* stages, const uint32_t& count);
