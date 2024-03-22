@@ -989,7 +989,7 @@ namespace Core
                 Core::Enums::QueueType purpose;
             };
 
-            struct BufferInfo
+            /*struct BufferInfo
             {
                 Core::Enums::BufferType * bufType;
                 Core::Enums::MemoryType * memType;
@@ -997,7 +997,7 @@ namespace Core
                 void * data;
                 size_t dataSize;
                 void * pGpuMem;
-            };
+            };*/
 
             struct VertexInputBindingInfo
             {

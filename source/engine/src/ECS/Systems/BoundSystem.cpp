@@ -8,7 +8,7 @@
 #include <Utility/ResourceAllocationHelper.h>
 #include <plog/Log.h> 
 
-#include <resourceManagement/UniformFactory.h>
+#include <resourceManagement/ShaderResourceManager.h>
 
 void BoundSystem::Init()
 {
@@ -22,7 +22,7 @@ void BoundSystem::Init()
     resourceSharingConfig.allocatedUniformCount = 0;
 
     size_t uniformSize = sizeof(Core::ECS::Components::BoundUniform);
-    memoryAlignedUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+    memoryAlignedUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
 void BoundSystem::DeInit()
@@ -63,7 +63,7 @@ void BoundSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
             break;
         }
 
-        UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
+        ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
             sizeof(Core::ECS::Components::BoundUniform), memoryAlignedUniformSize,
             &uniform, std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
 
@@ -114,7 +114,7 @@ void BoundSystem::HandleBoundAddition(Core::ECS::Events::BoundAdditionEvent * in
     if (Core::Utility::IsNewAllocationRequired(resourceSharingConfig))
     {
         // True : Allocate new buffer
-        boundSetWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
+        boundSetWrapper = ShdrResMgrAlias::GetInstance()->AllocateSetResources(setDescription);
     }
     else
     {
@@ -144,11 +144,11 @@ void BoundSystem::HandleBoundAddition(Core::ECS::Events::BoundAdditionEvent * in
         auto& bufferLayoutInfo = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info;
         auto offset = bufferLayoutInfo.offsetsForEachDescriptor[i];
 
-        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedUniformSize, &obj, offset, false);
+        ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedUniformSize, &obj, offset, false);
     }
 
     // allocate descriptor sets
-    UniFactAlias::GetInstance()->AllocateDescriptorSets(boundSetWrapper, setDescription, allocConfig.numDescriptorSets);
+    ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(boundSetWrapper, setDescription, allocConfig.numDescriptorSets);
     resDescriptionList.push_back(setDescription);
 
     switch (inputEvent->boundParentType)

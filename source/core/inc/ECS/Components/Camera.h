@@ -72,7 +72,7 @@ namespace Core
                 float mouseSensitivity;
                 float fov;
                 float aspect;
-                float zNear = 0.10f, zFar = 256.0f;
+                float zNear = 0.20f, zFar = 256.0f;
                 CameraType projectionType;
 
                 void* cameraDataRaw;
@@ -112,6 +112,10 @@ namespace Core
                 float& GetMouseSensitivity();
 
                 float& GetFOV();
+
+                const float& GetFar();
+
+                const float& GetNear();
 
                 void SetFOV(const float& FOV);
 

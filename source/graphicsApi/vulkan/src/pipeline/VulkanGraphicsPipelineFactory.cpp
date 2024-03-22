@@ -1470,7 +1470,7 @@ uint32_t GfxVk::VulkanPipeline::VulkanComputePipelineFactory::CreatePipeline(con
     auto id = GetComputePipelineId();
     idToPipelineMap.insert({ id, pipeline });
 
-    return 0;
+    return id;
 }
 
 const VkPipeline& GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetPipeline(const uint32_t& id)

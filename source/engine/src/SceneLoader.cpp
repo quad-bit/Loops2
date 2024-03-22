@@ -15,7 +15,7 @@
 #include "resourceManagement/MaterialFactory.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "VulkanInterface.h"
-#include "resourceManagement/UniformFactory.h"
+#include "resourceManagement/ShaderResourceManager.h"
 #include <utility>
 #include <Math/TangentCalculator.h>
 

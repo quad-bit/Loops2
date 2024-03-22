@@ -7,12 +7,13 @@
 #include <ECS/World.h>
 #include <ECS/Components/Mesh.h>
 #include <ECS/Components/Camera.h>
+#include <ECS/Components/Bounds.h>
 #include <RendererSettings.h>
 #include "ECS/Systems/CameraSystem.h"
 
 //#include "MaterialFactory.h"
 //#include "DrawGraphManager.h"
-#include "resourceManagement/UniformFactory.h"
+#include "resourceManagement/ShaderResourceManager.h"
 //#include "GraphicsPipelineManager.h"
 
 
@@ -37,7 +38,7 @@ void LightSystem::Init()
     pointLightBufferSharingConfig.allocatedUniformCount = 0;
 
     pointUniformSize = sizeof(PointLightUniform) * MAX_POINT_LIGHTS;
-    memoryAlignedPointUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(pointUniformSize);
+    memoryAlignedPointUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(pointUniformSize);
 }
 
 void LightSystem::DeInit()
@@ -52,8 +53,12 @@ void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
     for (auto & entity : registeredEntities)
     {
         Core::ECS::ComponentHandle<Core::ECS::Components::Light>* lightHandle;
-        Core::ECS::ComponentHandle<Core::ECS::Components::Transform> * transformHandle;
-        worldObj->Unpack(entity, &lightHandle, &transformHandle);
+        Core::ECS::ComponentHandle<Core::ECS::Components::Transform>* transformHandle;
+        Core::ECS::ComponentHandle<Core::ECS::Components::Bound> * boundHandle;
+        worldObj->Unpack(entity, &lightHandle, &transformHandle, &boundHandle);
+
+        auto maxPos = boundHandle->GetComponent()->GetBoundsCategory()->m_maxPos;
+        auto minPos = boundHandle->GetComponent()->GetBoundsCategory()->m_minPos;
 
         Core::ECS::Components::Light * light = lightHandle->GetComponent();
         if (light->GetLightType() == Core::ECS::Components::LightType::Point)
@@ -68,7 +73,7 @@ void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 
             m_pointUniformListPerFrame[frameInfo.m_frameInFlightIndex][index++] = uniformObj;
 
-            Core::Utility::PointLightData data{ uniformObj.lightPos , uniformObj.lightRadius };
+            Core::Utility::PointLightData data{ uniformObj.lightPos , uniformObj.lightRadius, minPos, maxPos };
             m_lightData.m_pointLights.push_back(data);
         }
     }
@@ -78,7 +83,7 @@ void LightSystem::Update(float dt, const Core::Wrappers::FrameInfo& frameInfo)
 
     //upload data to buffers
     {
-        UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
+        ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
             pointUniformSize, memoryAlignedPointUniformSize, m_pointUniformListPerFrame[frameInfo.m_frameInFlightIndex].data(),
             std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
     }
@@ -127,7 +132,7 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
         if (Core::Utility::IsNewAllocationRequired(pointLightBufferSharingConfig))
         {
             // True : Allocate new buffer
-            lightSetWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
+            lightSetWrapper = ShdrResMgrAlias::GetInstance()->AllocateSetResources(setDescription);
         }
         else
         {
@@ -162,12 +167,12 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
             auto& bufferLayoutInfo = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info;
             auto offset = bufferLayoutInfo.offsetsForEachDescriptor[i];
 
-            UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedPointUniformSize, m_pointUniformListPerFrame.at(i).data(), offset, false);
+            ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedPointUniformSize, m_pointUniformListPerFrame.at(i).data(), offset, false);
         }
 
         if (pointLightDescriptorInfoList.size() == 0)
         {
-            UniFactAlias::GetInstance()->AllocateDescriptorSets(lightSetWrapper, setDescription, pointLightUniformAllocConfig.numDescriptorSets);
+            ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(lightSetWrapper, setDescription, pointLightUniformAllocConfig.numDescriptorSets);
             pointLightDescriptorInfoList.push_back(setDescription);
         }
 
@@ -181,6 +186,7 @@ LightSystem::LightSystem(Core::Utility::LightData& lightData) : m_lightData(ligh
 {
     signature.AddComponent<Core::ECS::Components::Light>();
     signature.AddComponent<Core::ECS::Components::Transform>();
+    signature.AddComponent<Core::ECS::Components::Bound>();
 }
 
 LightSystem::~LightSystem()

@@ -2,7 +2,7 @@
 #include <VulkanInterface.h>
 #include <renderGraph/tasks/ComputeTask.h>
 #include <Utility/PipelineStateWrappers.h>
-#include <resourceManagement/UniformFactory.h>
+#include <resourceManagement/ShaderResourceManager.h>
 #include <Utility/ResourceAllocationHelper.h>
 #include <ECS/ECS_Setting.h>
 
@@ -13,102 +13,124 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
         info.size = sizeof(SceneInfo);
         info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT };
         info.m_name = "SceneBuffer";
-        m_sceneBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "sceneBuffer_0", "sceneBuffer_1"}));
+        m_sceneBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "SceneBuffer_0", "SceneBuffer_1"}));
     }
 
     {
         Core::Wrappers::BufferCreateInfo info{};
-        info.size = sizeof(AABB) * MAX_POINT_LIGHTS;
+        info.size = sizeof(LightInfo);
         info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT };
-        info.m_name = "BoundsBuffer";
-        m_boundsBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "boundsBuffer_0", "boundsBuffer_1"}));
+        info.m_name = "LightInfoBuffer";
+        m_lightInfoBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "LightInfoBuffer_0", "LightInfoBuffer_1"}));
     }
 
     {
         Core::Wrappers::BufferCreateInfo info{};
-        info.size = sizeof(TileData);
+        info.size = sizeof(ClusterInfo);
         info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT, Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT };
-        info.m_name = "TileBuffer";
-        m_tileBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "TileBuffer_0", "TileBuffer_1"}));
+        info.m_name = "ClusterInfoBuffer";
+        m_clusterInfoBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "ClusterBoundsBuffer_0", "ClusterBoundsBuffer_1" }));
     }
 
-    {
-        Core::Wrappers::BufferCreateInfo info{};
-        info.size = sizeof(LightDepthInfo);
-        info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT, Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT };
-        info.m_name = "LightDepthBuffer";
-        m_lightDepthBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "LightDepthBuffer_0", "LightDepthBuffer_1" }));
-    }
-
-    CreateResourceNode(GetNodeName("SceneInputData"), m_sceneBuffer,
+    CreateResourceNode(GetNodeName("SceneInputData1"), m_sceneBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_sceneBufferInput);
+        m_sceneBufferInput_1);
 
-    CreateResourceNode(GetNodeName("BoundsInputData"), m_boundsBuffer,
+    // Cluster builder
+    CreateResourceNode(GetNodeName("ClusterBoundsInputData"), m_clusterInfoBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_boundBufferInput);
+        m_clusterInfoBufferInput);
 
-    CreateResourceNode(GetNodeName("TileInputData"), m_tileBuffer,
+    CreateResourceNode(GetNodeName("ClusterBoundsOutputData"), m_clusterInfoBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_tileBufferInput);
+        m_clusterInfoBufferOutput_1);
 
-    CreateResourceNode(GetNodeName("TileOutputData"), m_tileBuffer,
+    // Light culler
+    CreateResourceNode(GetNodeName("LightBoundsInputData"), m_lightInfoBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_tileBufferOutput);
+        m_lightBoundBufferInput);
 
-    CreateResourceNode(GetNodeName("LightDepthInputData"), m_lightDepthBuffer,
+    CreateResourceNode(GetNodeName("SceneInputData2"), m_sceneBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_lightDepthBufferInput);
+        m_sceneBufferInput_2);
 
-    CreateResourceNode(GetNodeName("LightDepthOutputData"), m_lightDepthBuffer,
+    CreateResourceNode(GetNodeName("ClusterLightOutputData"), m_clusterInfoBuffer,
         m_resourceNodes, m_graph, m_callbackUtility.m_graphTraversalCallback,
-        m_lightDepthBufferOutput);
+        m_clusterInfoBufferOutput_2);
 
-    uint32_t workGroupX = 10, workGroupY = 10, workGroupZ = 10;
+    CreateComputeTaskGraphNode("ClusterBuilderTask", m_parentEffectName, m_name,
+        m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_clusterBuilderTaskNode,
+        NUM_CLUSTERS_X, NUM_CLUSTERS_Y, NUM_CLUSTERS_Z);
+
     CreateComputeTaskGraphNode("LightCullTask", m_parentEffectName, m_name,
-        m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_taskNode,
-        workGroupX, workGroupY, workGroupZ);
+        m_graph, m_callbackUtility.m_graphTraversalCallback, m_taskNodes, m_lightCullTaskNode,
+        NUM_CLUSTERS_X, NUM_CLUSTERS_Y, NUM_CLUSTERS_Z);
 
     Renderer::RenderGraph::Utils::BufferResourceConnectionInfo bufInfo{};
     bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bufInfo.expectedShader = Core::Enums::ShaderType::COMPUTE;
 
+    // Cluster builder
     Renderer::RenderGraph::Utils::ConnectionInfo connection{};
     connection.m_bufInfo = bufInfo;
     connection.m_resource = m_sceneBuffer;
-    connection.m_resourceParentNodeId = m_sceneBufferInput.m_graphNode->GetNodeId();
+    connection.m_resourceParentNodeId = m_sceneBufferInput_1.m_graphNode->GetNodeId();
     connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_sceneBufferInput.m_graphNode, m_taskNode.m_graphNode, connection);
+    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_sceneBufferInput_1.m_graphNode, m_clusterBuilderTaskNode.m_graphNode, connection);
 
+    bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT;
     connection.m_bufInfo = bufInfo;
-    connection.m_resource = m_boundsBuffer;
-    connection.m_resourceParentNodeId = m_boundBufferInput.m_graphNode->GetNodeId();
+    connection.m_resource = m_clusterInfoBuffer;
+    connection.m_resourceParentNodeId = m_clusterInfoBufferInput.m_graphNode->GetNodeId();
+    connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE;
+    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_clusterInfoBufferInput.m_graphNode, m_clusterBuilderTaskNode.m_graphNode, connection);
+
+    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_clusterBuilderTaskNode.m_graphNode, m_clusterInfoBufferOutput_1.m_graphNode);
+
+    // Light culler
+    bufInfo.expectedShader = Core::Enums::ShaderType::COMPUTE;
+    bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufInfo.previousUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufInfo.prevShader = Core::Enums::ShaderType::COMPUTE;
+    // cluster bound input which was output of cluster bound task
+    connection.m_bufInfo = bufInfo;
+    connection.m_resource = m_sceneBuffer;
+    connection.m_resourceParentNodeId = m_sceneBufferInput_2.m_graphNode->GetNodeId();
     connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_boundBufferInput.m_graphNode, m_taskNode.m_graphNode, connection);
+    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_sceneBufferInput_2.m_graphNode, m_lightCullTaskNode.m_graphNode, connection);
 
+    bufInfo.expectedShader = Core::Enums::ShaderType::COMPUTE;
+    bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    bufInfo.previousUsage = Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    bufInfo.prevShader = Core::Enums::ShaderType::COMPUTE;
+    // cluster bound input which was output of cluster bound task
     connection.m_bufInfo = bufInfo;
-    connection.m_resource = m_tileBuffer;
-    connection.m_resourceParentNodeId = m_tileBufferInput.m_graphNode->GetNodeId();
+    connection.m_resource = m_clusterInfoBuffer;
+    connection.m_resourceParentNodeId = m_clusterInfoBufferOutput_1.m_graphNode->GetNodeId();
     connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE;
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_tileBufferInput.m_graphNode, m_taskNode.m_graphNode, connection);
+    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_clusterInfoBufferOutput_1.m_graphNode, m_lightCullTaskNode.m_graphNode, connection);
 
+    bufInfo = {};
+    bufInfo.expectedShader = Core::Enums::ShaderType::COMPUTE;
+    bufInfo.expectedUsage = Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    // light bounds buffer input
     connection.m_bufInfo = bufInfo;
-    connection.m_resource = m_lightDepthBuffer;
-    connection.m_resourceParentNodeId = m_lightDepthBufferInput.m_graphNode->GetNodeId();
-    connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE;
-    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_lightDepthBufferInput.m_graphNode, m_taskNode.m_graphNode, connection);
+    connection.m_resource = m_lightInfoBuffer;
+    connection.m_resourceParentNodeId = m_lightBoundBufferInput.m_graphNode->GetNodeId();
+    connection.m_usage = Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_ONLY;
+    Renderer::RenderGraph::Utils::AddEdge(m_graph, m_lightBoundBufferInput.m_graphNode, m_lightCullTaskNode.m_graphNode, connection);
 
-    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_tileBufferOutput.m_graphNode);
-    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_taskNode.m_graphNode, m_lightDepthBufferOutput.m_graphNode);
-
+    // cluster light info output
+    Renderer::RenderGraph::Utils::AddTaskOutput(m_graph, m_lightCullTaskNode.m_graphNode, m_clusterInfoBufferOutput_2.m_graphNode);
+    /*
     // Create descriptorset
     {
         uint32_t numDescriptorSetsPerUniform = Core::Settings::m_maxFramesInFlight;
 
         Core::Utility::GlobalResourceAllocationConfig allocConfig{};
-        allocConfig.numDescriptorSets = numDescriptorSetsPerUniform;
-        allocConfig.numMemories = 1; // 1 memory
-        allocConfig.numResources = 1; //1 buff
+        allocConfig.numDescriptorSets = 2;// numDescriptorSetsPerUniform;
+        allocConfig.numMemories = 2; // 1 memory
+        allocConfig.numResources = 2; //1 buff
 
         Core::Utility::GlobalResourceSharingConfig resourceSharingConfig{};
         resourceSharingConfig.maxUniformPerResource = 1;
@@ -117,17 +139,18 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
         Core::Utility::DescriptorSetInfo setDescription;
         setDescription.m_setNumber = 0;
 
+
         {
             size_t sceneUniformSize = sizeof(SceneInfo);
-            uint32_t memoryAlignedSceneUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(sceneUniformSize);
+            uint32_t memoryAlignedSceneUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(sceneUniformSize);
 
             Core::Utility::BufferBindingInfo sceneBufInfo{};
             sceneBufInfo.info.allocationConfig = allocConfig;
             sceneBufInfo.info.dataSizePerDescriptor = sceneUniformSize;
             sceneBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedSceneUniformSize;
-            sceneBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
             sceneBufInfo.info.sharingConfig = resourceSharingConfig;
-            sceneBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.info.totalSize = memoryAlignedSceneUniformSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
             sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[0]->GetPhysicalResourceId());
             sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[1]->GetPhysicalResourceId());
 
@@ -141,21 +164,21 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
         }
 
         {
-            size_t boundUniformSize = sizeof(AABB);
-            uint32_t memoryAlignedBoundUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(boundUniformSize);
+            size_t boundUniformSize = sizeof(BoundInfo);
+            uint32_t memoryAlignedBoundUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(boundUniformSize);
 
             Core::Utility::BufferBindingInfo boundBufInfo{};
             boundBufInfo.info.allocationConfig = allocConfig;
             boundBufInfo.info.dataSizePerDescriptor = boundUniformSize;
             boundBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedBoundUniformSize;
-            boundBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
+            boundBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
             boundBufInfo.info.sharingConfig = resourceSharingConfig;
-            boundBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
-            boundBufInfo.bufferIdList.push_back(m_boundsBuffer[0]->GetPhysicalResourceId());
-            boundBufInfo.bufferIdList.push_back(m_boundsBuffer[1]->GetPhysicalResourceId());
+            boundBufInfo.info.totalSize = memoryAlignedBoundUniformSize;//Core::Utility::GetDataSizeMeantForSharing(memoryAlignedBoundUniformSize, allocConfig, resourceSharingConfig);
+            boundBufInfo.bufferIdList.push_back(m_lightBoundsBuffer[0]->GetPhysicalResourceId());
+            boundBufInfo.bufferIdList.push_back(m_lightBoundsBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
-            bindingDescription.m_bindingName = "AABB";
+            bindingDescription.m_bindingName = "Bounds";
             bindingDescription.m_bindingNumber = 1;
             bindingDescription.m_numElements = 2;
             bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
@@ -164,21 +187,21 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
         }
 
         {
-            size_t tileUniformSize = sizeof(TileData);
-            uint32_t memoryAlignedTileUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(tileUniformSize);
+            size_t tileUniformSize = sizeof(TileInfo);
+            uint32_t memoryAlignedTileUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(tileUniformSize);
 
             Core::Utility::BufferBindingInfo tileBufInfo{};
             tileBufInfo.info.allocationConfig = allocConfig;
             tileBufInfo.info.dataSizePerDescriptor = tileUniformSize;
             tileBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedTileUniformSize;
-            tileBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
+            tileBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
             tileBufInfo.info.sharingConfig = resourceSharingConfig;
-            tileBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
+            tileBufInfo.info.totalSize = memoryAlignedTileUniformSize;//Core::Utility::GetDataSizeMeantForSharing(memoryAlignedTileUniformSize, allocConfig, resourceSharingConfig);
             tileBufInfo.bufferIdList.push_back(m_tileBuffer[0]->GetPhysicalResourceId());
             tileBufInfo.bufferIdList.push_back(m_tileBuffer[1]->GetPhysicalResourceId());
 
             Core::Utility::DescriptorSetBindingInfo bindingDescription;
-            bindingDescription.m_bindingName = "TileBuffer";
+            bindingDescription.m_bindingName = "TileInfo";
             bindingDescription.m_bindingNumber = 2;
             bindingDescription.m_numElements = 1;
             bindingDescription.m_resourceType = Core::Enums::DescriptorType::STORAGE_BUFFER;
@@ -188,15 +211,15 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
 
         {
             size_t lightDepthUniformSize = sizeof(LightDepthInfo);
-            uint32_t memoryAlignedLightDepthUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(lightDepthUniformSize);
+            uint32_t memoryAlignedLightDepthUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(lightDepthUniformSize);
 
             Core::Utility::BufferBindingInfo lightDepthBufInfo{};
             lightDepthBufInfo.info.allocationConfig = allocConfig;
             lightDepthBufInfo.info.dataSizePerDescriptor = lightDepthUniformSize;
             lightDepthBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedLightDepthUniformSize;
-            lightDepthBufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
+            lightDepthBufInfo.info.offsetsForEachDescriptor = { 0,0 };// Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
             lightDepthBufInfo.info.sharingConfig = resourceSharingConfig;
-            lightDepthBufInfo.info.totalSize = Core::Utility::GetDataSizeMeantForSharing(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
+            lightDepthBufInfo.info.totalSize = memoryAlignedLightDepthUniformSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedLightDepthUniformSize, allocConfig, resourceSharingConfig);
             lightDepthBufInfo.bufferIdList.push_back(m_lightDepthBuffer[0]->GetPhysicalResourceId());
             lightDepthBufInfo.bufferIdList.push_back(m_lightDepthBuffer[1]->GetPhysicalResourceId());
 
@@ -210,14 +233,174 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
         }
         setDescription.m_numBindings = setDescription.m_setBindings.size();
 
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, numDescriptorSetsPerUniform);
 
-        /*auto setWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
+        for(auto& id : setDescription.m_descriptorSetIds)
+            m_descriptorSetIds.push_back(id);
+    }*/
 
-        resourceSharingConfig.allocatedUniformCount += 1;
+    // Cluster builder
+    {
+        uint32_t numDescriptorSetsPerUniform = Core::Settings::m_maxFramesInFlight;
 
-        UniFactAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, allocConfig.numDescriptorSets);*/
+        Core::Utility::GlobalResourceAllocationConfig allocConfig{};
+        allocConfig.numDescriptorSets = numDescriptorSetsPerUniform;
+        allocConfig.numMemories = 2; // 2 memory
+        allocConfig.numResources = 2; //2 buff
+
+        Core::Utility::GlobalResourceSharingConfig resourceSharingConfig{};
+        resourceSharingConfig.maxUniformPerResource = 1;
+        resourceSharingConfig.allocatedUniformCount = 0;
+
+        Core::Utility::DescriptorSetInfo setDescription;
+        setDescription.m_setNumber = 0;
+        {
+            size_t sceneUniformSize = sizeof(SceneInfo);
+            uint32_t memoryAlignedSceneUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(sceneUniformSize);
+
+            Core::Utility::BufferBindingInfo sceneBufInfo{};
+            sceneBufInfo.info.allocationConfig = allocConfig;
+            sceneBufInfo.info.dataSizePerDescriptor = sceneUniformSize;
+            sceneBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedSceneUniformSize;
+            sceneBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.info.sharingConfig = resourceSharingConfig;
+            sceneBufInfo.info.totalSize = memoryAlignedSceneUniformSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[0]->GetPhysicalResourceId());
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[1]->GetPhysicalResourceId());
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "Scene";
+            bindingDescription.m_bindingNumber = 0;
+            bindingDescription.m_numElements = 6;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+            bindingDescription.m_bindingInfo = sceneBufInfo;
+            setDescription.m_setBindings.push_back(bindingDescription);
+        }
+
+        {
+            size_t clusterBoundDataSize = sizeof(ClusterInfo);
+            uint32_t memoryAlignedClusterBoundsDataSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(clusterBoundDataSize);
+
+            Core::Utility::BufferBindingInfo clusterBoundBufInfo{};
+            clusterBoundBufInfo.info.allocationConfig = allocConfig;
+            clusterBoundBufInfo.info.dataSizePerDescriptor = clusterBoundDataSize;
+            clusterBoundBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedClusterBoundsDataSize;
+            clusterBoundBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.info.sharingConfig = resourceSharingConfig;
+            clusterBoundBufInfo.info.totalSize = memoryAlignedClusterBoundsDataSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.bufferIdList.push_back(m_clusterInfoBuffer[0]->GetPhysicalResourceId());
+            clusterBoundBufInfo.bufferIdList.push_back(m_clusterInfoBuffer[1]->GetPhysicalResourceId());
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "ClusterInfo";
+            bindingDescription.m_bindingNumber = 1;
+            bindingDescription.m_numElements = 1;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::STORAGE_BUFFER;
+            bindingDescription.m_bindingInfo = clusterBoundBufInfo;
+            setDescription.m_setBindings.push_back(bindingDescription);
+        }
+        setDescription.m_numBindings = setDescription.m_setBindings.size();
+
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, numDescriptorSetsPerUniform);
+
+        for (auto& id : setDescription.m_descriptorSetIds)
+            m_clusterBuilderDescriptorSetIds.push_back(id);
     }
 
+    // Light cull
+    {
+        uint32_t numDescriptorSetsPerUniform = Core::Settings::m_maxFramesInFlight;
+
+        Core::Utility::GlobalResourceAllocationConfig allocConfig{};
+        allocConfig.numDescriptorSets = numDescriptorSetsPerUniform;
+        allocConfig.numMemories = 2; // 2 memory
+        allocConfig.numResources = 2; //2 buff
+
+        Core::Utility::GlobalResourceSharingConfig resourceSharingConfig{};
+        resourceSharingConfig.maxUniformPerResource = 1;
+        resourceSharingConfig.allocatedUniformCount = 0;
+
+        Core::Utility::DescriptorSetInfo setDescription;
+        setDescription.m_setNumber = 0;
+        {
+            size_t sceneUniformSize = sizeof(SceneInfo);
+            uint32_t memoryAlignedSceneUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(sceneUniformSize);
+
+            Core::Utility::BufferBindingInfo sceneBufInfo{};
+            sceneBufInfo.info.allocationConfig = allocConfig;
+            sceneBufInfo.info.dataSizePerDescriptor = sceneUniformSize;
+            sceneBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedSceneUniformSize;
+            sceneBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.info.sharingConfig = resourceSharingConfig;
+            sceneBufInfo.info.totalSize = memoryAlignedSceneUniformSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[0]->GetPhysicalResourceId());
+            sceneBufInfo.bufferIdList.push_back(m_sceneBuffer[1]->GetPhysicalResourceId());
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "Scene";
+            bindingDescription.m_bindingNumber = 0;
+            bindingDescription.m_numElements = 6;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+            bindingDescription.m_bindingInfo = sceneBufInfo;
+            setDescription.m_setBindings.push_back(bindingDescription);
+        }
+
+        {
+            size_t lightInfoDataSize = sizeof(LightInfo);
+            uint32_t memoryAlignedLightInfoDataSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(lightInfoDataSize);
+
+            Core::Utility::BufferBindingInfo lightBufInfo{};
+            lightBufInfo.info.allocationConfig = allocConfig;
+            lightBufInfo.info.dataSizePerDescriptor = lightInfoDataSize;
+            lightBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedLightInfoDataSize;
+            lightBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            lightBufInfo.info.sharingConfig = resourceSharingConfig;
+            lightBufInfo.info.totalSize = memoryAlignedLightInfoDataSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            lightBufInfo.bufferIdList.push_back(m_lightInfoBuffer[0]->GetPhysicalResourceId());
+            lightBufInfo.bufferIdList.push_back(m_lightInfoBuffer[1]->GetPhysicalResourceId());
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "LightInfo";
+            bindingDescription.m_bindingNumber = 1;
+            bindingDescription.m_numElements = 2;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+            bindingDescription.m_bindingInfo = lightBufInfo;
+            setDescription.m_setBindings.push_back(bindingDescription);
+        }
+
+        {
+            size_t clusterBoundDataSize = sizeof(ClusterInfo);
+            uint32_t memoryAlignedClusterBoundsDataSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(clusterBoundDataSize);
+
+            Core::Utility::BufferBindingInfo clusterBoundBufInfo{};
+            clusterBoundBufInfo.info.allocationConfig = allocConfig;
+            clusterBoundBufInfo.info.dataSizePerDescriptor = clusterBoundDataSize;
+            clusterBoundBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedClusterBoundsDataSize;
+            clusterBoundBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.info.sharingConfig = resourceSharingConfig;
+            clusterBoundBufInfo.info.totalSize = memoryAlignedClusterBoundsDataSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.bufferIdList.push_back(m_clusterInfoBuffer[0]->GetPhysicalResourceId());
+            clusterBoundBufInfo.bufferIdList.push_back(m_clusterInfoBuffer[1]->GetPhysicalResourceId());
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "ClusterInfo";
+            bindingDescription.m_bindingNumber = 2;
+            bindingDescription.m_numElements = 1;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::STORAGE_BUFFER;
+            bindingDescription.m_bindingInfo = clusterBoundBufInfo;
+            setDescription.m_setBindings.push_back(bindingDescription);
+        }
+
+        setDescription.m_numBindings = setDescription.m_setBindings.size();
+
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, numDescriptorSetsPerUniform);
+
+        for (auto& id : setDescription.m_descriptorSetIds)
+            m_lightCullerDescriptorSetIds.push_back(id);
+    }
 }
 
 Renderer::RenderGraph::Techniques::LightCull::LightCull(
@@ -232,6 +415,7 @@ Renderer::RenderGraph::Techniques::LightCull::LightCull(
     m_renderWidth(windowSettings.m_renderWidth),
     m_renderHeight(windowSettings.m_renderHeight)
 {
+    m_cachingEnabled = false;
     CreateResources();
 }
 
@@ -246,10 +430,83 @@ std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::Rende
 
 std::vector<Renderer::RenderGraph::GraphNode<Renderer::RenderGraph::Utils::RenderGraphNodeBase>*> Renderer::RenderGraph::Techniques::LightCull::GetGraphEndResourceNodes()
 {
-    return { m_tileBufferOutput.m_graphNode, m_lightDepthBufferOutput.m_graphNode };
+    return { m_clusterInfoBufferOutput_2.m_graphNode};
 }
 
 void Renderer::RenderGraph::Techniques::LightCull::SetupFrame(const Core::Wrappers::FrameInfo& frameInfo)
 {
+    Renderer::RenderGraph::Tasks::DispatchInfo dispatchInfo{};
+    auto clusterBuilderTask = ((Renderer::RenderGraph::TaskNode*)(m_clusterBuilderTaskNode.m_nodeBase.get()))->GetTask();
+    auto lightCullerTask = ((Renderer::RenderGraph::TaskNode*)(m_lightCullTaskNode.m_nodeBase.get()))->GetTask();
+
+    glm::vec4 posVs(-262.7f, -147.8f, -256.0f, 0.0f);
+    glm::vec4 posWs = glm::inverse(m_renderData.m_cameraData[0].m_viewMat) * posVs;
+
+    glm::vec4 pos2Cs = m_renderData.m_cameraData[0].m_projectionMat * m_renderData.m_cameraData[0].m_viewMat * glm::vec4(-50.f, 10.f, 10.f, 1.0f);
+    glm::vec4 ndc = pos2Cs / pos2Cs.w;
+
+    glm::vec4 ndcRangeCoverted = (ndc + 1.0f) * .5f;
+
+    glm::vec2 screenPos = glm::vec2(ndcRangeCoverted.x * m_renderWidth, ndcRangeCoverted.y * m_renderHeight);
+    {
+        SceneInfo scene{};
+        scene.m_camFar = m_renderData.m_cameraData[0].m_far;
+        scene.m_camNear = m_renderData.m_cameraData[0].m_near;
+        scene.m_projection = m_renderData.m_cameraData[0].m_projectionMat;
+        scene.m_screenHeight = m_renderHeight;
+        scene.m_screenWidth = m_renderWidth;
+        scene.m_view = m_renderData.m_cameraData[0].m_viewMat;
+
+        //upload data to buffers
+        {
+            auto sceneUniformSize = sizeof(SceneInfo);
+            auto memoryAlignedSceneUniformSize = VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(sceneUniformSize);
+            ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(m_sceneBuffer[frameInfo.m_frameInFlightIndex]->GetPhysicalResourceId(),
+                sceneUniformSize, memoryAlignedSceneUniformSize, &scene, 0, false);
+        }
+    }
+    {
+        const uint32_t numLights = m_renderData.m_lightData.m_pointLights.size();
+        LightInfo lightInfo{};
+        lightInfo.m_numLights = numLights;
+        for (uint32_t i = 0; i < numLights; i++)
+        {
+            lightInfo.m_lights[i].m_position = m_renderData.m_lightData.m_pointLights[i].m_position;
+            lightInfo.m_lights[i].m_radius = m_renderData.m_lightData.m_pointLights[i].radius;
+        }
+        //upload data to buffers
+        {
+            auto lightUniformSize = sizeof(LightInfo);
+            auto memoryAlignedLightUniformSize = VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(lightUniformSize);
+            ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(m_lightInfoBuffer[frameInfo.m_frameInFlightIndex]->GetPhysicalResourceId(),
+                lightUniformSize, memoryAlignedLightUniformSize, &lightInfo, 0, false);
+        }
+    }
+
+    if (!clusterBuilderTask->IsDataCached())
+    {
+        dispatchInfo.m_descriptorInfo.descriptorSetIds.push_back(m_clusterBuilderDescriptorSetIds[frameInfo.m_frameInFlightIndex]);
+        dispatchInfo.m_descriptorInfo.dynamicOffsetCount = 0;
+        dispatchInfo.m_descriptorInfo.firstSet = 0;
+        dispatchInfo.m_descriptorInfo.numSetsToBind = 1;
+        dispatchInfo.m_descriptorInfo.pDynamicOffsets = 0;
+        dispatchInfo.m_descriptorInfo.pipelineBindPoint = Core::Enums::PipelineType::COMPUTE;
+
+        ((Renderer::RenderGraph::Tasks::ComputeTask*)clusterBuilderTask)->UpdateDispatchInfo(dispatchInfo);
+    }
+
+    // light cull
+    if (!lightCullerTask->IsDataCached())
+    {
+        dispatchInfo = {};
+        dispatchInfo.m_descriptorInfo.descriptorSetIds.push_back(m_lightCullerDescriptorSetIds[frameInfo.m_frameInFlightIndex]);
+        dispatchInfo.m_descriptorInfo.dynamicOffsetCount = 0;
+        dispatchInfo.m_descriptorInfo.firstSet = 0;
+        dispatchInfo.m_descriptorInfo.numSetsToBind = 1;
+        dispatchInfo.m_descriptorInfo.pDynamicOffsets = 0;
+        dispatchInfo.m_descriptorInfo.pipelineBindPoint = Core::Enums::PipelineType::COMPUTE;
+
+        ((Renderer::RenderGraph::Tasks::ComputeTask*)lightCullerTask)->UpdateDispatchInfo(dispatchInfo);
+    }
 }
 

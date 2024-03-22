@@ -62,9 +62,6 @@ private:
 
     size_t pointUniformSize;
     size_t memoryAlignedPointUniformSize;
-    
-    void CreateLightUniformDescription(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light);
-    void CreateLightUniformBuffer(Core::Utility::ShaderBindingDescription * desc, Core::ECS::Components::Light * light, Core::ECS::Components::Camera * cam);
 
     Core::Utility::LightData& m_lightData;
 

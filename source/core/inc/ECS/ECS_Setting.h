@@ -1,7 +1,7 @@
 #pragma once
 
-#define MAX_NUM_OF_UNIQUE_COMPONENT 200
-#define MAX_POINT_LIGHTS 20
+#define MAX_NUM_OF_UNIQUE_COMPONENT 600
+#define MAX_POINT_LIGHTS 8 * 8 *8
 
 namespace Core
 {

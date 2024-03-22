@@ -493,13 +493,13 @@ void Renderer::RenderGraph::Pipelines::LowEndPipeline::CreatePipeline()
             m_windowSettings,
             *m_graph.get(), "LightCullPass", m_callbackUtility);
 
-    auto& tileOutputNode = lightCullPass->GetGraphEndResourceNodes();
+    auto& lightCullOutputNodes = lightCullPass->GetGraphEndResourceNodes();
 
     std::unique_ptr<Renderer::RenderGraph::Effect> opaquePass =
         std::make_unique<Renderer::RenderGraph::Effects::OpaquePass>(
             m_renderData,
             m_windowSettings,
-            *m_graph.get(), "OpaquePass", m_callbackUtility, tileOutputNode);
+            *m_graph.get(), "OpaquePass", m_callbackUtility, lightCullOutputNodes);
 
     auto& opaqueOutputNodes = opaquePass->GetGraphEndResourceNodes();
 

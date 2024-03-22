@@ -34,6 +34,7 @@ namespace Core
             std::vector<Core::Enums::RenderLayers> m_renderLayers;
             glm::vec3 m_cameraPosition;
             glm::mat4 m_viewMat, m_projectionMat;
+            float m_near, m_far;
             uint32_t m_descriptorSetId;
             //point to the next resourceSet indicies 
             std::vector<uint32_t> childSetIndicies;
@@ -57,6 +58,7 @@ namespace Core
         {
             glm::vec3 m_position; // world position, will help with LOD or sorting
             float radius;
+            glm::vec3 m_minPos, m_maxPos;
         };
 
         // represent the complete light set (point binding = 0, spot = binding = 1, etc)
@@ -65,6 +67,7 @@ namespace Core
             uint32_t m_descriptorSetId;
             std::vector<PointLightData> m_pointLights;
             std::vector<uint32_t> m_childSetIndicies;
+            glm::vec3 m_maxPos, m_minPos;
         };
 
         struct TransformData

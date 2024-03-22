@@ -181,17 +181,10 @@ namespace GfxVk
             std::vector<VkDescriptorSet> GetDescriptors(const int* ids, const uint32_t& count);
             std::tuple<std::vector<VkDescriptorSet>, uint32_t> GetDescriptors(uint32_t* ids, const uint32_t& count, const uint32_t& pipelineLayoutId, const uint32_t& firstSet);
             uint32_t* AllocateDescriptorSets(Core::Wrappers::SetWrapper* set, const uint32_t& numDescriptors);
-            //void LinkSetBindingToResources(ShaderBindingDescription * desc);
-            void LinkSetBindingToResources(Core::Utility::ShaderBindingDescription* desc, const uint32_t& numBindings);
             void LinkSetBindingToResources(const Core::Utility::DescriptorSetInfo desc, const uint32_t& numDescriptorSets);
             const std::vector<int>* GetSetValuesInPipelineLayout(const uint32_t& pipelineLayoutId);
             
             std::map<uint32_t, std::vector<Core::Wrappers::SetWrapper*>>* GetPerSetSetwrapperMap();
-
-            /*uint32_t GetVertexInputStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            uint32_t GetPipelineLayoutId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            uint32_t GetShaderStateId(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);
-            const std::vector<Core::Wrappers::VertexBindingTypeInfo>& GetVertexBindingTypeInfo(const std::string& effectName, const std::string& techniqueName, const std::string& taskName);*/
 
             uint32_t GetVertexInputStateId(const Core::Utility::TaskId& taskId);
             uint32_t GetPipelineLayoutId(const Core::Utility::TaskId& taskId);

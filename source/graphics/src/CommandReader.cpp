@@ -58,6 +58,11 @@ void Renderer::CommandReader::Draw(const Core::Wrappers::CommandBufferInfo& cmdB
     GfxVk::CommandWriter::Draw(cmdBufInfo, info);
 }
 
+void Renderer::CommandReader::Dispatch(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t groupX, uint32_t groupY, uint32_t groupZ)
+{
+    GfxVk::CommandWriter::Dispatch(cmdBufInfo, groupX, groupY, groupZ);
+}
+
 void Renderer::CommandReader::SetPipelineBarrier(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t barrierId)
 {
     GfxVk::CommandWriter::SetPipelineBarrier(cmdBufInfo, barrierId);

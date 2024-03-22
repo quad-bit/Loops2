@@ -97,6 +97,16 @@ float& Core::ECS::Components::Camera::GetFOV()
     return this->fov;
 }
 
+const float& Core::ECS::Components::Camera::GetFar()
+{
+    return zFar;
+}
+
+const float& Core::ECS::Components::Camera::GetNear()
+{
+    return zNear;
+}
+
 void Core::ECS::Components::Camera::SetFOV(const float & fov)
 {
     this->fov = fov;

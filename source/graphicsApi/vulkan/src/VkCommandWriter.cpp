@@ -107,19 +107,23 @@ void GfxVk::CommandWriter::BindPipeline(const Core::Wrappers::CommandBufferInfo&
     VkPipelineBindPoint bindPoint;
     switch (type)
     {
-    case Core::Enums::PipelineType::COMPUTE :
+    case Core::Enums::PipelineType::COMPUTE:
+    {
         bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE;
-        break;
+        const VkPipeline& pipeline = GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()->GetPipeline(pipelineId);
+        vkCmdBindPipeline(cmBuf, bindPoint, pipeline);
+    }
+    break;
     case Core::Enums::PipelineType::GRAPHICS:
+    {
         bindPoint = VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS;
-        break;
+        const VkPipeline& pipeline = GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->GetPipeline(pipelineId);
+        vkCmdBindPipeline(cmBuf, bindPoint, pipeline);
+    }
+    break;
     default:
         ASSERT_MSG_DEBUG(0, "invalid option");
     }
-
-    const VkPipeline& pipeline = GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->GetPipeline(pipelineId);
-
-    vkCmdBindPipeline(cmBuf, bindPoint, pipeline);
 }
 
 void GfxVk::CommandWriter::BindDescriptorSet(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, const Core::Wrappers::DescriptorSetBindingInfo& info, uint32_t pipelineLayoutId)
@@ -188,6 +192,12 @@ void GfxVk::CommandWriter::Draw(const Core::Wrappers::CommandBufferInfo& cmdBufI
 {
     VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
     vkCmdDraw(cmBuf, info.vertexCount, info.instanceCount, info.firstVertex, info.firstInstance);
+}
+
+void GfxVk::CommandWriter::Dispatch(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t groupX, uint32_t groupY, uint32_t groupZ)
+{
+    VkCommandBuffer cmBuf = GetCommandBuffer(cmdBufInfo);
+    vkCmdDispatch(cmBuf, groupX, groupY, groupZ);
 }
 
 void GfxVk::CommandWriter::SetPipelineBarrier(const Core::Wrappers::CommandBufferInfo& cmdBufInfo, uint32_t barrierId)

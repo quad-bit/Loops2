@@ -7,7 +7,7 @@
 //#include "GraphicsPipelineManager.h"
 //#include "ShaderFactory.h"
 //#include "MaterialFactory.h"
-//#include "UniformFactory.h"
+//#include "ShaderResourceManager.h"
 //#include "DrawGraphManager.h"
 //#include "DrawGraphNode.h"
 //#include "ForwardDrawGraph.h"
@@ -208,7 +208,7 @@ void Renderer::RenderingManager::Init(GLFWwindow* window)
     GraphicsPipelineManager<T>::GetInstance()->Init(apiInterface);
     MaterialFactory::GetInstance()->Init();
     ShaderFactory::GetInstance()->Init(apiInterface);
-    UniformFactory::GetInstance()->Init(apiInterface);
+    ShaderResourceManager::GetInstance()->Init(apiInterface);
     DrawGraphManager::GetInstance()->Init(RendererType::Forward);*/
     //this->apiInterface = apiInterface;
 
@@ -301,8 +301,8 @@ void Renderer::RenderingManager::DeInit()
     /*DrawGraphManager::GetInstance()->DeInit();
     delete DrawGraphManager::GetInstance();
 
-    UniformFactory::GetInstance()->DeInit();
-    delete UniformFactory::GetInstance();
+    ShaderResourceManager::GetInstance()->DeInit();
+    delete ShaderResourceManager::GetInstance();
 
     ShaderFactory::GetInstance()->DeInit();
     delete ShaderFactory::GetInstance();

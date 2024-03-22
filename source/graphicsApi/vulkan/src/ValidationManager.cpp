@@ -205,10 +205,7 @@ void GfxVk::Utility::ValidationManager::SetupDebug()
 {
 #if BUILD_ENABLE_VULKAN_DEBUG
 
-    //instanceLayerNameList.push_back("VK_LAYER_RENDERDOC_Capture");
     instanceLayerNameList.push_back("VK_LAYER_KHRONOS_validation");
-    //instanceLayerNameList.push_back("VK_LAYER_LUNARG_api_dump");
-    //instanceExtensionNameList.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
     instanceExtensionNameList.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
     dbg_messenger_create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;

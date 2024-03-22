@@ -9,7 +9,7 @@
 #include <Utility/ResourceAllocationHelper.h>
 #include <plog/Log.h> 
 
-#include <resourceManagement/UniformFactory.h>
+#include <resourceManagement/ShaderResourceManager.h>
 //#include "DrawGraphManager.h"
 //#include "Graph.h"
 //#include "DrawCommandBuffer.h"
@@ -32,7 +32,7 @@ void MeshRendererSystem::Init()
     resourceSharingConfig.allocatedUniformCount = 0;
 
     size_t uniformSize = sizeof(Core::ECS::Components::TransformUniform);
-    memoryAlignedUniformSize = UniFactAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
+    memoryAlignedUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
 void MeshRendererSystem::DeInit()
@@ -56,7 +56,7 @@ void MeshRendererSystem::Update(float dt, const Core::Wrappers::FrameInfo& frame
         obj.modelMat = transformObj->GetGlobalModelMatrix();
 
         Core::Utility::DescriptorSetInfo desc = transformToBindDescMap[transformObj];
-        UniFactAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
+        ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
             sizeof(Core::ECS::Components::TransformUniform), memoryAlignedUniformSize,
             &obj, std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
 
@@ -171,7 +171,7 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
     if (Core::Utility::IsNewAllocationRequired(resourceSharingConfig))
     {
         // True : Allocate new buffer
-        transformSetWrapper = UniFactAlias::GetInstance()->AllocateSetResources(setDescription);
+        transformSetWrapper = ShdrResMgrAlias::GetInstance()->AllocateSetResources(setDescription);
     }
     else
     {
@@ -200,11 +200,11 @@ void MeshRendererSystem::HandleMeshRendererAddition(Core::ECS::Events::MeshRende
         auto& bufferLayoutInfo = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info;
         auto offset = bufferLayoutInfo.offsetsForEachDescriptor[i];
 
-        UniFactAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedUniformSize, &obj, offset, false);
+        ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(bufferId, dataSize, memoryAlignedUniformSize, &obj, offset, false);
     }
 
     // allocate descriptor sets
-    UniFactAlias::GetInstance()->AllocateDescriptorSets(transformSetWrapper, setDescription, allocConfig.numDescriptorSets);
+    ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(transformSetWrapper, setDescription, allocConfig.numDescriptorSets);
     resDescriptionList.push_back(setDescription);
 
     transformToBindDescMap.insert(std::pair<Core::ECS::Components::Transform *, Core::Utility::DescriptorSetInfo>(

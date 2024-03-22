@@ -1,0 +1,108 @@
+#version 450
+// CHECK
+#define CLUSTER_X 4 //16
+#define CLUSTER_Y 1 //9
+#define CLUSTER_Z 1 //24
+
+#define CLUSTER_X_PIXEL_SIZE 320//80 // 1280/16
+#define MAX_LIGHTS_PER_CLUSTER 7
+
+layout (std140, set = 0, binding = 0) uniform Scene
+{
+    mat4 view;
+    mat4 projection;
+    float near;
+    float far;
+    uint screenWidth;
+    uint screenHeight;
+} scene;
+
+struct Cluster
+{
+    vec4 minPos;
+    vec4 maxPos;
+    uint lightIds[MAX_LIGHTS_PER_CLUSTER];
+    uint numLights;
+};
+
+layout(set = 0, binding = 1) buffer ClusterInfo
+{
+    Cluster cluster[CLUSTER_X * CLUSTER_Y * CLUSTER_Z];
+}clusterInfo;
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+vec4 clipToView(vec4 clip)
+{
+    //View space transform
+    vec4 view = inverse(scene.projection) * clip;
+
+    //Perspective projection
+    view = view / view.w;
+    
+    return view;
+}
+
+vec4 ScreenToView(vec4 screen)
+{
+    //Convert to NDC
+    vec2 texCoord = screen.xy / vec2(scene.screenWidth, scene.screenHeight);
+
+    //Convert to clipSpace
+    // vec4 clip = vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+    vec4 clip = vec4(vec2(texCoord.x, texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+
+    return clipToView(clip);
+}
+
+vec3 LineIntersectionToZPlane(vec3 A, vec3 B, float zDistance)
+{
+    vec3 pointOnTargetZplane = vec3(0, 0, zDistance);
+    float a = zDistance; // distance(vec3(0), pointOnTargetZplane)
+    float b = B.z; // distance(vec3(0), vec3(0, 0, B.z))
+    float c = distance(A, B);
+    // from congruent triangles
+    float d = c * a / b;
+
+    vec3 result = A + d * normalize(B - A);
+    return result;
+}
+
+void main()
+{
+    uint clusterIndex =
+          gl_WorkGroupID.z * gl_NumWorkGroups.x * gl_NumWorkGroups.y +
+          gl_WorkGroupID.y * gl_NumWorkGroups.x + 
+          gl_WorkGroupID.x;
+
+    //Calculating the min and max point in screen space
+    vec4 maxPointSs = vec4(vec2(gl_WorkGroupID.x + 1,
+                                 gl_WorkGroupID.y + 1) * CLUSTER_X_PIXEL_SIZE,
+                                 -1.0, 1.0); // Top Right
+    vec4 minPointSs = vec4(gl_WorkGroupID.xy * CLUSTER_X_PIXEL_SIZE,
+                            -1.0, 1.0); // Bottom left
+
+    //Pass min and max to view space
+    vec3 maxPointVs = ScreenToView(maxPointSs).xyz;
+    vec3 minPointVs = ScreenToView(minPointSs).xyz;
+
+    //Near and far values of the cluster in view space
+    // Z = nearZ * pow(farZ/nearZ, slice/numSlices)
+    float tileNear  = -scene.near * pow(scene.far/ scene.near, gl_WorkGroupID.z/float(gl_NumWorkGroups.z));
+    float tileFar   = -scene.near * pow(scene.far/ scene.near, (gl_WorkGroupID.z + 1) /float(gl_NumWorkGroups.z));
+
+    vec3 eyePos = vec3(0.0);
+    vec3 minPointNear = LineIntersectionToZPlane(eyePos, minPointVs, tileNear );
+    vec3 minPointFar  = LineIntersectionToZPlane(eyePos, minPointVs, tileFar );
+    vec3 maxPointNear = LineIntersectionToZPlane(eyePos, maxPointVs, tileNear );
+    vec3 maxPointFar  = LineIntersectionToZPlane(eyePos, maxPointVs, tileFar );
+
+    //vec3 minPointAABB = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
+    //vec3 maxPointAABB = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
+    // z -1 is into the screen hence maxPointFar.z < minPointFar.z, so swapped the z for the minAABB and maxAABB
+    vec3 minPointAABB = vec3((minPointNear.x + minPointFar.x)/2.0f, (minPointNear.y + minPointFar.y)/2.0f, maxPointFar.z);
+    vec3 maxPointAABB = vec3((maxPointNear.x + maxPointFar.x)/2.0f, (maxPointNear.y + maxPointFar.y)/2.0f, minPointNear.z);
+
+    clusterInfo.cluster[clusterIndex].minPos  = vec4(minPointAABB , 0.0);
+    clusterInfo.cluster[clusterIndex].maxPos  = vec4(maxPointAABB , 0.0);
+}

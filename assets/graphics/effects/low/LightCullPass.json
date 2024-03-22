@@ -7,6 +7,18 @@
             "tasks":
             [
                 {
+                    "name" : "ClusterBuilderTask",
+                    "shaders":
+                    [
+                        {
+                            "name": "ClusterBuilder.comp",
+                            "type": "COMPUTE",
+                            "shaderPath": "",
+                            "reflPath": ""
+                        }
+                    ]
+                },
+                {
                     "name" : "LightCullTask",
                     "shaders":
                     [

@@ -5,7 +5,7 @@
 #include <RendererSettings.h>
 #include "ECS/Systems/MaterialSystem.h"
 
-#include "resourceManagement/UniformFactory.h"
+#include "resourceManagement/ShaderResourceManager.h"
 #include "resourceManagement/MaterialFactory.h"
 #include "VulkanInterface.h"
 
@@ -51,8 +51,8 @@ void MaterialSystem::Init()
         setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::MATERIAL;
         setDescription.m_setBindings.push_back(bindingDescription);
 
-        auto setWrapper = UniFactAlias::GetInstance()->GetSetWrapper(setDescription);
-        UniFactAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
 
         //materialCreationEvent->material->m_descriptorSetIds = setDescription.m_descriptorSetIds;
         m_skyboxDescriptorIds = setDescription.m_descriptorSetIds;
@@ -132,8 +132,8 @@ void MaterialSystem::HandleMaterialCreation(Core::ECS::Events::MaterialCreationE
         setDescription.m_setBindings.push_back(diffuseBindingDescription);
         setDescription.m_setBindings.push_back(normalBindingDescription);
 
-        auto setWrapper = UniFactAlias::GetInstance()->GetSetWrapper(setDescription);
-        UniFactAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
 
         //materialCreationEvent->material->m_descriptorSetIds = setDescription.m_descriptorSetIds;
         m_materialDescriptorList[materialCreationEvent->material->componentId] = setDescription.m_descriptorSetIds;
@@ -158,8 +158,8 @@ void MaterialSystem::HandleMaterialCreation(Core::ECS::Events::MaterialCreationE
         setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::MATERIAL;
         setDescription.m_setBindings.push_back(bindingDescription);
 
-        auto setWrapper = UniFactAlias::GetInstance()->GetSetWrapper(setDescription);
-        UniFactAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
+        auto setWrapper = ShdrResMgrAlias::GetInstance()->GetSetWrapper(setDescription);
+        ShdrResMgrAlias::GetInstance()->AllocateDescriptorSets(setWrapper, setDescription, g_numDescriptorSets);
 
         //materialCreationEvent->material->m_descriptorSetIds = setDescription.m_descriptorSetIds;
         m_materialDescriptorList[materialCreationEvent->material->componentId] = setDescription.m_descriptorSetIds;

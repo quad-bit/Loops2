@@ -27,7 +27,7 @@
 #include <pipeline/VulkanGraphicsPipelineFactory.h>
 #include <VkSamplerFactory.h>
 
-#include <resourceManagement/UniformFactory.h>
+#include <resourceManagement/ShaderResourceManager.h>
 #include <resourceManagement/MeshFactory.h>
 #include <resourceManagement/MaterialFactory.h>
 
@@ -60,7 +60,7 @@ void Renderer::GraphicsManager::Init()
     GfxVk::VulkanPipeline::VulkanComputePipelineFactory::GetInstance()->Init(m_windowSettings);
 
     // next high level wrappers
-    Renderer::ResourceManagement::UniformFactory::GetInstance()->Init();
+    Renderer::ResourceManagement::ShaderResourceManager::GetInstance()->Init();
     Renderer::ResourceManagement::MeshFactory::GetInstance()->Init();
     Renderer::ResourceManagement::MaterialFactory::GetInstance()->Init();
 
@@ -97,8 +97,8 @@ void Renderer::GraphicsManager::DeInit()
     Renderer::ResourceManagement::MeshFactory::GetInstance()->DeInit();
     delete Renderer::ResourceManagement::MeshFactory::GetInstance();
 
-    Renderer::ResourceManagement::UniformFactory::GetInstance()->DeInit();
-    delete Renderer::ResourceManagement::UniformFactory::GetInstance();
+    Renderer::ResourceManagement::ShaderResourceManager::GetInstance()->DeInit();
+    delete Renderer::ResourceManagement::ShaderResourceManager::GetInstance();
 
     GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance()->DeInit();
     delete GfxVk::VulkanPipeline::VulkanGraphicsPipelineFactory::GetInstance();

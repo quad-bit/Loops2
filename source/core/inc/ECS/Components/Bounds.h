@@ -38,7 +38,6 @@ namespace Core
                 float m_minY, m_maxY;
                 float m_minZ, m_maxZ;
 
-
                 BoundCategory(const BoundType& type, const glm::mat4& parentTranform, const std::string& parentName,
                     const glm::vec3& minPos, const glm::vec3& maxPos)
                     : m_type(type), m_parentTransform(parentTranform), m_parentName(parentName), m_minPos(minPos), m_maxPos(maxPos)
@@ -52,25 +51,29 @@ namespace Core
                     m_minZ = minPos.z;
                     m_maxZ = maxPos.z;
 
-                    m_minPos = glm::vec3(m_minX, m_minY, m_minZ);
-                    m_maxPos = glm::vec3(m_maxX, m_maxY, m_maxZ);
+                    UpdateTransform();
+
+                    //m_minPos = glm::vec3(m_minX, m_minY, m_minZ);
+                    //m_maxPos = glm::vec3(m_maxX, m_maxY, m_maxZ);
                 }
 
+                // have a sphere positioned at zero, then transform it in Update based on parent Transform
                 BoundCategory(const BoundType& type, const glm::mat4& parentTranform, const std::string& parentName,
-                    const glm::vec3& centerPos, const float& radius)
+                    const float& radius)
                     : m_type(type), m_parentTransform(parentTranform), m_parentName(parentName)
                 {
-                    m_minX = centerPos.x - radius;
-                    m_maxX = centerPos.x + radius;
+                    m_minX = -radius;
+                    m_maxX = radius;
 
-                    m_minY = centerPos.y - radius;
-                    m_maxY = centerPos.y + radius;
+                    m_minY = -radius;
+                    m_maxY = radius;
 
-                    m_minZ = centerPos.z - radius;
-                    m_maxZ = centerPos.z + radius;
+                    m_minZ = -radius;
+                    m_maxZ = radius;
 
-                    m_minPos = glm::vec3(m_minX, m_minY, m_minZ);
-                    m_maxPos = glm::vec3(m_maxX, m_maxY, m_maxZ);
+                    UpdateTransform();
+                    //m_minPos = glm::vec3(m_minX, m_minY, m_minZ);
+                    //m_maxPos = glm::vec3(m_maxX, m_maxY, m_maxZ);
                 }
 
                 virtual void UpdateTransform()
@@ -96,10 +99,10 @@ namespace Core
                     auto max = m_parentTransform * glm::vec4(m_maxPos, 1.0f);
                     auto maxPos = glm::vec3(max);*/
 
-                    //glm::vec3 size = glm::vec3(glm::abs(maxPos.x - minPos.x), glm::abs(maxPos.y - minPos.y), glm::abs(maxPos.z - minPos.z));
                     glm::vec3 size = glm::vec3(glm::abs(m_maxX - m_minX), glm::abs(m_maxY - m_minY), glm::abs(m_maxZ - m_minZ));
-                    glm::vec3 center = glm::vec3((maxPos.x + minPos.x) / 2, (maxPos.y + minPos.y) / 2, (maxPos.z + minPos.z) / 2);
-                    m_transform = glm::translate(center) * glm::scale(size / 2.0f);
+                    glm::vec3 center = glm::vec3((maxPos.x + minPos.x) / 2.0f, (maxPos.y + minPos.y) / 2.0f, (maxPos.z + minPos.z) / 2.0f);
+
+                    m_transform = glm::translate(center) * glm::scale(size/2.0f);
                 }
             };
 
@@ -111,8 +114,8 @@ namespace Core
                 {
                 }
 
-                AABB(const glm::mat4& parentTranform, const std::string& parentName, const glm::vec3& centerPos, float radius):
-                    BoundCategory(BoundType::AABB, parentTranform, parentName, centerPos, radius)
+                AABB(const glm::mat4& parentTranform, const std::string& parentName, float radius):
+                    BoundCategory(BoundType::AABB, parentTranform, parentName, radius)
                 {
                 }
             };
@@ -131,36 +134,15 @@ namespace Core
                 glm::vec3 m_center;
                 float m_radius;
                 SphereBound(const glm::mat4& parentTranform, const std::string& parentName, const glm::vec3& centerPos, float radius) :
-                    BoundCategory(BoundType::SPHERE, parentTranform, parentName, centerPos, radius),
+                    BoundCategory(BoundType::SPHERE, parentTranform, parentName, radius),
                     m_center(centerPos), m_radius(radius)
                 {
                 }
 
                 virtual void UpdateTransform() override
                 {
-
                     auto center = glm::vec3(m_parentTransform[3].x, m_parentTransform[3].y, m_parentTransform[3].z);
                     m_transform = glm::translate(center) * glm::scale(glm::vec3(m_radius));
-
-
-                    /*auto minX = m_parentTransform * glm::vec4(m_minX, 0, 0, 1.0f);
-                    auto maxX = m_parentTransform * glm::vec4(m_maxX, 0, 0, 1.0f);
-
-                    auto minY = m_parentTransform * glm::vec4(0, m_minY, 0, 1.0f);
-                    auto maxY = m_parentTransform * glm::vec4(0, m_maxY, 0, 1.0f);
-
-                    auto minZ = m_parentTransform * glm::vec4(0, 0, m_minZ, 1.0f);
-                    auto maxZ = m_parentTransform * glm::vec4(0, 0, m_maxZ, 1.0f);
-
-                    m_minPos = glm::vec3(minX.x, minY.y, minZ.z);
-                    m_maxPos = glm::vec3(maxX.x, maxY.y, maxZ.z);
-
-                    auto minPos = glm::vec3(m_minPos);
-                    auto maxPos = glm::vec3(m_maxPos);
-
-                    glm::vec3 size = glm::vec3(glm::abs(m_maxX - m_minX), glm::abs(m_maxY - m_minY), glm::abs(m_maxZ - m_minZ));
-                    glm::vec3 center = glm::vec3((maxPos.x + minPos.x) / 2, (maxPos.y + minPos.y) / 2, (maxPos.z + minPos.z) / 2);
-                    m_transform = glm::translate(center) * glm::scale(size);*/
                 }
             };
 

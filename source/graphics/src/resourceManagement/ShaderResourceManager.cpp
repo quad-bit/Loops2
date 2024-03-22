@@ -1,10 +1,10 @@
-#include "resourceManagement/UniformFactory.h"
+#include "resourceManagement/ShaderResourceManager.h"
 #include <algorithm>
 #include <Platform/Assertion.h>
 #include "VulkanInterface.h"
 
-Renderer::ResourceManagement::UniformFactory* Renderer::ResourceManagement::UniformFactory::instance = nullptr;
-void Renderer::ResourceManagement::UniformFactory::HandleUniformBuffer(Core::Utility::BufferBindingInfo& bufferInfo)
+Renderer::ResourceManagement::ShaderResourceManager* Renderer::ResourceManagement::ShaderResourceManager::instance = nullptr;
+void Renderer::ResourceManagement::ShaderResourceManager::HandleUniformBuffer(Core::Utility::BufferBindingInfo& bufferInfo)
 {
     Core::Enums::MemoryType mem[2]{ Core::Enums::MemoryType::HOST_VISIBLE_BIT, Core::Enums::MemoryType::HOST_COHERENT_BIT };
     Core::Wrappers::BufferCreateInfo info{};
@@ -20,13 +20,13 @@ void Renderer::ResourceManagement::UniformFactory::HandleUniformBuffer(Core::Uti
     memoryIds.push_back(memId);
 }
 
-void Renderer::ResourceManagement::UniformFactory::Init()
+void Renderer::ResourceManagement::ShaderResourceManager::Init()
 {
     setWrapperList = VulkanInterfaceAlias::GetSetWrapperList();
     m_perSetMap = VulkanInterfaceAlias::GetPerSetSetwrapperList();
 }
 
-void Renderer::ResourceManagement::UniformFactory::DeInit()
+void Renderer::ResourceManagement::ShaderResourceManager::DeInit()
 {
     setConfig.clear();
 
@@ -34,44 +34,29 @@ void Renderer::ResourceManagement::UniformFactory::DeInit()
     VulkanInterfaceAlias::FreeMemory(memoryIds.data(), (uint32_t)memoryIds.size());
 }
 
-void Renderer::ResourceManagement::UniformFactory::Update()
+void Renderer::ResourceManagement::ShaderResourceManager::Update()
 {
 
 }
 
-Renderer::ResourceManagement::UniformFactory * Renderer::ResourceManagement::UniformFactory::GetInstance()
+Renderer::ResourceManagement::ShaderResourceManager * Renderer::ResourceManagement::ShaderResourceManager::GetInstance()
 {
     if (instance == nullptr)
     {
-        instance = new Renderer::ResourceManagement::UniformFactory();
+        instance = new Renderer::ResourceManagement::ShaderResourceManager();
     }
     return instance;
 }
 
-Renderer::ResourceManagement::UniformFactory::~UniformFactory()
+Renderer::ResourceManagement::ShaderResourceManager::~ShaderResourceManager()
 {
 }
-void Renderer::ResourceManagement::UniformFactory::UploadDataToBuffers(const uint32_t & bufId, const size_t & dataSize, const size_t & memAlignedSize, void * data, const size_t & memoryOffset, bool keepMemoryMounted)
+void Renderer::ResourceManagement::ShaderResourceManager::UploadDataToBuffers(const uint32_t & bufId, const size_t & dataSize, const size_t & memAlignedSize, void * data, const size_t & memoryOffset, bool keepMemoryMounted)
 {
     VulkanInterfaceAlias::CopyBufferDataToMemory(bufId, dataSize, memAlignedSize, data, memoryOffset, keepMemoryMounted);
 }
 
-void Renderer::ResourceManagement::UniformFactory::AllocateDescriptorSet(Core::Wrappers::SetWrapper * wrapper, Core::Utility::ShaderBindingDescription * desc, const uint32_t & numBindings, const uint32_t & numDescriptorsPerBinding)
-{
-    //// Allocate descriptor sets
-    //uint32_t * descriptorIds = VulkanInterfaceAlias::AllocateDescriptorsSet(wrapper, numDescriptorsPerBinding);
-
-    //for (uint32_t i = 0; i < numBindings; i++)
-    //{
-    //    for (uint32_t k = 0; k < numDescriptorsPerBinding; k++)
-    //        desc[i].descriptorSetIds.push_back(descriptorIds[k]);
-
-    //}
-    //// update the descriptors
-    //VulkanInterfaceAlias::LinkSetBindingToResources(desc, numBindings);
-}
-
-Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::AllocateSetResources(const Core::Utility::DescriptorSetInfo& setDescription)
+Core::Wrappers::SetWrapper* Renderer::ResourceManagement::ShaderResourceManager::AllocateSetResources(const Core::Utility::DescriptorSetInfo& setDescription)
 {
     Core::Wrappers::SetWrapper* setWrapper = GetSetWrapper(setDescription);
 
@@ -82,29 +67,19 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::Alloca
             switch (resourceType)
             {
             case Core::Enums::DescriptorType::SAMPLER:
-                break;
             case Core::Enums::DescriptorType::COMBINED_IMAGE_SAMPLER:
-                break;
             case Core::Enums::DescriptorType::SAMPLED_IMAGE:
-                break;
             case Core::Enums::DescriptorType::STORAGE_IMAGE:
-                break;
             case Core::Enums::DescriptorType::UNIFORM_TEXEL_BUFFER:
-                break;
             case Core::Enums::DescriptorType::STORAGE_TEXEL_BUFFER:
+            case Core::Enums::DescriptorType::STORAGE_BUFFER:
+            case Core::Enums::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
+            case Core::Enums::DescriptorType::STORAGE_BUFFER_DYNAMIC:
+            case Core::Enums::DescriptorType::INPUT_ATTACHMENT:
+                ASSERT_MSG_DEBUG(0, "Not yet implemented");
                 break;
             case Core::Enums::DescriptorType::UNIFORM_BUFFER:
-            {
                 HandleUniformBuffer((Core::Utility::BufferBindingInfo&)std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[i].m_bindingInfo));
-                break;
-            }
-            case Core::Enums::DescriptorType::STORAGE_BUFFER:
-                break;
-            case Core::Enums::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
-                break;
-            case Core::Enums::DescriptorType::STORAGE_BUFFER_DYNAMIC:
-                break;
-            case Core::Enums::DescriptorType::INPUT_ATTACHMENT:
                 break;
             }
         }
@@ -113,7 +88,7 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::Alloca
     return setWrapper;
 }
 
-void Renderer::ResourceManagement::UniformFactory::AllocateDescriptorSets(Core::Wrappers::SetWrapper* wrapper, Core::Utility::DescriptorSetInfo& setDescription, const uint32_t& numDescriptorSets)
+void Renderer::ResourceManagement::ShaderResourceManager::AllocateDescriptorSets(Core::Wrappers::SetWrapper* wrapper, Core::Utility::DescriptorSetInfo& setDescription, const uint32_t& numDescriptorSets)
 {
     // Allocate descriptor sets
     uint32_t* descriptorIds = VulkanInterfaceAlias::AllocateDescriptorsSet(wrapper, numDescriptorSets);
@@ -127,7 +102,7 @@ void Renderer::ResourceManagement::UniformFactory::AllocateDescriptorSets(Core::
     VulkanInterfaceAlias::LinkSetBindingToResources(setDescription, numDescriptorSets);
 }
 
-Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::GetSetWrapper(const Core::Utility::DescriptorSetInfo& setDescription)
+Core::Wrappers::SetWrapper* Renderer::ResourceManagement::ShaderResourceManager::GetSetWrapper(const Core::Utility::DescriptorSetInfo& setDescription)
 {
     Core::Wrappers::SetWrapper* wrapper = nullptr;
 
@@ -139,6 +114,7 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::GetSet
                     // Check if the set value and num of bindings are same
                     if (e->setValue == setDescription.m_setNumber && setDescription.m_numBindings == e->bindingWrapperList.size())
                     {
+                        uint32_t counter = 0;
                         for (uint32_t i = 0; i < setDescription.m_numBindings; i++)
                         {
                             if (e->bindingWrapperList[i].bindingObj.descriptorType != setDescription.m_setBindings[i].m_resourceType)
@@ -153,8 +129,10 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::GetSet
                             if (e->bindingWrapperList[i].bindingName != setDescription.m_setBindings[i].m_bindingName)
                                 break;
 
-                            return true;
+                            counter++;
                         }
+                        if (counter == setDescription.m_numBindings)
+                            return true;
                     }
                     return false;
                 });
@@ -181,18 +159,7 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::UniformFactory::GetSet
     return FindSetWrapper();
 }
 
-std::vector<uint32_t> Renderer::ResourceManagement::UniformFactory::AcquireMeshList(Core::Wrappers::SetWrapper * wrapper)
-{
-    ASSERT_MSG(0, "Not implemented");
-    return std::vector<uint32_t>();
-}
-
-size_t Renderer::ResourceManagement::UniformFactory::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
+size_t Renderer::ResourceManagement::ShaderResourceManager::GetMemoryAlignedDataSizeForBuffer(const size_t & dataSize)
 {
     return VulkanInterfaceAlias::GetMemoryAlignedDataSizeForBuffer(dataSize);
-}
-
-uint32_t Renderer::ResourceManagement::UniformFactory::CreateSampler(const Core::Wrappers::SamplerCreateInfo & info)
-{
-    return VulkanInterfaceAlias::CreateSampler(info);
 }

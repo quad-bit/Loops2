@@ -1308,99 +1308,6 @@ uint32_t * GfxVk::Shading::VkShaderResourceManager::AllocateDescriptorSets(Core:
     return ids;
 }
 
-void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(Core::Utility::ShaderBindingDescription * desc, const uint32_t & numBindings)
-{
-    // number of writes/set will equal to number of bindings in a set
-    uint32_t numWritesPerDescriptorSet = numBindings;
-    uint32_t numDescriptorSets = (uint32_t)desc->descriptorSetIds.size();
-
-    for (uint32_t i = 0; i < numDescriptorSets; i++)
-    {
-        // Create writes for various type of descriptors
-        std::vector<VkWriteDescriptorSet> writeList;
-        writeList.resize(numWritesPerDescriptorSet);
-
-        VkDescriptorBufferInfo bufferInfo = {};
-        VkDescriptorImageInfo imageInfo = {};
-
-        for (uint32_t k = 0; k < numWritesPerDescriptorSet; k++)
-        {
-            VkDescriptorType descriptorType = UnwrapDescriptorType(desc[k].resourceType);
-            
-            writeList[k].descriptorCount = 1;
-            writeList[k].descriptorType = descriptorType;
-            writeList[k].dstBinding = desc[k].binding;
-            writeList[k].dstSet = GetDescriptorSet(desc->descriptorSetIds[i]);
-            writeList[k].pBufferInfo = nullptr;
-            writeList[k].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            writeList[k].pImageInfo = nullptr;
-            writeList[k].pTexelBufferView = nullptr;
-
-            switch (descriptorType)
-            {
-            case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-            {
-                uint32_t numBuffers = (uint32_t)desc[k].bufferBindingInfo.bufferIdList.size();
-
-                // if numBuffer == numDescriptors : no sharing
-                // if numBuffer < numDescriptors : sharing
-
-                if (numBuffers == 1)
-                    bufferInfo.buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[0]);
-                else
-                    bufferInfo.buffer = Utility::VkBufferFactory::GetInstance()->GetBuffer(desc[k].bufferBindingInfo.bufferIdList[i]);
-
-                bufferInfo.offset = desc[k].bufferBindingInfo.info.offsetsForEachDescriptor[i];
-                bufferInfo.range = desc[k].bufferBindingInfo.info.dataSizePerDescriptorAligned;
-                writeList[k].pBufferInfo = &(bufferInfo);
-
-            }
-            break;
-
-            case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-            {
-                /*imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                
-                uint32_t numViews = (uint32_t)desc[k].imageBindingInfo.imageId.size();
-                VkImageView imageView;
-
-                if (numViews == 1)
-                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[0]);
-                else
-                    imageView = GfxVk::Utility::VkImageFactory::GetInstance()->GetImageView(desc[k].imageBindingInfo.imageId[i]);
-
-                imageInfo.imageView = imageView;
-                    
-                uint32_t numSamplers = (uint32_t)desc[k].samplerBindingInfo.samplerId.size();
-                VkSampler * sampler;
-                if (numSamplers == 1)
-                    sampler = VkSamplerFactory::GetInstance()->GetSampler(desc[k].samplerBindingInfo.samplerId[0]);
-                else
-                    sampler = VkSamplerFactory::GetInstance()->GetSampler(desc[k].samplerBindingInfo.samplerId[i]);
-
-                imageInfo.sampler = *sampler;
-
-                writeList[k].pImageInfo = &(imageInfo);*/
-
-            }
-            break;
-
-            case VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER:
-                ASSERT_MSG_DEBUG(0, "Yet to be implemented");
-                break;
-
-            default:
-                ASSERT_MSG_DEBUG(0, "Yet to be implemented");
-            }
-
-        }
-
-        // update descriptor set
-        vkUpdateDescriptorSets(DeviceInfo::GetLogicalDevice(), (uint32_t)writeList.size(), writeList.data(), 0, nullptr);
-
-    }
-}
-
 void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Core::Utility::DescriptorSetInfo desc, const uint32_t& numDescriptorSets)
 {
     // number of writes/set will equal to number of bindings in a set
@@ -1430,6 +1337,7 @@ void GfxVk::Shading::VkShaderResourceManager::LinkSetBindingToResources(const Co
             switch (descriptorType)
             {
             case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
             {
                 Core::Utility::BufferBindingInfo bufBindingInfo = std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[k].m_bindingInfo);
                 uint32_t numBuffers = (uint32_t)bufBindingInfo.bufferIdList.size();

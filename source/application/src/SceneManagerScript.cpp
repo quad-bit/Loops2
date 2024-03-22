@@ -15,7 +15,7 @@
 #include "Utility/Timer.h"
 #include <Utility/RenderingWrappers/AttributeHelper.h>
 
-#define LIGHT_SPHERE_VISUAL 1
+#define LIGHT_SPHERE_VISUAL 0
 
 SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(false)
 {
@@ -60,7 +60,8 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
         auto& lightEntity = lightHandles[i];
         lightEntity = worldObj->CreateEntity("light_" + std::to_string(i));
         Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightEntity->GetComponent<Core::ECS::Components::Transform>();
-        auto lighPosition = glm::vec3(x + 10 * (i%2 == 0? -1 : 1), 10, z + (i%2 == 0 ? -1.0f : 1.0f) * i * 5);
+        //auto lighPosition = glm::vec3(x + 10 * (i % 2 == 0 ? -1 : 1), 10, z + (i % 2 == 0 ? -1.0f : 1.0f) * i * 5);
+        auto lighPosition = glm::vec3(-15, 10, z + (i%2 == 0 ? -1.0f : 1.0f) * i * 5);
         lightTrfHandle->SetLocalPosition(lighPosition);
 
         std::unique_ptr<Core::ECS::Components::LightCategory> category(new Core::ECS::Components::PointLight(radius));
@@ -73,7 +74,7 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
             lightTrfHandle->GetGlobalModelMatrix(), lightEntity->GetEntity()->entityName, lightTrfHandle->GetGlobalPosition(), radius));
 #else
         std::unique_ptr<Core::ECS::Components::BoundCategory> boundCategory(new Core::ECS::Components::AABB(
-            lightTrfHandle->GetGlobalModelMatrix(), lightEntity->GetEntity()->entityName, lighPosition, radius));
+            lightTrfHandle->GetGlobalModelMatrix(), lightEntity->GetEntity()->entityName, radius));
 #endif
 
         Core::ECS::Components::Bound* bound = new Core::ECS::Components::Bound(boundCategory);

@@ -79,13 +79,13 @@ src/renderGraph/tasks/DownloadTask.cpp
 )
 
 set(SHADER_RESOURCE_FILES
-inc/resourceManagement/UniformFactory.h
+inc/resourceManagement/ShaderResourceManager.h
 inc/resourceManagement/MaterialFactory.h
 inc/resourceManagement/MeshFactory.h
 inc/resourceManagement/BoundFactory.h
 inc/resourceManagement/Resource.h
 
-src/resourceManagement/UniformFactory.cpp
+src/resourceManagement/ShaderResourceManager.cpp
 src/resourceManagement/MaterialFactory.cpp
 src/resourceManagement/MeshFactory.cpp
 src/resourceManagement/BoundFactory.cpp

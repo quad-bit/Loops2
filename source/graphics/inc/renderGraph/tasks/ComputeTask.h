@@ -29,7 +29,8 @@ namespace Renderer
             public:
                 ComputeTask(const std::string& name, const std::string& effectName, const std::string& techniqueName,
                     uint32_t workGroupX, uint32_t workGroupY, uint32_t workGroupZ) :
-                    Task(name, TaskType::COMPUTE_TASK)
+                    Task(name, TaskType::COMPUTE_TASK),
+                    m_workGroupX(workGroupX), m_workGroupY(workGroupY), m_workGroupZ(workGroupZ)
                 {
                     auto effectId = VulkanInterfaceAlias::GetEffectId(effectName);
                     auto techId = VulkanInterfaceAlias::GetTechniqueId(effectId, techniqueName);
@@ -49,6 +50,17 @@ namespace Renderer
                     pipelineInfo.shaderStateId = m_shaderStateId.value();
 
                     m_computePipelineId = VulkanInterfaceAlias::CreatePipeline(pipelineInfo);
+                }
+
+                void UpdateDispatchInfo(const DispatchInfo& dispatchInfo)
+                {
+                    m_dispatchCache.push_back(dispatchInfo);
+                    ASSERT_MSG_DEBUG(m_dispatchCache.size() < m_maxFrameCacheCount + 1, "Cache count exceeded");
+
+                    if (m_cachingEnabled)
+                    {
+                        UpdateCacheInfo();
+                    }
                 }
 
                 void Execute(const Core::Wrappers::FrameInfo& frameInfo) override
@@ -73,12 +85,11 @@ namespace Renderer
                         // bind pipeline
                         CommandReader::BindPipeline(info, Core::Enums::PipelineType::COMPUTE, m_computePipelineId.value());
 
-                        ASSERT_MSG_DEBUG(0, "check m_descriptorInfo");
                         // bind descriptor set
                         CommandReader::BindDescriptorSet(info, dispatchInfo.m_descriptorInfo, m_pipelineLayoutId.value());
 
                         // dispatch
-                        //CommandReader::DrawIndex(info, indexDrawInfo);
+                        CommandReader::Dispatch(info, m_workGroupX, m_workGroupY, m_workGroupZ);
                     }
 
                     EndTask(frameInfo, queueType);

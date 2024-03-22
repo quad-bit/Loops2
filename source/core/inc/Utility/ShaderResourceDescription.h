@@ -63,27 +63,6 @@ namespace Core
             BufferLayoutInfo info;
         };
 
-        //represent one binding, might have unique descriptor for each frame in flight
-        struct ShaderBindingDescription
-        {
-            uint32_t uniformId; // not getting used
-            uint32_t resParentId; // not getting used
-            Core::ECS::COMPONENT_TYPE parentType; // not getting used
-
-            Core::Enums::DescriptorType resourceType;
-            uint32_t set;
-            uint32_t binding;
-            std::string resourceName;
-            uint32_t numElements;
-
-            // Might belong to multiple descriptor sets
-            std::vector<uint32_t> descriptorSetIds;
-
-            //SamplerBindingInfo samplerBindingInfo;
-            ImageBindingInfo imageBindingInfo;
-            BufferBindingInfo bufferBindingInfo;
-        };
-
         struct DescriptorSetBindingInfo
         {
             std::string m_bindingName;
