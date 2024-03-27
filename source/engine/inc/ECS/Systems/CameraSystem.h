@@ -7,6 +7,7 @@
 //#include "MeshAdditionEvent.h"
 #include <map>
 #include <tuple>
+#include <Settings.h>
 
 template <typename T>
 class GraphNode;
@@ -76,6 +77,7 @@ namespace Engine
                 uint32_t mainCameraId = 0;
 
                 std::vector<Core::Utility::CameraData>& m_cameraDataList;
+                const Core::WindowSettings& m_windowSettings;
 
             public:
                 virtual void Init() override;
@@ -89,7 +91,7 @@ namespace Engine
                 Core::Utility::GlobalResourceAllocationConfig GetAllocConfig() const;
                 Core::Utility::GlobalResourceSharingConfig GetResourceSharingConfig() const;
 
-                CameraSystem(std::vector<Core::Utility::CameraData>& cameraData);
+                CameraSystem(std::vector<Core::Utility::CameraData>& cameraData, const Core::WindowSettings& windowSettings);
                 virtual ~CameraSystem();
 
                 void SetMainCamera(uint32_t componentId);

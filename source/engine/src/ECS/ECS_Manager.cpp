@@ -23,9 +23,14 @@
 Engine::ECS_Manager* Engine::ECS_Manager::instance = nullptr;
 Core::ECS::World * worldObj;
 
-void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader)
+void Engine::ECS_Manager::Init(
+    Core::Utility::RenderData& renderData,
+    std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader,
+    const Core::WindowSettings& windowSettings)
 {
     PLOGD << "ECS Manager Init";
+
+    m_windowSettings = windowSettings;
 
     worldObj = new Core::ECS::World();
 
@@ -44,7 +49,8 @@ void Engine::ECS_Manager::Init(Core::Utility::RenderData& renderData, std::uniqu
     transformSystemObj = new TransformSystem();
     worldObj->AddSystem(transformSystemObj, Core::ECS::COMPONENT_TYPE::TRANSFORM);
 
-    cameraSystemObj = new Engine::ECS::Systems::CameraSystem(renderData.m_cameraData);
+    cameraSystemObj = new Engine::ECS::Systems::CameraSystem(
+        renderData.m_cameraData, m_windowSettings);
     worldObj->AddSystem(cameraSystemObj, Core::ECS::COMPONENT_TYPE::CAMERA);
 
     lightSystem = new LightSystem(renderData.m_lightData);

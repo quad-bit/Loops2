@@ -1,12 +1,7 @@
 #version 450
 
-#define MAX_LIGHTS 8 * 8 * 8
-#define MAX_LIGHTS_PER_CLUSTER 7
-
-// CHECK
-#define CLUSTER_X 4 //16
-#define CLUSTER_Y 1 //9
-#define CLUSTER_Z 1 //24
+#extension GL_GOOGLE_include_directive : enable
+#include "LightCullSettings.h"
 
 shared int lightList[MAX_LIGHTS];
 

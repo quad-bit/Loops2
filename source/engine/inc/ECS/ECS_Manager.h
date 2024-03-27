@@ -2,6 +2,7 @@
 
 #include <RenderData.h>
 #include <SceneLoader.h>
+#include <Settings.h>
 
 namespace Core
 {
@@ -43,6 +44,7 @@ namespace Engine
         static ECS_Manager* instance;
         //Core::Utility::RenderData m_renderData;
         std::unique_ptr<Engine::Utility::GltfLoader> m_sceneLoader;
+        Core::WindowSettings m_windowSettings;
 
     public:
         Core::ECS::ComponentManager<Core::ECS::Components::Transform>* transformManager;
@@ -67,7 +69,9 @@ namespace Engine
         Core::ECS::ComponentManager<Core::ECS::Components::Bound>* boundManager;
         Core::ECS::System* boundSystem;
 
-        void Init(Core::Utility::RenderData& renderData, std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader);
+        void Init(Core::Utility::RenderData& renderData,
+            std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader,
+            const Core::WindowSettings& windowSettings);
         void DeInit();
         void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo);
         void Render(float dt);

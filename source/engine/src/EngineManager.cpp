@@ -37,7 +37,7 @@ void Engine::EngineManager::Init(const std::string& windowName,
     Renderer::Windowing::InputManager::GetInstance()->Init(m_graphicsMngrObj->GetGlfwWindow());
     Renderer::Windowing::MouseInputManager::GetInstance()->Init();
 
-    ECS_Manager::GetInstance()->Init(m_renderData, m_gltfLoader);
+    ECS_Manager::GetInstance()->Init(m_renderData, m_gltfLoader, m_windowSettings);
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
 }

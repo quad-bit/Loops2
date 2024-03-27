@@ -5,13 +5,6 @@
 #include <RenderData.h>
 #include <Settings.h>
 #include "renderGraph/Task.h"
-#include "ECS/ECS_Setting.h"
-
-#define NUM_CLUSTERS_Z 1//24
-#define NUM_CLUSTERS_X 4//1280 / 80
-#define NUM_CLUSTERS_Y 1//720 / 80
-#define NUM_CLUSTERS NUM_CLUSTERS_X * NUM_CLUSTERS_Y * NUM_CLUSTERS_Z
-#define MAX_LIGHTS_PER_CLUSTER 7
 
 namespace Renderer
 {
@@ -60,7 +53,7 @@ namespace Renderer
                 };
                 // ========= Bounds ================
 
-                const Core::Utility::RenderData& m_renderData;
+                Core::Utility::RenderData& m_renderData;
                 void CreateResources() override;
 
                 std::vector<ResourceAlias*> m_sceneBuffer, m_clusterInfoBuffer, m_lightInfoBuffer;

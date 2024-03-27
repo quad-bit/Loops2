@@ -7,6 +7,7 @@ set(CORE_FILES
     inc/CorePrecompiled.h
     inc/PlatformSettings.h
     inc/Settings.h
+    inc/LightCullSettings.h
     inc/RenderData.h
     inc/Shader.h
 

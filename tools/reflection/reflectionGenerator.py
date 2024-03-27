@@ -8,6 +8,7 @@ currentPath = os.getcwd()
 shaderPath = currentPath +"//..//..//assets//graphics//vulkan//Shaders"
 spvPath =  currentPath +"//..//..//assets//graphics//vulkan//Spvs"
 reflPath = currentPath +"//..//..//assets//graphics//vulkan//Reflections"
+shaderIncludePath = currentPath +"//..//..//source//core//inc "
 
 def CleanFolder(folder):
     for filename in os.listdir(folder):
@@ -22,7 +23,7 @@ def CleanFolder(folder):
 
 def GenerateSpv():
     dir_list = os.listdir(shaderPath)
-    commandBase = "glslangValidator.exe -V "
+    commandBase = "glslangValidator.exe -V -I" + shaderIncludePath
     for filename in dir_list:
         outputFilename = filename + ".spv"
         command = commandBase + shaderPath + "//" + filename + " -o " + spvPath+ "//" + outputFilename

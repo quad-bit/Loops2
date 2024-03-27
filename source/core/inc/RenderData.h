@@ -68,6 +68,7 @@ namespace Core
             std::vector<PointLightData> m_pointLights;
             std::vector<uint32_t> m_childSetIndicies;
             glm::vec3 m_maxPos, m_minPos;
+            std::vector<uint32_t> m_lightClusterBufferIds;
         };
 
         struct TransformData

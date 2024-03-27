@@ -34,7 +34,7 @@ void LightSystem::Init()
     pointLightUniformAllocConfig.numMemories = 1;
     pointLightUniformAllocConfig.numResources = 1;
 
-    pointLightBufferSharingConfig.maxUniformPerResource = 1; // keep it a multiple of numdesccriptorSets of allocConfig
+    pointLightBufferSharingConfig.maxUniformPerResource = MAX_POINT_LIGHTS; // keep it a multiple of numdesccriptorSets of allocConfig
     pointLightBufferSharingConfig.allocatedUniformCount = 0;
 
     pointUniformSize = sizeof(PointLightUniform) * MAX_POINT_LIGHTS;
@@ -122,10 +122,47 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
             return bindingDescription;
         };
 
+        auto GetLightClusterBinding = [this]() -> Core::Utility::DescriptorSetBindingInfo
+        {
+            uint32_t numDescriptorSetsPerUniform = Core::Settings::m_maxFramesInFlight;
+
+            Core::Utility::GlobalResourceAllocationConfig allocConfig{};
+            allocConfig.numDescriptorSets = numDescriptorSetsPerUniform;
+            allocConfig.numMemories = 2; // 2 memory
+            allocConfig.numResources = 2; //2 buff
+
+            Core::Utility::GlobalResourceSharingConfig resourceSharingConfig{};
+            resourceSharingConfig.maxUniformPerResource = 1;
+            resourceSharingConfig.allocatedUniformCount = 0;
+
+            size_t clusterBoundDataSize = sizeof(ClusterInfo);
+            uint32_t memoryAlignedClusterBoundsDataSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(clusterBoundDataSize);
+
+            Core::Utility::BufferBindingInfo clusterBoundBufInfo{};
+            clusterBoundBufInfo.info.allocationConfig = allocConfig;
+            clusterBoundBufInfo.info.dataSizePerDescriptor = clusterBoundDataSize;
+            clusterBoundBufInfo.info.dataSizePerDescriptorAligned = memoryAlignedClusterBoundsDataSize;
+            clusterBoundBufInfo.info.offsetsForEachDescriptor = { 0,0 }; //Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.info.sharingConfig = resourceSharingConfig;
+            clusterBoundBufInfo.info.totalSize = memoryAlignedClusterBoundsDataSize;// Core::Utility::GetDataSizeMeantForSharing(memoryAlignedSceneUniformSize, allocConfig, resourceSharingConfig);
+            clusterBoundBufInfo.bufferIdList.push_back(m_lightData.m_lightClusterBufferIds[0]);
+            clusterBoundBufInfo.bufferIdList.push_back(m_lightData.m_lightClusterBufferIds[1]);
+
+            Core::Utility::DescriptorSetBindingInfo bindingDescription;
+            bindingDescription.m_bindingName = "ClusterInfo";
+            bindingDescription.m_bindingNumber = 1;
+            bindingDescription.m_numElements = 1;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+            bindingDescription.m_bindingInfo = clusterBoundBufInfo;
+
+            return bindingDescription;
+        };
+
         Core::Utility::DescriptorSetInfo setDescription;
-        setDescription.m_numBindings = 1;
+        setDescription.m_numBindings = 2;
         setDescription.m_setNumber = (uint32_t)Core::Enums::ResourceSets::LIGHT;
         setDescription.m_setBindings.push_back(GetPointLightBinding());
+        setDescription.m_setBindings.push_back(GetLightClusterBinding());
 
         // Check if it can be fit into an existing buffer,
         // in light system 20 + 20 (2 frames) point light uniforms are stuffed into one buffer

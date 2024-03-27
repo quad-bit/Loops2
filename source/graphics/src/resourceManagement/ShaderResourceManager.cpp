@@ -79,7 +79,12 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::ShaderResourceManager:
                 ASSERT_MSG_DEBUG(0, "Not yet implemented");
                 break;
             case Core::Enums::DescriptorType::UNIFORM_BUFFER:
-                HandleUniformBuffer((Core::Utility::BufferBindingInfo&)std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[i].m_bindingInfo));
+            {
+                auto& bindingInfo = (Core::Utility::BufferBindingInfo&)std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[i].m_bindingInfo);
+                // if the buffer and memory has been previously allocated then skip the below step
+                if(bindingInfo.bufferIdList.size() == 0)
+                    HandleUniformBuffer(bindingInfo);
+            }
                 break;
             }
         }

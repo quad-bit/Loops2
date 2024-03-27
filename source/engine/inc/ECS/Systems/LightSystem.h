@@ -6,7 +6,7 @@
 #include <ECS/Events/MeshAdditionEvent.h>
 #include <ECS/Events/ComponentAdditionEvent.h>
 #include <RenderData.h>
-#include <ECS/ECS_Setting.h>
+#include <Settings.h>
 #include <array>
 
 #if (RENDERING_API == VULKAN)
@@ -67,6 +67,19 @@ private:
 
     uint32_t m_pointLightCount = 0;
     std::vector<std::array<PointLightUniform, MAX_POINT_LIGHTS>> m_pointUniformListPerFrame;
+
+    struct Cluster
+    {
+        glm::vec4 m_minPos;
+        glm::vec4 m_maxPos;
+        uint32_t lightIds[MAX_LIGHTS_PER_CLUSTER];
+        uint32_t numLights;
+    };
+
+    struct ClusterInfo
+    {
+        Cluster m_clusters[NUM_CLUSTERS];
+    };
 
 public:
     virtual void Init() override;

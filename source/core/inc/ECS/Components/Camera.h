@@ -39,11 +39,15 @@ namespace Core
                 ORTHOGONAL
             };
 
-            struct CameraUniform
+            struct SceneUniform
             {
                 glm::mat4 viewMat;
                 glm::mat4 projectionMat;
                 glm::vec3 cameraPos;
+                float camNear;
+                float camFar;
+                uint32_t screenWidth;
+                uint32_t screenHeight;
             };
 
             // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL

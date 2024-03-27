@@ -1,0 +1,12 @@
+#define MAX_LIGHTS 8 * 8 * 8
+#define MAX_LIGHTS_PER_CLUSTER 7
+
+// CHECK
+#define CLUSTER_X 4 //16
+#define CLUSTER_Y 4 //9
+#define CLUSTER_Z 1 //24
+
+#define CLUSTER_X_PIXEL_SIZE 320 //80 // 1280/16
+#define CLUSTER_Y_PIXEL_SIZE 180 //80 // 720/9
+
+#define NUM_CLUSTERS CLUSTER_X * CLUSTER_Y * CLUSTER_Z

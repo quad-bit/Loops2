@@ -40,7 +40,7 @@ void Engine::ECS::Systems::CameraSystem::Init()
     resourceSharingConfig.maxUniformPerResource = 2;
     resourceSharingConfig.allocatedUniformCount = 0;
 
-    size_t uniformSize = sizeof(Core::ECS::Components::CameraUniform);
+    size_t uniformSize = sizeof(Core::ECS::Components::SceneUniform);
     memoryAlignedUniformSize = ShdrResMgrAlias::GetInstance()->GetMemoryAlignedDataSizeForBuffer(uniformSize);
 }
 
@@ -59,16 +59,20 @@ void Engine::ECS::Systems::CameraSystem::Update(float dt, const Core::Wrappers::
 
         UpdateCameraVectors(camHandle->GetComponent());
 
-        Core::ECS::Components::CameraUniform obj = {};
+        Core::ECS::Components::SceneUniform obj = {};
         obj.projectionMat = camHandle->GetComponent()->GetProjectionMat();
         obj.viewMat = camHandle->GetComponent()->GetViewMatrix();
         obj.cameraPos = *camHandle->GetComponent()->GetPosition();
+        obj.camFar = camHandle->GetComponent()->GetFar();
+        obj.camNear = camHandle->GetComponent()->GetNear();
+        obj.screenHeight = m_windowSettings.m_renderHeight;
+        obj.screenWidth = m_windowSettings.m_renderWidth;
 
         Core::Utility::DescriptorSetInfo desc = camToDescriptionMap[camHandle->GetComponent()];
         //upload data to buffers
         {
             ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).bufferIdList[0],
-                sizeof(Core::ECS::Components::CameraUniform), memoryAlignedUniformSize, &obj,
+                sizeof(Core::ECS::Components::SceneUniform), memoryAlignedUniformSize, &obj,
                 std::get<Core::Utility::BufferBindingInfo>(desc.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[frameInfo.m_frameInFlightIndex], false);
         }
         // TODO : write the uniform data of Camera to gpu memory via void*
@@ -94,7 +98,7 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
 
     Core::Utility::BufferBindingInfo bufInfo{};
     bufInfo.info.allocationConfig = allocConfig;
-    bufInfo.info.dataSizePerDescriptor = sizeof(Core::ECS::Components::CameraUniform);
+    bufInfo.info.dataSizePerDescriptor = sizeof(Core::ECS::Components::SceneUniform);
     bufInfo.info.dataSizePerDescriptorAligned = memoryAlignedUniformSize;
     bufInfo.info.offsetsForEachDescriptor = Core::Utility::CalculateOffsetsForDescInUniform(memoryAlignedUniformSize, allocConfig, resourceSharingConfig);
     bufInfo.info.sharingConfig = resourceSharingConfig;
@@ -130,10 +134,15 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
 
     resourceSharingConfig.allocatedUniformCount += 1;
 
-    Core::ECS::Components::CameraUniform obj = {};
-    obj.projectionMat = inputEvent->cam->GetProjectionMat();
-    obj.viewMat = inputEvent->cam->GetViewMatrix();
-    obj.cameraPos = *inputEvent->cam->GetPosition();
+    auto& camHandle = inputEvent->cam;
+    Core::ECS::Components::SceneUniform obj = {};
+    obj.projectionMat = camHandle->GetProjectionMat();
+    obj.viewMat = camHandle->GetViewMatrix();
+    obj.cameraPos = *camHandle->GetPosition();
+    obj.camFar = camHandle->GetFar();
+    obj.camNear = camHandle->GetNear();
+    obj.screenHeight = m_windowSettings.m_renderHeight;
+    obj.screenWidth = m_windowSettings.m_renderWidth;
 
     //upload data to buffers
     for(uint32_t i = 0; i < allocConfig.numDescriptorSets; i++)
@@ -145,7 +154,7 @@ void Engine::ECS::Systems::CameraSystem::HandleCameraAddition(Core::ECS::Events:
             bufferId = std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).bufferIdList[i];
 
         ShdrResMgrAlias::GetInstance()->UploadDataToBuffers(bufferId,
-            sizeof(Core::ECS::Components::CameraUniform), memoryAlignedUniformSize, &obj, 
+            sizeof(Core::ECS::Components::SceneUniform), memoryAlignedUniformSize, &obj, 
             std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[0].m_bindingInfo).info.offsetsForEachDescriptor[i], false);
     }
 
@@ -261,7 +270,10 @@ void Engine::ECS::Systems::CameraSystem::HandleMeshAddition(MeshToMatAdditionEve
 }
 */
 
-Engine::ECS::Systems::CameraSystem::CameraSystem(std::vector<Core::Utility::CameraData>& cameraData) : m_cameraDataList(cameraData)
+Engine::ECS::Systems::CameraSystem::CameraSystem(
+    std::vector<Core::Utility::CameraData>& cameraData,
+    const Core::WindowSettings& windowSettings) :
+    m_cameraDataList(cameraData), m_windowSettings(windowSettings)
 {
     signature.AddComponent<Core::ECS::Components::Camera>();
     signature.AddComponent<Core::ECS::Components::Transform>();
