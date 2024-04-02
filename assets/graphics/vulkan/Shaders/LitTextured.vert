@@ -40,14 +40,15 @@ struct OutVertex
     vec4 color;
     vec2 fragTexCoord;
     vec3 normal;
-    vec3 cameraPos;
     vec4 tangent;
+    vec3 viewSpacePos;
     vec4 worldSpacePos;
 };
 layout (location = 0) out OutVertex outVertex;
 
 struct OutScene
 {
+    vec4 cameraPos;
     // x = near, y= far, z=screenHeight, w=screenWidth
     vec4 pack;
     mat4 inverseProjection;
@@ -64,16 +65,17 @@ void main()
     );
 
     mat3 normalMat = mat3(transpose(inverse(transform.model))); // needs to be calculated on cpu side, normal Mat
+    vec4 viewPos = scene.view * transform.model * vec4(pos.xyz, 1.0);
 
     outVertex.color = inColor;
     gl_Position = scene.projection * scene.view * transform.model * vec4(pos.xyz, 1.0);
-
     outVertex.fragTexCoord = inTexCoord;
     outVertex.normal = normalMat * inNormal;
-    outVertex.cameraPos = scene.cameraPos;
     outVertex.tangent = inTangent;
     outVertex.worldSpacePos = transform.model * vec4(pos.xyz, 1.0);
+    outVertex.viewSpacePos = viewPos.xyz;
 
+    outScene.cameraPos = vec4(scene.cameraPos.xyz, viewPos.z);
     outScene.inverseProjection = inverse(scene.projection);
     outScene.pack.x = scene.near;
     outScene.pack.y = scene.far;

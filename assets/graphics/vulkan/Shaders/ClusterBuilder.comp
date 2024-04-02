@@ -1,11 +1,4 @@
 #version 450
-// CHECK
-//#define CLUSTER_X 4 //16
-//#define CLUSTER_Y 1 //9
-//#define CLUSTER_Z 1 //24
-
-//#define CLUSTER_X_PIXEL_SIZE 320//80 // 1280/16
-//#define MAX_LIGHTS_PER_CLUSTER 7
 
 #extension GL_GOOGLE_include_directive : enable
 #include "LightCullSettings.h"
@@ -86,8 +79,8 @@ void FindClusterBounds_1(inout vec3 minPointAABB, inout vec3 maxPointAABB, vec3 
 
 void FindClusterBounds_2(inout vec3 minPointAABB, inout vec3 maxPointAABB, vec3 minPointVs, vec3 maxPointVs, float tileNear, float tileFar)
 {
-    minPointAABB = vec3(minPointVs.x, maxPointVs.y, tileNear);
-    maxPointAABB = vec3(maxPointVs.x, minPointVs.y, tileFar);
+    minPointAABB = vec3(minPointVs.x, maxPointVs.y, tileFar);
+    maxPointAABB = vec3(maxPointVs.x, minPointVs.y, tileNear);
 }
 
 void main()
@@ -98,10 +91,13 @@ void main()
           gl_WorkGroupID.x;
 
     //Calculating the min and max point in screen space
-    vec4 maxPointSs = vec4(vec2((gl_WorkGroupID.x + 1) * CLUSTER_X_PIXEL_SIZE, (gl_WorkGroupID.y + 1) * CLUSTER_Y_PIXEL_SIZE) ,
-                                 -1.0, 1.0); // Top Right
-    vec4 minPointSs = vec4(gl_WorkGroupID.x * CLUSTER_X_PIXEL_SIZE, gl_WorkGroupID.y * CLUSTER_Y_PIXEL_SIZE,
-                            -1.0, 1.0); // Bottom left
+    float xpos = (gl_WorkGroupID.x + 1) * CLUSTER_X_PIXEL_SIZE;
+    float ypos = (gl_WorkGroupID.y + 1) * CLUSTER_Y_PIXEL_SIZE;
+    vec4 maxPointSs = vec4(xpos, ypos, 0.0, 1.0); // Top Right, z is 0 as vulkan expects it in [0,1]
+
+    xpos = (gl_WorkGroupID.x) * CLUSTER_X_PIXEL_SIZE;
+    ypos = (gl_WorkGroupID.y) * CLUSTER_Y_PIXEL_SIZE;
+    vec4 minPointSs = vec4(xpos, ypos, 0.0, 1.0); // Bottom left, z is 0 as vulkan expects it in [0,1]
 
     //Pass min and max to view space
     vec3 maxPointVs = ScreenToView(maxPointSs).xyz;
@@ -113,8 +109,8 @@ void main()
     float tileFar   = -scene.near * pow(scene.far/ scene.near, (gl_WorkGroupID.z + 1) /float(gl_NumWorkGroups.z));
 
     vec3 minPointAABB, maxPointAABB;
-    //FindClusterBounds_1(minPointAABB, maxPointAABB, minPointVs, maxPointVs, tileNear, tileFar);
-    FindClusterBounds_2(minPointAABB, maxPointAABB, minPointVs, maxPointVs, tileNear, tileFar);
+    FindClusterBounds_1(minPointAABB, maxPointAABB, minPointVs, maxPointVs, tileNear, tileFar);
+    //FindClusterBounds_2(minPointAABB, maxPointAABB, minPointVs, maxPointVs, tileNear, tileFar);
 
     clusterInfo.cluster[clusterIndex].minPos  = vec4(minPointAABB , 0.0);
     clusterInfo.cluster[clusterIndex].maxPos  = vec4(maxPointAABB , 0.0);

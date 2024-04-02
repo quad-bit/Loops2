@@ -152,7 +152,7 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
             bindingDescription.m_bindingName = "ClusterInfo";
             bindingDescription.m_bindingNumber = 1;
             bindingDescription.m_numElements = 1;
-            bindingDescription.m_resourceType = Core::Enums::DescriptorType::UNIFORM_BUFFER;
+            bindingDescription.m_resourceType = Core::Enums::DescriptorType::STORAGE_BUFFER;
             bindingDescription.m_bindingInfo = clusterBoundBufInfo;
 
             return bindingDescription;

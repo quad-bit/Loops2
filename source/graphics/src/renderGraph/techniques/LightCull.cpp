@@ -27,7 +27,7 @@ void Renderer::RenderGraph::Techniques::LightCull::CreateResources()
     {
         Core::Wrappers::BufferCreateInfo info{};
         info.size = sizeof(ClusterInfo);
-        info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_UNIFORM_BUFFER_BIT, Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT };
+        info.usage = { Core::Enums::BufferUsage::BUFFER_USAGE_STORAGE_BUFFER_BIT };
         info.m_name = "ClusterInfoBuffer";
         m_clusterInfoBuffer = m_callbackUtility.m_resourceCreationCallback.CreatePerFrameBufferFunc(info, std::vector<std::string>({ "ClusterBoundsBuffer_0", "ClusterBoundsBuffer_1" }));
         m_renderData.m_lightData.m_lightClusterBufferIds.push_back(m_clusterInfoBuffer[0]->GetPhysicalResourceId());
@@ -453,13 +453,18 @@ void Renderer::RenderGraph::Techniques::LightCull::SetupFrame(const Core::Wrappe
     //glm::vec2 screenPos2(0, 0);
     //glm::vec2 screenPos2(1279, 0);
     //glm::vec2 screenPos2(1279, 719);
-    glm::vec2 screenPos2(153, 677);
-    glm::vec4 temp = glm::vec4(screenPos2.x, screenPos2.y, -1.0f, 1.0f);
+    //glm::vec4 screenPos2(189.5, 664.5, 0.99615, 1);
+    glm::vec4 screenPos2(189.5, 664.5, 0.0, 1);
+    glm::vec4 temp = glm::vec4(screenPos2.x, screenPos2.y, screenPos2.z, screenPos2.w);
 
     temp = glm::vec4(screenPos2.x / m_renderWidth, screenPos2.y / m_renderHeight, temp.z, temp.w);
-    glm::vec4 clipPos = glm::vec4(glm::vec2(temp.x * 2.0 - 1.0, (1.0 - temp.y) * 2.0 - 1.0) , temp.z, temp.w);
+    glm::vec4 clipPos = glm::vec4(glm::vec2(temp.x * 2.0 - 1.0, (1.0 - temp.y) * 2.0 - 1.0), (temp.z), temp.w);
     glm::vec4 view = glm::inverse(m_renderData.m_cameraData[0].m_projectionMat) * clipPos;
-    view = view / view.w;
+    view = (view / view.w);
+    //glm::vec4 worldPos(-15, 10, 4.22f, 1.0f);
+    //glm::vec4 worldPos(0, 0, -28.38f, 1.0f);
+    //glm::vec4 viewSpacePos = m_renderData.m_cameraData[0].m_viewMat * worldPos;
+
     {
         SceneInfo scene{};
         scene.m_camFar = m_renderData.m_cameraData[0].m_far;

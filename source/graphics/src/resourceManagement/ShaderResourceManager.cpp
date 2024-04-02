@@ -72,7 +72,6 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::ShaderResourceManager:
             case Core::Enums::DescriptorType::STORAGE_IMAGE:
             case Core::Enums::DescriptorType::UNIFORM_TEXEL_BUFFER:
             case Core::Enums::DescriptorType::STORAGE_TEXEL_BUFFER:
-            case Core::Enums::DescriptorType::STORAGE_BUFFER:
             case Core::Enums::DescriptorType::UNIFORM_BUFFER_DYNAMIC:
             case Core::Enums::DescriptorType::STORAGE_BUFFER_DYNAMIC:
             case Core::Enums::DescriptorType::INPUT_ATTACHMENT:
@@ -86,6 +85,13 @@ Core::Wrappers::SetWrapper* Renderer::ResourceManagement::ShaderResourceManager:
                     HandleUniformBuffer(bindingInfo);
             }
                 break;
+            case Core::Enums::DescriptorType::STORAGE_BUFFER:
+            {
+                auto& bindingInfo = (Core::Utility::BufferBindingInfo&)std::get<Core::Utility::BufferBindingInfo>(setDescription.m_setBindings[i].m_bindingInfo);
+                // if the buffer and memory has been previously allocated then skip the below step
+                if (bindingInfo.bufferIdList.size() == 0)
+                    ASSERT_MSG_DEBUG(0, "Not yet implemented");
+            }
             }
         }
     }
