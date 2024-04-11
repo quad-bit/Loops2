@@ -14,7 +14,7 @@ src/SceneManagerScript.cpp
 )
 
 #create library
-set(TARGET_NAME "Application")
+set(TARGET_NAME "app_beautifulGame")
 add_Executable(${TARGET_NAME} ${SourceList})
 
 find_package(plog REQUIRED)

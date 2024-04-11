@@ -39,7 +39,9 @@ namespace Engine
         std::unique_ptr<Engine::Utility::GltfLoader> m_gltfLoader;
 
     public:
-        void Init(const std::string& windowName = std::string{ "Test" },
+        void Init(
+            const Engine::Utility::SceneLoadInfo& sceneLoadInfo,
+            const std::string& windowName = std::string{ "Test" },
             uint32_t windowWidth = 600,
             uint32_t windowHeight = 600,
             uint32_t renderWidth = 600,

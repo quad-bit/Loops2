@@ -101,7 +101,6 @@ void LightSystem::HandleLightAddition(Core::ECS::Events::LightAdditionEvent * li
 
     if (light->GetLightType() == Core::ECS::Components::LightType::Point)
     {
-
         auto GetPointLightBinding = [this]() -> Core::Utility::DescriptorSetBindingInfo
         {
             Core::Utility::BufferBindingInfo bufInfo{};

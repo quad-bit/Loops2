@@ -31,15 +31,30 @@ namespace Core
                 {
 #if RADIUS_TEST
                     m_ambient = glm::vec4(0.05f);
-                    m_diffuse = glm::vec4(.5f);
+                    m_diffuse = glm::vec4(.8f);
                     m_specular = glm::vec4(.5f);
 #else
                     m_ambient = glm::vec4(0.02f);
-                    m_diffuse = glm::vec4(.3f);
-                    m_specular = glm::vec4(.2f);
+                    m_diffuse = glm::vec4(.09f);
+                    m_specular = glm::vec4(.0001f);
 #endif
                     m_color = glm::vec4(.20f);
                 }
+
+                LightCategory(const LightType& type,
+                    glm::vec4 ambient,
+                    glm::vec4 diffuse,
+                    glm::vec4 specular,
+                    glm::vec4 color) :
+                    m_type(type),
+                    m_ambient(ambient),
+                    m_diffuse(diffuse),
+                    m_specular(specular),
+                    m_color(color)
+                {
+                }
+
+
             };
 
             struct SpotLight : LightCategory
@@ -58,7 +73,18 @@ namespace Core
             struct PointLight : LightCategory
             {
                 float m_lightRadius = 50.0f;
-                PointLight(float radius) : LightCategory(LightType::Point), m_lightRadius(radius)
+                PointLight(float radius,
+                    glm::vec4 ambient,
+                    glm::vec4 diffuse,
+                    glm::vec4 specular,
+                    glm::vec4 color) :
+                    LightCategory(
+                        LightType::Point,
+                        ambient,
+                        diffuse,
+                        specular,
+                        color),
+                    m_lightRadius(radius)
                 {
                 }
 

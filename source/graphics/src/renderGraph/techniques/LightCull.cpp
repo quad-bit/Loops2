@@ -454,15 +454,15 @@ void Renderer::RenderGraph::Techniques::LightCull::SetupFrame(const Core::Wrappe
     //glm::vec2 screenPos2(1279, 0);
     //glm::vec2 screenPos2(1279, 719);
     //glm::vec4 screenPos2(189.5, 664.5, 0.99615, 1);
-    glm::vec4 screenPos2(189.5, 664.5, 0.0, 1);
-    glm::vec4 temp = glm::vec4(screenPos2.x, screenPos2.y, screenPos2.z, screenPos2.w);
+    //glm::vec4 screenPos2(189.5, 664.5, 0.0, 1);
+    //glm::vec4 temp = glm::vec4(screenPos2.x, screenPos2.y, screenPos2.z, screenPos2.w);
 
-    temp = glm::vec4(screenPos2.x / m_renderWidth, screenPos2.y / m_renderHeight, temp.z, temp.w);
-    glm::vec4 clipPos = glm::vec4(glm::vec2(temp.x * 2.0 - 1.0, (1.0 - temp.y) * 2.0 - 1.0), (temp.z), temp.w);
-    glm::vec4 view = glm::inverse(m_renderData.m_cameraData[0].m_projectionMat) * clipPos;
-    view = (view / view.w);
-    //glm::vec4 worldPos(-15, 10, 4.22f, 1.0f);
-    //glm::vec4 worldPos(0, 0, -28.38f, 1.0f);
+    //temp = glm::vec4(screenPos2.x / m_renderWidth, screenPos2.y / m_renderHeight, temp.z, temp.w);
+    //glm::vec4 clipPos = glm::vec4(glm::vec2(temp.x * 2.0 - 1.0, (1.0 - temp.y) * 2.0 - 1.0), (temp.z), temp.w);
+    //glm::vec4 view = glm::inverse(m_renderData.m_cameraData[0].m_projectionMat) * clipPos;
+    //view = (view / view.w);
+    ////glm::vec4 worldPos(-15, 10, 4.22f, 1.0f);
+    //glm::vec4 worldPos(264, 100, -200.0f, 1.0f);
     //glm::vec4 viewSpacePos = m_renderData.m_cameraData[0].m_viewMat * worldPos;
 
     {

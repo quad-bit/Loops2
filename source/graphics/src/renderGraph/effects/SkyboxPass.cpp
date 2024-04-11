@@ -18,15 +18,5 @@ Renderer::RenderGraph::Effects::SkyboxPass::SkyboxPass(
             m_renderData, m_windowSettings,
             graph, m_callbackUtility, "Skybox", m_name, info, inputNodes[0], inputNodes[1]);
 
-    //auto taskNode = skyboxTech->GetTaskNode("SkyboxRenderTask");
-
-    //Renderer::RenderGraph::Utils::AddInputAsDepthAttachment(graph, inputNodes[0], taskNode,
-    //    Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
-    //    Core::Enums::ImageLayout::LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-
-    //Renderer::RenderGraph::Utils::AddInputAsColorAttachment(graph, inputNodes[1], taskNode,
-    //    Renderer::RenderGraph::Utils::ResourceMemoryUsage::READ_WRITE,
-    //    Core::Enums::ImageLayout::LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0);
-
     m_techniques.push_back(std::move(skyboxTech));
 }

@@ -41,7 +41,7 @@ struct PointLight
     vec4 specular;
 };
 
-const int NUM_LIGHTS = 5;
+const int NUM_LIGHTS = 150;
 
 layout(set = 2, binding = 0) uniform lightUniform
 {
@@ -105,64 +105,13 @@ uint FindZTile(float screenZ)
     return tile;
 }
 
-int FindCluster(vec4 viewSpacePos, float screenZ)
-{
-    // top left corner of cluster 0
-    vec3 topLeftClusterPos = vec3(clusterInfo.cluster[0].minPos.x, clusterInfo.cluster[0].maxPos.y, clusterInfo.cluster[0].minPos.z);
-
-    uint topRightIndex = CLUSTER_X - 1;
-    // top right corner of CLUSTER_X - 1'th cluster
-    vec3 topRightClusterPos = vec3(clusterInfo.cluster[topRightIndex].maxPos.x, clusterInfo.cluster[topRightIndex].maxPos.y, clusterInfo.cluster[topRightIndex].minPos.z);
-
-    uint bottomLeftIndex = CLUSTER_X * (CLUSTER_Y - 1);
-    vec3 bottomLeftClusterPos = vec3(clusterInfo.cluster[bottomLeftIndex].minPos.x, clusterInfo.cluster[bottomLeftIndex].minPos.y, clusterInfo.cluster[bottomLeftIndex].minPos.z);
-
-    float clusterWidth = abs(topRightClusterPos.x - topLeftClusterPos.x)/CLUSTER_X;
-    float clusterHeight = abs(bottomLeftClusterPos.y - topLeftClusterPos.y)/CLUSTER_Y;
-
-    int clusterXIndex = 0, clusterYIndex = 0;
-    // you cant divide by cluster width as the range is from -a to +a and not from 0 to a
-    if(CLUSTER_X > 1)
-    {
-        if(viewSpacePos.x < 0)
-        {
-            clusterXIndex = int(viewSpacePos.x/clusterWidth) + int(floor(CLUSTER_X/2)) - 1;
-        }
-        else
-        {
-            clusterXIndex = int(viewSpacePos.x/clusterWidth) + int(ceil(CLUSTER_X/2));
-        }
-    }
-
-    // the range for y starts from + to - unlike above x's
-    if(CLUSTER_Y > 1)
-    {
-        if(viewSpacePos.y < 0)
-        {
-            clusterYIndex = -int(viewSpacePos.y/clusterHeight) + int(floor(CLUSTER_Y/2));
-        }
-        else
-        {
-            clusterYIndex = int(viewSpacePos.y/clusterHeight) + int(ceil(CLUSTER_Y/2)) - 1;
-        }
-    }
-    //int clusterZIndex = int(FindZTile(screenZ));
-    float zNear = scene.pack.x;
-    float zFar = scene.pack.y;
-    int clusterZIndex = int(CLUSTER_Z * log(abs(viewSpacePos.z/zNear))/log(zFar/zNear));
-
-    int clusterIndex = clusterZIndex * CLUSTER_X * CLUSTER_Y +
-          clusterYIndex * CLUSTER_X + 
-          clusterXIndex;
-
-    return clusterIndex;
-}
-
-int FindCluster2(vec4 viewSpacePos)
+int FindCluster(vec4 viewSpacePos)
 {
     float zNear = scene.pack.x;
     float zFar = scene.pack.y;
+    // Z = nearZ * pow(farZ/nearZ, slice/numSlices)
     int clusterZIndex = int(CLUSTER_Z * log(abs(viewSpacePos.z/zNear))/log(zFar/zNear));
+    //int clusterZIndex = CLUSTER_Z - 1 - int(CLUSTER_Z * log(abs(viewSpacePos.z/zNear))/log(zFar/zNear));
 
     // top left corner of cluster the first cluster in the z slice
     uint topLeftClusterIndex = clusterZIndex * CLUSTER_X * CLUSTER_Y;
@@ -180,30 +129,18 @@ int FindCluster2(vec4 viewSpacePos)
     float clusterHeight = abs(bottomLeftClusterPos.y - topLeftClusterPos.y)/CLUSTER_Y;
 
     int clusterXIndex = 0, clusterYIndex = 0;
-    // you cant divide by cluster width as the range is from -a to +a and not from 0 to a
+    // use the unit vector * value method to find out how deep is the vector along the line of original direction
+    // startPos + divisionValue * numDivisions = viewPos.(x/y)
+    // startPos lies at the 0'th index 
     if(CLUSTER_X > 1)
     {
-        if(viewSpacePos.x < 0)
-        {
-            clusterXIndex = int(viewSpacePos.x/clusterWidth) + int(floor(CLUSTER_X/2)) - 1;
-        }
-        else
-        {
-            clusterXIndex = int(viewSpacePos.x/clusterWidth) + int(ceil(CLUSTER_X/2));
-        }
+        clusterXIndex = int((viewSpacePos.x - topLeftClusterPos.x)/clusterWidth);
     }
 
-    // the range for y starts from + to - unlike above x's
+    // the range for y starts from + to - unlike above x's hence the abs()
     if(CLUSTER_Y > 1)
     {
-        if(viewSpacePos.y < 0)
-        {
-            clusterYIndex = -int(viewSpacePos.y/clusterHeight) + int(floor(CLUSTER_Y/2));
-        }
-        else
-        {
-            clusterYIndex = int(viewSpacePos.y/clusterHeight) + int(ceil(CLUSTER_Y/2)) - 1;
-        }
+        clusterYIndex = int(abs(viewSpacePos.y - topLeftClusterPos.y)/clusterHeight);
     }
 
     int clusterIndex = clusterZIndex * CLUSTER_X * CLUSTER_Y +
@@ -216,7 +153,8 @@ int FindCluster2(vec4 viewSpacePos)
 
 void main() 
 {
-    surface.specular = vec3(1.0);
+    surface.specular = vec3(1.0f);
+    //surface.specular = vec3(1.0f);
     surface.shininess = 32;
 
     uint num = clusterInfo.cluster[0].numLights;
@@ -226,31 +164,28 @@ void main()
 
     vec3 N = normalize(inVertex.normal);
     vec3 T = normalize(inVertex.tangent.xyz);
-    vec3 B = cross(inVertex.normal, inVertex.tangent.xyz) * inVertex.tangent.w;
+    vec3 B = normalize(cross(inVertex.normal, inVertex.tangent.xyz) * inVertex.tangent.w);
     mat3 TBN = mat3(T, B, N);
     N = TBN * normalize(texture(normalSampler, inVertex.fragTexCoord).xyz * 2.0 - vec3(1.0));
 
     vec3 V = normalize(viewDir);
 
     vec3 diffuse = vec3(0.0);
-    vec3 ambient = vec3(0.3f);
+    vec3 ambient = vec3(0.20f);
     vec3 specular = vec3(0.0);
 
     vec3 fragCoord = gl_FragCoord.xyz;
     vec4 viewPos = ScreenToView(vec4(fragCoord.xyz, 1.0));
-    uint clusterIndex = FindCluster2(viewPos);
-    //vec4 viewPos = vec4(inVertex.viewSpacePos.xyz, 1.0);
-    //uint clusterIndex = FindCluster(viewPos, viewPos.z);
+    uint clusterIndex = FindCluster(viewPos);
 
     for(int j = 0; j < clusterInfo.cluster[clusterIndex].numLights; j++)
     {
         uint lightIndex = clusterInfo.cluster[clusterIndex].lightIds[j];
-        //vec3 lightAmbient = pointLights[lightIndex].ambient.xyz;
         vec3 lightDiffuse = pointLights[lightIndex].diffuse.xyz; 
         vec3 lightSpecular = pointLights[lightIndex].specular.xyz; 
         vec3 lightPos = pointLights[lightIndex].lightPos.xyz; 
 
-        vec3 lightDir = normalize(lightPos.xyz - inVertex.worldSpacePos.xyz);
+        vec3 lightDir = lightPos.xyz - inVertex.worldSpacePos.xyz;
         vec3 L = normalize(lightDir);
         vec3 R = reflect(-L, N);
 
@@ -260,7 +195,7 @@ void main()
         {
             if(distanceVal < pointLights[lightIndex].lightRadius)
             {
-                diffuse += lightDiffuse * max(dot(N, L), 0.0);// * 1.0f/(distanceVal);
+                diffuse += lightDiffuse * max(dot(N, L), 0.0);
                 specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;// * 1.0f/(distanceVal);
             }
         }

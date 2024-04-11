@@ -5,14 +5,6 @@
 // for including headers
 #extension GL_GOOGLE_include_directive : enable
 
-/*
-layout (std140, set = 0, binding = 0) uniform View
-{
-    mat4 view;
-    mat4 projection;
-    vec3 cameraPos;
-} view;
-*/
 layout (std430, set = 0, binding = 0) uniform Scene
 {
     mat4 view;
@@ -57,13 +49,6 @@ layout (location = 6) out OutScene outScene;
 
 void main()
 {
-    mat4 clip = mat4(
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, -1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.5f, 0.5f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    );
-
     mat3 normalMat = mat3(transpose(inverse(transform.model))); // needs to be calculated on cpu side, normal Mat
     vec4 viewPos = scene.view * transform.model * vec4(pos.xyz, 1.0);
 
@@ -71,9 +56,9 @@ void main()
     gl_Position = scene.projection * scene.view * transform.model * vec4(pos.xyz, 1.0);
     outVertex.fragTexCoord = inTexCoord;
     outVertex.normal = normalMat * inNormal;
-    outVertex.tangent = inTangent;
-    outVertex.worldSpacePos = transform.model * vec4(pos.xyz, 1.0);
+    outVertex.tangent = vec4(inTangent.xyz, 1.0);
     outVertex.viewSpacePos = viewPos.xyz;
+    outVertex.worldSpacePos = transform.model * vec4(pos.xyz, 1.0);
 
     outScene.cameraPos = vec4(scene.cameraPos.xyz, viewPos.z);
     outScene.inverseProjection = inverse(scene.projection);

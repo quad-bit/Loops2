@@ -19,44 +19,54 @@
 #include <utility>
 #include <Math/TangentCalculator.h>
 
-
 void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, const tinygltf::Model& input, Core::ECS::EntityHandle* parent)
 {
     bool generateTangents = false;
 
-    Core::ECS::EntityHandle* entity = m_ecsWorldObj->CreateEntity();
-    entity->GetEntity()->entityName = inputNode.name;
-    auto transform = entity->GetTransform();
-    if(parent)
-        transform->SetParent(parent->GetTransform());
+    auto CreateEntity = [this](
+        const std::string& name,
+        Core::ECS::EntityHandle* parent,
+        const glm::vec3& position,
+        const glm::vec3& eulerAngles,
+        const glm::vec3& scale) -> Core::ECS::EntityHandle*
+    {
+        Core::ECS::EntityHandle* entity = m_ecsWorldObj->CreateEntity();
+        entity->GetEntity()->entityName = name;
+        auto transform = entity->GetTransform();
+        if (parent)
+            transform->SetParent(parent->GetTransform());
+        transform->SetLocalPosition(position);
+        transform->SetLocalEulerAngles(eulerAngles);
+        transform->SetLocalScale(scale);
 
-    float scaleFactor = 100.0f;
+        return entity;
+    };
+
+    float scaleFactor = m_sceneLoadInfo.m_scaleFactor;
+
+    glm::vec3 position(0,0,0), scale(1, 1, 1), eulerAngles(0, 0, 0);
 
     // Get the local node matrix
     // It's either made up from translation, rotation, scale or a 4x4 matrix
     if (inputNode.translation.size() == 3)
     {
-        auto position = glm::vec3(glm::make_vec3(inputNode.translation.data())) * scaleFactor;
-        /*
-        * global to local 
-        * posLocal = globalInverMatOfObject * (globalPosOfObject - theGlobalPosition)
-        */
-
-        auto localPosition = glm::inverse(parent->GetTransform()->GetGlobalModelMatrix()) * glm::vec4(parent->GetTransform()->GetGlobalPosition() - position, 1.0f);
-        transform->SetLocalPosition(position);
+        position = glm::vec3(glm::make_vec3(inputNode.translation.data())) * scaleFactor;
     }
     if (inputNode.rotation.size() == 4)
     {
         glm::quat q = glm::make_quat(inputNode.rotation.data());
-        glm::vec3 euler = glm::eulerAngles(q);// *3.14159f / 180.f;
-        //euler = glm::inverse(parent->GetTransform()->GetGlobalModelMatrix())* glm::vec4(parent->GetTransform()->GetLocalEulerAngles() - euler, 1.0f);
-        transform->SetLocalEulerAngles(euler);
+        eulerAngles = glm::eulerAngles(q);// *3.14159f / 180.f;
     }
 
     if (inputNode.scale.size() == 3)
     {
-        transform->SetLocalScale(glm::vec3(glm::make_vec3(inputNode.scale.data())));
+        scale = glm::vec3(glm::make_vec3(inputNode.scale.data()));
     }
+
+    // If there are multiple primitives this entity will act as parent and 
+    // each primitive will represent an entity
+    Core::ECS::EntityHandle* meshParentEntity = CreateEntity(inputNode.name,
+        parent, position, eulerAngles, scale);
 
     if (inputNode.matrix.size() == 16)
     {
@@ -65,23 +75,34 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
     };
 
     // If the node contains mesh data, we load vertices and indices from the buffers
-    // In glTF this is done via accessors and buffer views
-    if (inputNode.mesh > -1) {
+    if (inputNode.mesh > -1)
+    {
         const tinygltf::Mesh mesh = input.meshes[inputNode.mesh];
-        if (mesh.primitives.size() > 1)
-        {
-            ASSERT_MSG_DEBUG(0, "Sub meshes not yet supported");
-        }
 
         // Iterate through all primitives of this node's mesh
         for (size_t i = 0; i < mesh.primitives.size(); i++)
         {
+            Core::ECS::EntityHandle* entity = nullptr;
+            // if size == 1 then dont create any new entity use meshParentEntity as entity
+            if (mesh.primitives.size() == 1)
+            {
+                entity = meshParentEntity;
+            }
+            else // create new entity per primitive
+            {
+                glm::vec3 childPosition(0, 0, 0);
+                glm::vec3 childScale(1, 1, 1);
+                glm::vec3 childEulers(0, 0, 0);
+                entity = CreateEntity(inputNode.name + std::to_string(i),
+                    meshParentEntity, childPosition, childEulers, childScale);
+            }
+
             const tinygltf::Primitive& glTFPrimitive = mesh.primitives[i];
             uint32_t firstIndex = 0;// static_cast<uint32_t>(indexBuffer.size());
             uint32_t vertexStart = 0;// static_cast<uint32_t>(vertexBuffer.size());
             uint32_t indexCount = 0;
-            Core::ECS::Components::Mesh* mesh = new Core::ECS::Components::Mesh();
             size_t vertexCount = 0;
+            Core::ECS::Components::Mesh* mesh = new Core::ECS::Components::Mesh();
 
             // Vertices
             {
@@ -91,26 +112,30 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                 const float* tangentsBuffer = nullptr;
 
                 // Get buffer data for vertex normals
-                if (glTFPrimitive.attributes.find("POSITION") != glTFPrimitive.attributes.end()) {
+                if (glTFPrimitive.attributes.find("POSITION") != glTFPrimitive.attributes.end())
+                {
                     const tinygltf::Accessor& accessor = input.accessors[glTFPrimitive.attributes.find("POSITION")->second];
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     positionBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                     vertexCount = accessor.count;
                 }
                 // Get buffer data for vertex normals
-                if (glTFPrimitive.attributes.find("NORMAL") != glTFPrimitive.attributes.end()) {
+                if (glTFPrimitive.attributes.find("NORMAL") != glTFPrimitive.attributes.end())
+                {
                     const tinygltf::Accessor& accessor = input.accessors[glTFPrimitive.attributes.find("NORMAL")->second];
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     normalsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                 }
                 // Get buffer data for vertex texture coordinates
                 // glTF supports multiple sets, we only load the first one
-                if (glTFPrimitive.attributes.find("TEXCOORD_0") != glTFPrimitive.attributes.end()) {
+                if (glTFPrimitive.attributes.find("TEXCOORD_0") != glTFPrimitive.attributes.end())
+                {
                     const tinygltf::Accessor& accessor = input.accessors[glTFPrimitive.attributes.find("TEXCOORD_0")->second];
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     texCoordsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
                 }
-                if (glTFPrimitive.attributes.find("TANGENT") != glTFPrimitive.attributes.end()) {
+                if (glTFPrimitive.attributes.find("TANGENT") != glTFPrimitive.attributes.end())
+                {
                     const tinygltf::Accessor& accessor = input.accessors[glTFPrimitive.attributes.find("TANGENT")->second];
                     const tinygltf::BufferView& view = input.bufferViews[accessor.bufferView];
                     tangentsBuffer = reinterpret_cast<const float*>(&(input.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]));
@@ -120,9 +145,12 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                 glm::vec3 minPos{}, maxPos{};
 
                 // Append data to model's vertex buffer
-                for (size_t v = 0; v < vertexCount; v++) {
-                    mesh->m_positions.push_back(glm::vec3(glm::make_vec3(&positionBuffer[v * 3])) * scaleFactor);
-                    mesh->m_normals.push_back(glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f)));
+                for (size_t v = 0; v < vertexCount; v++)
+                {
+                    auto meshVertexCoords = glm::vec3(glm::make_vec3(&positionBuffer[v * 3])) * scaleFactor;
+                    mesh->m_positions.push_back(meshVertexCoords);
+                    auto normal = glm::vec3(normalsBuffer ? glm::make_vec3(&normalsBuffer[v * 3]) : glm::vec3(0.0f));
+                    mesh->m_normals.push_back(glm::normalize(normal));
                     mesh->m_uv0.push_back(texCoordsBuffer ? glm::make_vec2(&texCoordsBuffer[v * 2]) : glm::vec3(0.0f));
                     mesh->m_colors.push_back(glm::vec4(1.0f));
 
@@ -136,35 +164,35 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
 
                     {
                         // min
-                        if (mesh->m_positions[v].x < minPos.x)
+                        if (meshVertexCoords.x < minPos.x)
                         {
-                            minPos.x = mesh->m_positions[v].x;
+                            minPos.x = meshVertexCoords.x;
                         }
 
-                        if (mesh->m_positions[v].y < minPos.y)
+                        if (meshVertexCoords.y < minPos.y)
                         {
-                            minPos.y = mesh->m_positions[v].y;
+                            minPos.y = meshVertexCoords.y;
                         }
 
-                        if (mesh->m_positions[v].z < minPos.z)
+                        if (meshVertexCoords.z < minPos.z)
                         {
-                            minPos.z = mesh->m_positions[v].z;
+                            minPos.z = meshVertexCoords.z;
                         }
 
                         // max
-                        if (mesh->m_positions[v].x > maxPos.x)
+                        if (meshVertexCoords.x > maxPos.x)
                         {
-                            maxPos.x = mesh->m_positions[v].x;
+                            maxPos.x = meshVertexCoords.x;
                         }
 
-                        if (mesh->m_positions[v].y > maxPos.y)
+                        if (meshVertexCoords.y > maxPos.y)
                         {
-                            maxPos.y = mesh->m_positions[v].y;
+                            maxPos.y = meshVertexCoords.y;
                         }
 
-                        if (mesh->m_positions[v].z > maxPos.z)
+                        if (meshVertexCoords.z > maxPos.z)
                         {
-                            maxPos.z = mesh->m_positions[v].z;
+                            maxPos.z = meshVertexCoords.z;
                         }
                     }
                     mesh->m_minPos = minPos;
@@ -178,7 +206,7 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                 const tinygltf::BufferView& bufferView = input.bufferViews[accessor.bufferView];
                 const tinygltf::Buffer& buffer = input.buffers[bufferView.buffer];
 
-                indexCount += static_cast<uint32_t>(accessor.count);
+                indexCount = static_cast<uint32_t>(accessor.count);
 
                 // glTF supports different component types of indices
                 switch (accessor.componentType)
@@ -225,10 +253,11 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
             auto mat = GetMaterial(input, glTFPrimitive.material);
             entity->AddComponent<Core::ECS::Components::Material>(mat);
 
-            auto renderer = new Core::ECS::Components::MeshRenderer(mesh, mat, transform);
+            auto renderer = new Core::ECS::Components::MeshRenderer(mesh, mat, entity->GetTransform());
             entity->AddComponent<Core::ECS::Components::MeshRenderer>(renderer);
 
             // Bounds
+            if(m_sceneLoadInfo.m_addMeshBounds)
             {
                 std::unique_ptr<Core::ECS::Components::BoundCategory> category = std::make_unique<Core::ECS::Components::AABB>(
                     entity->GetTransform()->GetGlobalModelMatrix(), entity->GetEntity()->entityName, mesh->m_minPos, mesh->m_maxPos);
@@ -236,17 +265,17 @@ void Engine::Utility::GltfLoader::LoadNode(const tinygltf::Node& inputNode, cons
                 Renderer::ResourceManagement::BoundFactory::GetInstance()->AddBound(bound);
                 entity->AddComponent<Core::ECS::Components::Bound>(bound);
             }
+
+            m_entityList.push_back(entity);
         }
     }
-
-    m_entityList.push_back(entity);
 
     // Load node's children
     if (inputNode.children.size() > 0)
     {
         for (size_t i = 0; i < inputNode.children.size(); i++)
         {
-            LoadNode(input.nodes[inputNode.children[i]], input, entity);
+            LoadNode(input.nodes[inputNode.children[i]], input, meshParentEntity);
         }
     }
 }
@@ -384,25 +413,71 @@ uint32_t Engine::Utility::GltfLoader::GetTexture(int textureIndex)
 void Engine::Utility::GltfLoader::LoadSamplers(const tinygltf::Model& input)
 {
     // Not loading any info from gltf for samplers, for now.
-    // can take the filter valur from gltf
+    // can take the filter value from gltf
 
     auto& samplers = input.samplers;
     uint32_t index = 0;
     for (auto& sampler : samplers)
     {
         Core::Wrappers::SamplerCreateInfo info = {};
-        info.minFilter = Core::Enums::Filter::FILTER_NEAREST;
-        info.magFilter = Core::Enums::Filter::FILTER_NEAREST;
-        info.addressModeU = Core::Enums::SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        if (sampler.minFilter == 9728)
+        {
+            info.minFilter = Core::Enums::Filter::FILTER_NEAREST;
+        }
+        else if (sampler.minFilter == 9729)
+        {
+            info.minFilter = Core::Enums::Filter::FILTER_LINEAR;
+        }
+        // mip mapping
+        else if (sampler.minFilter == 9984 || sampler.minFilter == 9985 ||
+            sampler.minFilter == 9986 || sampler.minFilter == 9987)
+        {
+            info.minFilter = Core::Enums::Filter::FILTER_NEAREST;
+        }
+        else
+            ASSERT_MSG_DEBUG(0, "Not covered");
+
+        if (sampler.magFilter == 9728)
+        {
+            info.magFilter = Core::Enums::Filter::FILTER_NEAREST;
+        }
+        else if (sampler.magFilter == 9729)
+        {
+            info.magFilter = Core::Enums::Filter::FILTER_LINEAR;
+        }
+        else
+            ASSERT_MSG_DEBUG(0, "Invalid value");
+
+        if (sampler.wrapS == 33071)
+        {
+            info.addressModeU = Core::Enums::SamplerAddressMode::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        }
+        else if (sampler.wrapS == 33648)
+        {
+            info.addressModeU = Core::Enums::SamplerAddressMode::SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        }
+        if (sampler.wrapS == 10497)
+        {
+            info.addressModeU = Core::Enums::SamplerAddressMode::SAMPLER_ADDRESS_MODE_REPEAT;
+        }
+        else
+            ASSERT_MSG_DEBUG(0, "Invalid value");
+
+        {
+            info.minFilter = Core::Enums::Filter::FILTER_NEAREST;
+            info.magFilter = Core::Enums::Filter::FILTER_NEAREST;
+        }
+
         info.addressModeV = info.addressModeU;
         info.addressModeW = info.addressModeU;
         info.anisotropyEnable = false;
         info.maxAnisotropy = 1.0f;
-        info.borderColor = Core::Enums::BorderColor::BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        info.borderColor = Core::Enums::BorderColor::BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
         info.unnormalizedCoordinates = false;
         info.compareEnable = false;
         info.compareOp = Core::Enums::CompareOp::COMPARE_OP_ALWAYS;
-        info.mipmapMode = Core::Enums::SamplerMipmapMode::SAMPLER_MIPMAP_MODE_NEAREST;
+        info.mipmapMode = Core::Enums::SamplerMipmapMode::SAMPLER_MIPMAP_MODE_LINEAR;
         info.minLod = 0.0f;
         info.maxLod = 0.0f;
         info.mipLodBias = 0.0f;
@@ -421,15 +496,19 @@ uint32_t Engine::Utility::GltfLoader::GetSampler(uint32_t index)
     return it->second;
 }
 
-Engine::Utility::GltfLoader::GltfLoader(Core::ECS::World* worldObj)
+Engine::Utility::GltfLoader::GltfLoader(Core::ECS::World* worldObj,
+    std::vector<Core::ECS::EntityHandle*>& entityList,
+    const SceneLoadInfo& sceneLoadInfo) :
+    m_sceneLoadInfo(sceneLoadInfo)
 {
     m_ecsWorldObj = worldObj;
+    LoadGltf(m_sceneLoadInfo.m_filePath, entityList);
 }
 
-void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::vector<Core::ECS::EntityHandle*>& entityList)
+void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetPath, std::vector<Core::ECS::EntityHandle*>& entityList)
 {
     // load file from gltfPath
-    std::string path = ASSETS_PATH + std::string{ "\\models\\" } + assetName;
+    std::string path = assetPath;
 
     tinygltf::Model glTFInput;
     tinygltf::TinyGLTF gltfContext;
@@ -442,12 +521,12 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
     auto transform = entity->GetTransform();
     transform->SetLocalPosition(glm::vec3(0, 0, 0));
     transform->SetLocalScale(glm::vec3(1, 1, 1));
-    //transform->SetLocalEulerAngles(glm::vec3(0, glm::radians(90.0), 0));
     transform->SetLocalEulerAngles(glm::vec3(0, 0, 0));
 
     m_entityList.push_back(entity);
 
-    if (fileLoaded) {
+    if (fileLoaded)
+    {
         LoadSamplers(glTFInput);
         LoadTextures(glTFInput);
         LoadMaterials(glTFInput);
@@ -457,7 +536,8 @@ void Engine::Utility::GltfLoader::LoadGltf(const std::string& assetName, std::ve
             LoadNode(node, glTFInput, entity);
         }
     }
-    else {
+    else
+    {
         ASSERT_MSG_DEBUG(0, "File load failed");
         return;
     }

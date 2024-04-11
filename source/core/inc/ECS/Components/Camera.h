@@ -76,12 +76,13 @@ namespace Core
                 float mouseSensitivity;
                 float fov;
                 float aspect;
-                float zNear = 0.20f, zFar = 256.0f;
+                float zNear = 0.20f, zFar = 1500.0f;
                 CameraType projectionType;
 
                 void* cameraDataRaw;
 
                 Camera() = delete;
+                void UpdateLocalAxes();
 
             public:
 

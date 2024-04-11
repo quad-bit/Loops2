@@ -70,8 +70,9 @@ namespace Engine
         Core::ECS::System* boundSystem;
 
         void Init(Core::Utility::RenderData& renderData,
+            const Core::WindowSettings& windowSettings,
             std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader,
-            const Core::WindowSettings& windowSettings);
+            const Engine::Utility::SceneLoadInfo& sceneLoadInfo);
         void DeInit();
         void Update(float dt, const Core::Wrappers::FrameInfo& frameInfo);
         void Render(float dt);

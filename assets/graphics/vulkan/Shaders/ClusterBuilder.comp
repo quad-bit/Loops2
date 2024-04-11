@@ -1,9 +1,11 @@
 #version 450
 
 #extension GL_GOOGLE_include_directive : enable
+// std430 + UBO 
+#extension GL_EXT_scalar_block_layout : enable 
 #include "LightCullSettings.h"
 
-layout (std140, set = 0, binding = 0) uniform Scene
+layout (std430, set = 0, binding = 0) uniform Scene
 {
     mat4 view;
     mat4 projection;
@@ -21,7 +23,7 @@ struct Cluster
     uint numLights;
 };
 
-layout(set = 0, binding = 1) buffer ClusterInfo
+layout(std430, set = 0, binding = 1) buffer ClusterInfo
 {
     Cluster cluster[CLUSTER_X * CLUSTER_Y * CLUSTER_Z];
 }clusterInfo;
@@ -107,6 +109,8 @@ void main()
     // Z = nearZ * pow(farZ/nearZ, slice/numSlices)
     float tileNear  = -scene.near * pow(scene.far/ scene.near, gl_WorkGroupID.z/float(gl_NumWorkGroups.z));
     float tileFar   = -scene.near * pow(scene.far/ scene.near, (gl_WorkGroupID.z + 1) /float(gl_NumWorkGroups.z));
+    //float tileNear  = -scene.near * pow(scene.far/ scene.near, (gl_NumWorkGroups.z - 1 - gl_WorkGroupID.z)/float(gl_NumWorkGroups.z));
+    //float tileFar   = -scene.near * pow(scene.far/ scene.near, (gl_NumWorkGroups.z - 1 - gl_WorkGroupID.z + 1) /float(gl_NumWorkGroups.z));
 
     vec3 minPointAABB, maxPointAABB;
     FindClusterBounds_1(minPointAABB, maxPointAABB, minPointVs, maxPointVs, tileNear, tileFar);

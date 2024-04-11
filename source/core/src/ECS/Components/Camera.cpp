@@ -22,12 +22,27 @@ Core::ECS::Components::Camera::Camera(Core::ECS::Components::Transform * transfo
 // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
 glm::mat4 Core::ECS::Components::Camera::GetViewMatrix()
 {
-    glm::vec3 localForward = transform->GetForward();
-    glm::vec3 localUp = transform->GetUp();
-    viewMat = glm::lookAt(transform->GetLocalPosition(), 
-        transform->GetLocalPosition() + localForward, 
-        localUp );
+    auto matrix = transform->GetGlobalModelMatrix();
+    glm::vec3 camRight = glm::normalize(glm::vec3(matrix[0][0], matrix[0][1], matrix[0][2]));
+    glm::vec3 camUp = glm::normalize(glm::vec3(matrix[1][0], matrix[1][1], matrix[1][2]));
+    glm::vec3 camFront = glm::normalize(glm::vec3(matrix[2][0], matrix[2][1], matrix[2][2]));
+
+    viewMat = glm::lookAt(transform->GetGlobalPosition(), 
+        transform->GetGlobalPosition() + camFront, camUp);
+
     return viewMat;
+}
+
+void Core::ECS::Components::Camera::UpdateLocalAxes()
+{
+    glm::vec3 front;
+    front.x = cos(glm::radians(transform->GetLocalEulerAngles().y)) * cos(glm::radians(transform->GetLocalEulerAngles().x));
+    front.y = sin(glm::radians(transform->GetLocalEulerAngles().x));
+    front.z = sin(glm::radians(transform->GetLocalEulerAngles().y)) * cos(glm::radians(transform->GetLocalEulerAngles().x));
+    glm::vec3 camFront = glm::normalize(front);
+    // also re-calculate the Right and Up vector
+    glm::vec3 camRight = glm::normalize(glm::cross(camFront, worldUp));
+    glm::vec3 camUp = glm::normalize(glm::cross(camRight, camFront));
 }
 
 glm::mat4 Core::ECS::Components::Camera::GetProjectionMat()

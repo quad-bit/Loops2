@@ -14,12 +14,12 @@
 
 Engine::EngineManager* Engine::EngineManager::instance = nullptr;
 
-void Engine::EngineManager::Init(const std::string& windowName,
+void Engine::EngineManager::Init(const Engine::Utility::SceneLoadInfo& sceneLoadInfo,
+    const std::string& windowName,
     uint32_t windowWidth,
     uint32_t windowHeight,
     uint32_t renderWidth,
     uint32_t renderHeight)
-
 {
     //PLOGD << "ENGINE MANAGER Init";
     m_windowSettings.m_windowWidth = windowWidth;
@@ -37,7 +37,7 @@ void Engine::EngineManager::Init(const std::string& windowName,
     Renderer::Windowing::InputManager::GetInstance()->Init(m_graphicsMngrObj->GetGlfwWindow());
     Renderer::Windowing::MouseInputManager::GetInstance()->Init();
 
-    ECS_Manager::GetInstance()->Init(m_renderData, m_gltfLoader, m_windowSettings);
+    ECS_Manager::GetInstance()->Init(m_renderData, m_windowSettings, m_gltfLoader, sceneLoadInfo);
     sceneManagerObj = new Engine::SceneManager();
     Core::Utility::Timer::GetInstance()->Init();
 }

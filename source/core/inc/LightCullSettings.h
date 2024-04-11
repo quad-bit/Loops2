@@ -1,7 +1,6 @@
 #define MAX_LIGHTS 8 * 8 * 8
 #define MAX_LIGHTS_PER_CLUSTER 7
 
-// CHECK
 #define CLUSTER_X 16
 #define CLUSTER_Y 9
 #define CLUSTER_Z 24

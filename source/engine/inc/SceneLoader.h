@@ -21,13 +21,28 @@ namespace Engine
 {
     namespace Utility
     {
+        class GltfLoader;
+        class SceneLoadInfo
+        {
+        private:
+            std::string m_filePath;
+            float m_scaleFactor;
+            bool m_addMeshBounds;
+        public:
+            SceneLoadInfo() = delete;
+            SceneLoadInfo(const std::string& path,
+                float scaleFactor, bool addMeshBounds):
+                m_filePath(path), m_scaleFactor(scaleFactor), m_addMeshBounds(addMeshBounds)
+            {}
+            friend GltfLoader;
+        };
+
         using gltfMaterialIndex = int;
         class GltfLoader
         {
         private:
-            GltfLoader() {};
-            GltfLoader(GltfLoader const&) {}
-            GltfLoader const& operator= (GltfLoader const&) {}
+            GltfLoader() = delete;
+            GltfLoader(GltfLoader const&) = delete;
 
             Core::ECS::World* m_ecsWorldObj;
             std::vector<Core::ECS::EntityHandle*> m_entityList;
@@ -48,10 +63,14 @@ namespace Engine
             void LoadSamplers(const tinygltf::Model& input);
             uint32_t GetSampler(uint32_t index);
 
-        public:
-            GltfLoader(Core::ECS::World* worldObj);
+            const SceneLoadInfo& m_sceneLoadInfo;
 
-            void LoadGltf(const std::string& assetName, std::vector<Core::ECS::EntityHandle*>& m_entityList);
+        public:
+            GltfLoader(Core::ECS::World* worldObj,
+                std::vector<Core::ECS::EntityHandle*>& entityList,
+                const SceneLoadInfo& sceneLoadInfo);
+
+            void LoadGltf(const std::string& assetPath, std::vector<Core::ECS::EntityHandle*>& m_entityList);
             ~GltfLoader();
         };
     }

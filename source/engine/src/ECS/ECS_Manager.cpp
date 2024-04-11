@@ -25,8 +25,9 @@ Core::ECS::World * worldObj;
 
 void Engine::ECS_Manager::Init(
     Core::Utility::RenderData& renderData,
+    const Core::WindowSettings& windowSettings,
     std::unique_ptr<Engine::Utility::GltfLoader>& sceneLoader,
-    const Core::WindowSettings& windowSettings)
+    const Engine::Utility::SceneLoadInfo& sceneLoadInfo)
 {
     PLOGD << "ECS Manager Init";
 
@@ -67,11 +68,10 @@ void Engine::ECS_Manager::Init(
 
     worldObj->Init();
 
-    m_sceneLoader = std::make_unique<Engine::Utility::GltfLoader>(worldObj);
-
     std::vector<Core::ECS::EntityHandle*> entityList;
-    //sceneLoader->LoadGltf("Sponza\\gltf\\Sponza.gltf", entityList);
-    m_sceneLoader->LoadGltf("ABeautifulGame\\gltf\\ABeautifulGame.gltf", entityList);
+    m_sceneLoader = std::make_unique<Engine::Utility::GltfLoader>(worldObj, entityList, sceneLoadInfo);
+
+    //m_sceneLoader->LoadGltf("ABeautifulGame\\gltf\\ABeautifulGame.gltf", entityList);
 }
 
 void Engine::ECS_Manager::DeInit()

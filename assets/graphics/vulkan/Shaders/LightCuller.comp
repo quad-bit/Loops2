@@ -1,11 +1,14 @@
 #version 450
 
+// std430 + UBO 
+#extension GL_EXT_scalar_block_layout : enable 
+
 #extension GL_GOOGLE_include_directive : enable
 #include "LightCullSettings.h"
 
 shared int lightList[MAX_LIGHTS];
 
-layout (std140, set = 0, binding = 0) uniform Scene
+layout (std430, set = 0, binding = 0) uniform Scene
 {
     mat4 view;
     mat4 projection;
@@ -21,7 +24,7 @@ struct Light
     float radius;
 };
 
-layout (set = 0, binding = 1) uniform LightInfo
+layout (std430, set = 0, binding = 1) uniform LightInfo
 {
     Light lights[MAX_LIGHTS];
     uint numLights;
@@ -35,7 +38,7 @@ struct Cluster
     uint numLights;
 };
 
-layout(set = 0, binding = 2) buffer ClusterInfo
+layout(std430, set = 0, binding = 2) buffer ClusterInfo
 {
     Cluster cluster[CLUSTER_X * CLUSTER_Y * CLUSTER_Z];
 }clusterInfo;
@@ -65,11 +68,14 @@ bool IsPointLightInCluster(vec3 center, float radius, vec3 minPos, vec3 maxPos)
     // find the closest AABB point to the center
     // https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection#bounding_spheres
 
-    // as we have clusters in cuboid shapes rather than trapezoid, hence isoalate z calculation
-
-    //vec3 centerVS = (scene.view * vec4(center.xy, -1.0f, 1.0)).xyz;
-    //centerVS.z = (scene.view * vec4(0, 0, center.z, 1.0)).z;
     vec3 centerVS = (scene.view * vec4(center, 1.0)).xyz;
+
+    // ignore the lights outside the range of zNear->zFar, there might be others
+    // lights which might get ignored if these lights fill up the limited light capacity
+    // of a cluster
+    //if(centerVS.z > scene.near) || centerVS.z < scene.far)
+        //return false;
+
     float x = max(minPos.x, min(centerVS.x, maxPos.x));
     float y = max(minPos.y, min(centerVS.y, maxPos.y));
     float z = max(minPos.z, min(centerVS.z, maxPos.z));
@@ -119,12 +125,14 @@ void main()
         uint counter = 0;
         for(uint i = 0 ; i < MAX_LIGHTS; i++)
         {
-            if(counter >= MAX_LIGHTS_PER_CLUSTER || counter >= lightInfo.numLights)
-                break;
-            if(lightList[i] == 1)
+            if(counter <= MAX_LIGHTS_PER_CLUSTER && counter <= lightInfo.numLights)
             {
-                clusterInfo.cluster[clusterIndex].lightIds[counter++] = i;
-                clusterInfo.cluster[clusterIndex].numLights = counter;
+                if(lightList[i] == 1)
+                {
+                    clusterInfo.cluster[clusterIndex].lightIds[counter] = i;
+                    clusterInfo.cluster[clusterIndex].numLights = counter+1;
+                    counter += 1;
+                }
             }
         }
     }

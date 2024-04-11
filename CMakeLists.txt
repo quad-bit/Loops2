@@ -41,5 +41,8 @@ add_subdirectory(Source/Graphics Projects/Graphics)
 message ("\nConfiguring EngineInterface ..\n")
 add_subdirectory(source/engine projects/engine)
 
-message ("\nApp ..")
-add_subdirectory(source/application projects/application)
+message ("\nSponza ..")
+add_subdirectory(source/apps/sponza projects/apps/sponza)
+
+message ("\nBeautifulGame ..")
+add_subdirectory(source/apps/beautifulGame projects/apps/beautifulGame)

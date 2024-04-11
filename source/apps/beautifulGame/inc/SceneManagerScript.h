@@ -35,7 +35,7 @@ private:
     std::array< Core::ECS::Components::Light*, NUM_LIGHTS> lightComponents;
 
     float prevAngle, currentAngle;
-
+    void CreateLights();
 public:
     SceneManagerScript();
     virtual ~SceneManagerScript();

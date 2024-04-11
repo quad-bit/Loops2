@@ -6,7 +6,12 @@ void main()
 {
     ApplicationController appController;
 
-    Engine::EngineManager::GetInstance()->Init("Loops", 1280, 720, 1280, 720);
+    Engine::Utility::SceneLoadInfo sceneLoadInfo
+    {
+        ASSETS_PATH + std::string{ "\\models\\ABeautifulGame\\glTF\\ABeautifulGame.gltf" },
+        100.0f, false 
+    };
+    Engine::EngineManager::GetInstance()->Init(sceneLoadInfo, "Loops", 1280, 720, 1280, 720);
     appController.Init();
 
     appController.Update();

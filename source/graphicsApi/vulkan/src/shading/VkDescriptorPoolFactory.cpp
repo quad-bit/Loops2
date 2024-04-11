@@ -63,15 +63,16 @@ const uint32_t GfxVk::Shading::VkDescriptorPoolFactory::CreateDescritorPool()
     PoolWrapper poolWrapper = {};
     poolWrapper.poolId = GetId();
 
-    poolWrapper.poolSizeCount = 6;
+    poolWrapper.poolSizeCount = 2;
 
-    VkDescriptorPoolSize * poolSize = new VkDescriptorPoolSize[poolWrapper.poolSizeCount];
-    poolSize[0].descriptorCount = 400;
+    VkDescriptorPoolSize* poolSize = new VkDescriptorPoolSize[poolWrapper.poolSizeCount];
+    poolSize[0].descriptorCount = 500;
     poolSize[0].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-    poolSize[1].descriptorCount = 100;
+    poolSize[1].descriptorCount = 400;
     poolSize[1].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
+    /*
     poolSize[2].descriptorCount = 50;
     poolSize[2].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 
@@ -82,13 +83,13 @@ const uint32_t GfxVk::Shading::VkDescriptorPoolFactory::CreateDescritorPool()
     poolSize[4].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 
     poolSize[5].descriptorCount = 50;
-    poolSize[5].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+    poolSize[5].type = VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;*/
 
     VkDescriptorPoolCreateInfo createInfo = {};
     //createInfo.flags = VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     createInfo.maxSets = MAX_SETS_PER_POOL;
     createInfo.pNext = nullptr;
-    createInfo.poolSizeCount = 6;
+    createInfo.poolSizeCount = poolWrapper.poolSizeCount;
     createInfo.pPoolSizes = poolSize;
     createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 
