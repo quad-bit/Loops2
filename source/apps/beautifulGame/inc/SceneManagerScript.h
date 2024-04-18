@@ -18,7 +18,7 @@ namespace Core
     }
 }
 
-#define NUM_LIGHTS 5
+#define NUM_LIGHTS 4
 class SceneManagerScript : public Core::ECS::Components::Scriptable
 {
 private:

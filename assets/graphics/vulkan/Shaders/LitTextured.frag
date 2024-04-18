@@ -171,7 +171,7 @@ void main()
     vec3 V = normalize(viewDir);
 
     vec3 diffuse = vec3(0.0);
-    vec3 ambient = vec3(0.20f);
+    vec3 ambient = vec3(0.33f); //0.20f;
     vec3 specular = vec3(0.0);
 
     vec3 fragCoord = gl_FragCoord.xyz;
@@ -190,21 +190,27 @@ void main()
         vec3 R = reflect(-L, N);
 
         float distanceVal = distance(lightPos.xyz, inVertex.worldSpacePos.xyz);
-        bool testRadius = true;
-        if(testRadius)
+        bool testRadius = false;
+
+        if(distanceVal < pointLights[lightIndex].lightRadius)
         {
-            if(distanceVal < pointLights[lightIndex].lightRadius)
+            if(testRadius)
             {
                 diffuse += lightDiffuse * max(dot(N, L), 0.0);
-                specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;// * 1.0f/(distanceVal);
+                specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;
+            }
+            else
+            {
+                float constant = 1.0f;
+                float linear = .02f;
+                float quadratic = 0.032f;
+                distanceVal = distanceVal/pointLights[lightIndex].lightRadius;
+                float attenuation = 1 / (distanceVal * distanceVal);// (constant + linear * distanceVal + quadratic * (distanceVal * distanceVal)); 
+
+                diffuse += lightDiffuse * max(dot(N, L), 0.0) * attenuation;
+                specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular * attenuation;
             }
         }
-        else
-        {
-            diffuse += lightDiffuse * max(dot(N, L), 0.0);
-            specular += pow(max(dot(R, V), 0.0), surface.shininess) * lightSpecular * surface.specular;
-        }
-        //ambient += lightAmbient;
     }
 
     outColor = vec4((diffuse + specular + ambient) * color.rgb, color.a);

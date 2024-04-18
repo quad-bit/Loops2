@@ -9,7 +9,7 @@ void main()
     Engine::Utility::SceneLoadInfo sceneLoadInfo
     {
         ASSETS_PATH + std::string{ "\\models\\ABeautifulGame\\glTF\\ABeautifulGame.gltf" },
-        100.0f, false 
+        100.0f, true 
     };
     Engine::EngineManager::GetInstance()->Init(sceneLoadInfo, "Loops", 1280, 720, 1280, 720);
     appController.Init();

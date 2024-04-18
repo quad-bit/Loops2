@@ -26,8 +26,8 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     //camHandle0->GetTransform()->SetLocalPosition(glm::vec3(0, 30, 70));
     //camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(10.0f), 0, 0));
 
-    camHandle0->GetTransform()->SetLocalPosition(glm::vec3(-45, 10, 0));
-    camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(10.0f), glm::radians(90.0f), 0));
+    camHandle0->GetTransform()->SetLocalPosition(glm::vec3(-65, 20, 0));
+    camHandle0->GetTransform()->SetLocalEulerAngles(glm::vec3(glm::radians(15.0f), glm::radians(90.0f), 0));
 
     Core::ECS::Components::Camera* camera = new Core::ECS::Components::Camera(
         camHandle0->GetTransform(), 1280.0f / 720.0f);
@@ -44,29 +44,28 @@ SceneManagerScript::SceneManagerScript() : Core::ECS::Components::Scriptable(fal
     auto seed = 15;// Timer::GetInstance()->GetSeconds();
     srand(seed);
 
-    uint32_t radius = 10;
+    uint32_t radius = 15;
 
-    float xStart = -10.0f;
-    float yStart = 5.0f;
+    float xStart = 0.0f;
+    float yStart = 10.0f;
+
+    glm::vec3 positions[NUM_LIGHTS]
+    {
+        {-20, 10, -15},{-20, 10, 15},
+        {20, 10, -15},{20, 10, 15}
+    };
 
     for (uint32_t i = 0; i < NUM_LIGHTS; i++)
     {
-        int theta = rand() % (uint32_t)((360.0f));
-        int phi = rand() % (uint32_t)((180.0f));
-        float x = 30 * glm::sin(glm::radians((float)phi)) * glm::cos(glm::radians((float)theta));
-        float y = radius * glm::sin(glm::radians((float)phi)) * glm::sin(glm::radians((float)theta));
-        float z = radius * glm::cos(glm::radians((float)phi));
-
         auto& lightEntity = lightHandles[i];
         lightEntity = worldObj->CreateEntity("light_" + std::to_string(i));
         Core::ECS::ComponentHandle<Core::ECS::Components::Transform> lightTrfHandle = lightEntity->GetComponent<Core::ECS::Components::Transform>();
-        auto lighPosition = glm::vec3(x + 10 * (i % 2 == 0 ? -1 : 1), 10, z + (i % 2 == 0 ? -1.0f : 1.0f) * i * 5);
-        lightTrfHandle->SetLocalPosition(lighPosition);
+        lightTrfHandle->SetLocalPosition(positions[i]);
 
-        glm::vec4 ambient = glm::vec4(0.05f);
-        glm::vec4 diffuse = glm::vec4(.8f);
-        glm::vec4 specular = glm::vec4(.5f);
-        glm::vec4 color = glm::vec4(.2f);
+        glm::vec4 ambient = glm::vec4(0.8f);
+        glm::vec4 diffuse = glm::vec4(.2f);
+        glm::vec4 specular = glm::vec4(.2f);
+        glm::vec4 color = glm::vec4(.7f);
 
         std::unique_ptr<Core::ECS::Components::LightCategory> category(
             new Core::ECS::Components::PointLight(radius, ambient, diffuse, specular, color));
